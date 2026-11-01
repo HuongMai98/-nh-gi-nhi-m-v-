@@ -306,6 +306,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
           Thay đổi trên bảng tổng hợp được lưu khi chọn Lưu dòng hoặc chuyển bước/trình duyệt.
         </p>
       )}
+      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV tiếp thu hoặc bảo lưu; điểm CQTT được giữ nguyên." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <details open className="group mb-4 overflow-hidden rounded-lg border">

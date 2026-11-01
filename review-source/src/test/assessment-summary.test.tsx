@@ -30,6 +30,7 @@ describe("assessment summary template", () => {
     fireEvent.click(screen.getByText("Chọn vai trò"));
     expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toHaveValue(null);
     expect(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003")).toHaveValue(null);
+    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
     expect(screen.getByRole("columnheader", { name: "Điểm CQ tự đánh giá" })).toHaveAttribute(
       "colspan",
       "3",
@@ -44,7 +45,7 @@ describe("assessment summary template", () => {
     fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-003"), {
       target: { value: "Kiểm tra hồ sơ" },
     });
-    fireEvent.blur(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-003" }));
     expect(record().proposedKi).toBe("B");
     expect(record().reviewRemark).toBe("Kiểm tra hồ sơ");
     expect(record().councilScore).toBeUndefined();
@@ -77,7 +78,7 @@ function BatchProbe() {
   const [hideFirst, setHideFirst] = useState(false);
   const { evaluations, setPreviewRole, addEvaluation } = useEvaluations();
   const scoped = evaluations.filter(
-    (e) => e.period === "Quý III/2026" && e.block === "Khối Cơ quan",
+    (e) => ["DG-2026-Q3-005", "BATCH-002", "DG-2026-Q3-002"].includes(e.id),
   );
   return (
     <>
@@ -119,7 +120,7 @@ it("office sends all pending records together and keeps unfinished row metadata"
   fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-005"), {
     target: { value: "Gửi chung" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Gửi CQTT (2 phiếu)" }));
+  fireEvent.click(screen.getByRole("button", { name: "Gửi CQTT" }));
   const all = JSON.parse(screen.getByTestId("batch-records").textContent ?? "[]");
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-005")).toMatchObject({
     step: "cqtt",
@@ -127,20 +128,47 @@ it("office sends all pending records together and keeps unfinished row metadata"
   });
   expect(all.find((e: { id: string }) => e.id === "BATCH-002").step).toBe("cqtt");
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-002").step).toBe("council");
-  expect(screen.getByRole("button", { name: "Gửi CQTT (0 phiếu)" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Gửi CQTT" })).toBeDisabled();
   expect(screen.getByText("Đã gửi 2 phiếu đến CQTT rà soát.")).toBeInTheDocument();
 });
 
 it("copies personal scores without adjustment and allows switching to manual adjustment", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
+  expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
   expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toHaveValue(0.9);
   expect(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003")).toHaveValue(2.55);
   expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toBeDisabled();
-  fireEvent.blur(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"));
+  fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-003" }));
   expect(record().cqttKey).toBe(0.9);
   expect(record().cqttFunction).toBe(2.55);
   fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
   expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).not.toBeDisabled();
+});
+
+it("saves and requests adjustment from the table toolbar", () => {
+  render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
+  fireEvent.click(screen.getByText("Chọn vai trò"));
+  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-003"), { target: { value: "Bổ sung kết quả" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
+  expect(record().cqttKey).toBe(0.9);
+  fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.7" } });
+  fireEvent.click(screen.getByLabelText("Chọn gửi điều chỉnh DG-2026-Q3-003"));
+  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh (1)" }));
+  expect(record().step).toBe("response");
+});
+
+it("enables row adjustment request only when CQTT total differs from self total", () => {
+  render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
+  fireEvent.click(screen.getByText("Chọn vai trò"));
+  const send = screen.getByRole("button", { name: "Gửi điều chỉnh" });
+  expect(send).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  expect(send).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.8" } });
+  expect(send).not.toBeDisabled();
 });

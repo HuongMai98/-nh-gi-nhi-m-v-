@@ -6,7 +6,7 @@ it("limits CQTT to received summaries and distinguishes submitted council record
   expect(cqttStatus({ ...e, step: "self" })).toBeNull();
   expect(cqttStatus({ ...e, step: "office" })).toBeNull();
   expect(cqttStatus({ ...e, step: "cqtt" })).toBe("pending");
-  expect(cqttStatus({ ...e, step: "cqtt_report" })).toBe("pending");
+  expect(cqttStatus({ ...e, step: "cqtt_report" })).toBe("report");
   expect(cqttStatus({ ...e, step: "response" })).toBe("waiting");
   expect(cqttStatus({ ...e, step: "council" })).toBe("submitted");
 });

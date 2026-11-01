@@ -15,7 +15,7 @@ describe("evaluation scoring", () => {
     expect(canSelfEvaluate(e, e.owner)).toBe(true);
   });
   it("provides task dates and assigning unit", () => {
-    expect(EVALUATIONS).toHaveLength(8);
+    expect(EVALUATIONS).toHaveLength(85);
     for (const e of EVALUATIONS)
       for (const c of e.criteria) {
         expect(c.startDate).toMatch(/^2026-07-/);

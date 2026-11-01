@@ -1,3 +1,6 @@
+import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
 import { cqttStatus, type CqttStatus } from "@/lib/cqtt-filter";
 import { officeAggregationStatus, type OfficeStatus } from "@/lib/office-filter";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
@@ -22,6 +25,7 @@ import {
   mainStage,
   selfEditable,
   templateResult,
+  cqttTotal,
   totalScore,
   type Step,
   type Evaluation,
@@ -31,6 +35,9 @@ import { Button } from "@/components/ui/button";
 import { AggregateForm } from "@/components/AggregateForm";
 import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { useEvaluations } from "@/components/evaluation-context";
+
+const FILTER_STEPS = [...MAIN_STEPS.slice(0, 3), { key: "response" as const, label: "Chờ CQ/CQĐV phản hồi", actor: "CQ/CQĐV" }, MAIN_STEPS[3], { key: "council_adjust" as const, label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" }, ...MAIN_STEPS.slice(4)];
+const listStage = (step: Step) => step === "response" || step === "council_adjust" ? step : mainStage(step);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,7 +70,7 @@ function Index() {
     catch { setRefreshMessage("Chưa thể làm mới. Vui lòng thử lại."); }
     finally { setRefreshing(false); }
   }
-  const { evaluations, previewRole } = useEvaluations();
+  const { evaluations, previewRole, createCouncilSummary } = useEvaluations();
   const [view, setView] = useState<"list" | "kpi" | "ki" | "appendix">(
     previewRole === "office" ? "kpi" : "list",
   );
@@ -72,22 +79,29 @@ function Index() {
   const [createOpen, setCreateOpen] = useState(false);
   const [created, setCreated] = useState("");
   const [period, setPeriod] = useState("Quý III/2026");
-  const [filter, setFilter] = useState<Set<Step>>(new Set(MAIN_STEPS.map((s) => s.key)));
+  const [filter, setFilter] = useState<Set<Step>>(new Set(FILTER_STEPS.map((s) => s.key)));
   const [block, setBlock] = useState<"all" | "Khối Cơ quan" | "Khối Đơn vị">("all");
   const [selectedBatch, setSelectedBatch] = useState<string | undefined>();
+  const [ceoFilter, setCeoFilter] = useState<CeoFilter>("pending");
+  const [councilFilter, setCouncilFilter] = useState<CouncilFilter>("pending");
   const [cqttFilter, setCqttFilter] = useState<CqttStatus>("pending");
   const [officeStatus, setOfficeStatus] = useState<OfficeStatus>("pending");
+  const [unitFilter, setUnitFilter] = useState("");
+  const [kiFilter, setKiFilter] = useState("");
+  const advancedCount = Number(!!unitFilter) + Number(!!kiFilter);
   const [q, setQ] = useState("");
   const rows = useMemo(
     () =>
       evaluations.filter(
         (e) =>
           e.period === period &&
-          (previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : filter.has(mainStage(e.step))) &&
+          (previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e.step))) &&
           (block === "all" || e.block === block) &&
+          (!unitFilter || e.unit === unitFilter) &&
+          (!kiFilter || (kiFilter === "unrated" ? !e.ki : (e.approvedKi ?? e.ki) === kiFilter)) &&
           `${e.unit} ${e.owner} ${ASSIGNING_UNIT.name}`.toLowerCase().includes(q.toLowerCase()),
       ),
-    [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter],
+    [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter],
   );
   const toggle = (k: Step) =>
     setFilter((s) => {
@@ -199,10 +213,10 @@ function Index() {
               <option value="pending">Chờ tổng hợp</option><option value="completed">Đã tổng hợp</option>
             </select>
             <div className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && officeAggregationStatus(e) === officeStatus).length} cá nhân</div>
-          </div> : previewRole === "cqtt" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái rà soát</div><select aria-label="Trạng thái rà soát" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={cqttFilter} onChange={(e) => { setSelectedBatch(undefined); setCqttFilter(e.target.value as CqttStatus); }}><option value="pending">Chờ CQTT đánh giá</option><option value="waiting">Chờ CQ/CQĐV điều chỉnh</option><option value="submitted">Đã trình Hội đồng</option></select></div> : <>
-          <div className="mb-3 border-b pb-3 font-medium">Bước xử lý</div>
+          </div> : previewRole === "cqtt" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái rà soát</div><select aria-label="Trạng thái rà soát" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={cqttFilter} onChange={(e) => { setSelectedBatch(undefined); setCqttFilter(e.target.value as CqttStatus); }}><option value="pending">Chờ CQTT đánh giá</option><option value="report">Chờ trình Hội đồng</option><option value="waiting">Chờ CQ/CQĐV phản hồi</option><option value="submitted">Đã trình Hội đồng</option></select></div> : previewRole === "council" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái Hội đồng</div><select aria-label="Trạng thái Hội đồng" value={councilFilter} onChange={(event) => { setSelectedBatch(undefined); setCouncilFilter(event.target.value as CouncilFilter); }} className="h-9 w-full rounded-md border bg-card px-2 text-sm">{COUNCIL_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select><p className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && councilStatus(e.step) === councilFilter).length} hồ sơ</p></div> : previewRole === "ceo" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái phê duyệt</div><select aria-label="Trạng thái phê duyệt" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={ceoFilter} onChange={(e) => setCeoFilter(e.target.value as CeoFilter)}>{CEO_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select></div> : <>
+          <div className="mb-3 border-b pb-3 font-medium">{previewRole === "performer" ? "Trạng thái" : "Bước xử lý"}</div>
           <div className="space-y-3">
-            {MAIN_STEPS.map((s) => (
+            {FILTER_STEPS.map((s) => (
               <label key={s.key} className="flex cursor-pointer items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -224,7 +238,8 @@ function Index() {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className={"mb-3 flex flex-wrap items-center gap-3 " + (previewRole === "council" && activeView === "ki" ? "sticky top-0 z-40 bg-card py-2" : "")}>
+            {previewRole === "ceo" && activeView === "list" && <Button variant="outline" disabled={!rows.length} onClick={() => setView("ki")}>Xem tổng hợp Ki</Button>}
             {previewRole === "office" && activeView === "list" && officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!evaluations.some((e) => e.period === period && (block === "all" || e.block === block) && e.step === "office")}>Tổng hợp</Button>}
             <div className="flex min-w-0 w-80 items-center gap-2 rounded-md border border-primary/30 px-3 py-2">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -236,6 +251,7 @@ function Index() {
               />
             </div>
 
+            <Popover><PopoverTrigger asChild><Button variant="outline" className={advancedCount ? "border-primary/40 text-primary" : ""}><SlidersHorizontal className="h-4 w-4" />Lọc nâng cao{advancedCount > 0 && <span className="rounded bg-accent px-1.5 text-xs">{advancedCount}</span>}</Button></PopoverTrigger><PopoverContent align="start" className="w-80 space-y-4 bg-card p-4"><h3 className="text-sm font-semibold">Lọc nâng cao</h3><label className="block space-y-2 text-sm">Đơn vị/Cơ quan<select aria-label="Lọc theo đơn vị/cơ quan" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={unitFilter} onChange={(e) => setUnitFilter(e.target.value)}><option value="">Tất cả đơn vị/cơ quan</option>{[...new Set(evaluations.filter((e) => e.period === period && (block === "all" || e.block === block)).map((e) => e.unit))].sort((a, b) => a.localeCompare(b, "vi")).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label><label className="block space-y-2 text-sm">Ki<select aria-label="Lọc theo Ki" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={kiFilter} onChange={(e) => setKiFilter(e.target.value)}><option value="">Tất cả Ki</option>{["A+", "A", "B", "C", "D", "K"].map((ki) => <option key={ki} value={ki}>{ki}</option>)}<option value="unrated">Chưa xếp Ki</option></select></label><div className="flex items-center justify-between border-t pt-3"><span className="text-xs text-muted-foreground">Áp dụng ngay khi chọn</span><Button variant="ghost" size="sm" onClick={() => { setUnitFilter(""); setKiFilter(""); }}>Xóa bộ lọc</Button></div></PopoverContent></Popover>
             <div className="ml-auto flex rounded-lg bg-muted p-1 text-sm">
               {(["all", "Khối Cơ quan", "Khối Đơn vị"] as const).map((b) => (
                 <button
@@ -254,12 +270,13 @@ function Index() {
             </div>
           </div>
 
-          {activeView !== "list" ? (
+          {previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || e.councilReviewed || !["council"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại tab Tổng hợp đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => setView("kpi")}>Mở Tổng hợp đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
-              evaluations={previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : rows}
+              evaluations={previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || e.councilReviewed || e.step !== "council") : rows}
               mode={activeView}
+              onCouncilSummary={() => { createCouncilSummary(rows.map((e) => e.id)); setView("ki"); }}
               batchCandidates={evaluations.filter(
-                (e) => e.period === period && (block === "all" || e.block === block) && (previewRole !== "office" || officeStatus === "pending"),
+                (e) => e.period === period && (previewRole !== "office" || officeStatus === "pending"),
               )}
             />
           ) : previewRole === "cqtt" ? <div className="overflow-x-auto rounded-lg border"><table className="w-full text-left text-sm"><thead className="bg-muted text-xs"><tr>{["Danh sách tổng hợp", "Đơn vị gửi", "Kỳ đánh giá", "Số cá nhân", "Thao tác"].map((h) => <th key={h} className="px-4 py-3 font-medium">{h}</th>)}</tr></thead><tbody>{[...new Map(rows.map((e) => [e.officeBatchId ?? e.period + "|" + e.block, e])).entries()].map(([id, e]) => <tr key={id} className="border-t"><td className="px-4 py-4 font-medium">Tổng hợp đánh giá · {e.block}</td><td className="px-4 py-4">{e.block === "Khối Cơ quan" ? "Văn phòng" : "Ban Chiến lược"}</td><td className="px-4 py-4">{e.period}</td><td className="px-4 py-4">{rows.filter((r) => (r.officeBatchId ?? r.period + "|" + r.block) === id).length}</td><td className="px-4 py-4"><Button variant="outline" onClick={() => { setSelectedBatch(id); setBlock(e.block); setQ(""); setView("kpi"); }}>{cqttFilter === "submitted" ? "Xem tổng hợp" : "Đánh giá tổng hợp"}</Button></td></tr>)}</tbody></table>{!rows.length && <p className="p-6 text-center text-sm text-muted-foreground">Không có hồ sơ phù hợp.</p>}</div> : (
@@ -275,6 +292,7 @@ function Index() {
                       "Khối",
                       "Hạn đánh giá",
                       "Tự ĐG",
+                      "CQTT đánh giá",
                       "Hội đồng ĐG",
                       "Xếp loại",
                       "Trạng thái",
@@ -289,7 +307,7 @@ function Index() {
                 <tbody>
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={11} className="py-10 text-center text-muted-foreground">
+                      <td colSpan={12} className="py-10 text-center text-muted-foreground">
                         Không có phiếu đánh giá phù hợp
                       </td>
                     </tr>
@@ -325,11 +343,12 @@ function Index() {
                         <td className="px-3 py-4 font-medium">
                           {totalScore(e.criteria).toFixed(2)}
                         </td>
+                        <td className="px-3 py-4 font-medium">{cqttTotal(e)?.toFixed(2) ?? "—"}</td>
                         <td className="px-3 py-4 font-medium">{result.score?.toFixed(2) ?? "—"}</td>
                         <td className="px-3 py-4">{result.ki}</td>
                         <td className="px-3 py-4">
                           <StatusPill tone={STATUS[e.step].tone}>
-                            {MAIN_STEPS.find((s) => s.key === mainStage(e.step))?.label}
+                            {FILTER_STEPS.find((s) => s.key === listStage(e.step))?.label}
                           </StatusPill>
                         </td>
                         <td className="px-3 py-4">

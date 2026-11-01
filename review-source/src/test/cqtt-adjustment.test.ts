@@ -1,13 +1,12 @@
 import { expect, it } from "vitest";
-import { EVALUATIONS, cqttBounds, proposeCqttKi, cqttTotal } from "@/lib/evaluation";
-it("defaults to ten percent and adjusts proposed Ki without changing self scores", () => {
+import { EVALUATIONS, KI_SCORE_RANGES, proposeCqttKi, cqttScoreForKi, cqttTotal, saveDraft, type Ki } from "@/lib/evaluation";
+it("proposes each Ki minimum and allows edits only within its range", () => {
   const e = EVALUATIONS[2]!;
-  expect(cqttBounds(e).max).toBeCloseTo(3.795);
-  const patch = proposeCqttKi(e, "A+");
-  expect(cqttTotal({ ...e, ...patch })).toBe(3.5);
-  expect(patch.cqttKey!).toBeLessThanOrEqual(1);
-  expect(patch.cqttFunction!).toBeLessThanOrEqual(4);
-  expect(e.criteria[0]!.self).toBeGreaterThan(0);
-  expect(proposeCqttKi({ ...e, cqttAdjustmentPercent: 0 }, "A+").proposedKi).toBe("A+");
-  expect(() => proposeCqttKi({ ...e, laborCompliance: "Bị xử lý kỷ luật lao động" }, "A+")).toThrow();
+  for (const ki of Object.keys(KI_SCORE_RANGES) as Exclude<Ki, "K">[]) {
+    const range = KI_SCORE_RANGES[ki];
+    expect(cqttTotal({ ...e, ...proposeCqttKi(e, ki) })).toBe(range.min);
+    expect(cqttTotal({ ...e, ...cqttScoreForKi(e, ki, range.max) })).toBe(range.max);
+    expect(() => cqttScoreForKi(e, ki, range.max + 0.01)).toThrow();
+  }
+  expect(() => saveDraft(e, "cqtt", { proposedKi: "A", cqttKey: 0.9, cqttFunction: 2.5 }, "now")).toThrow();
 });

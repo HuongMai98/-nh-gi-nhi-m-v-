@@ -22,7 +22,7 @@ it("updates the original self-evaluation without creating another record", () =>
   fireEvent.change(screen.getByLabelText("Điểm tự đánh giá nhiệm vụ 1"), { target: { value: "3" } });
   fireEvent.click(screen.getByRole("button", { name: "Lưu cập nhật" }));
   const state = JSON.parse(screen.getByTestId("state").textContent!);
-  expect(state.count).toBe(9);
+  expect(state.count).toBe(86);
   expect(state.record.criteria[0].self).toBe(3);
   expect(state.record.evaluationDate).toBe("2026-11-01");
   expect(state.record.deadline).toBe("25/11/2026");

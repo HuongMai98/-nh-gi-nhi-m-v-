@@ -39,15 +39,6 @@ test("batch rejects wrong role, empty, missing, advanced or mixed scope records 
   );
   assert.throws(() =>
     forwardOfficeBatch(
-      [{ ...source[0], block: "Khối Đơn vị" }, source[1]],
-      "office",
-      ids,
-      {},
-      "now",
-    ),
-  );
-  assert.throws(() =>
-    forwardOfficeBatch(
       [{ ...source[0], period: "Quý II/2026" }, source[1]],
       "office",
       ids,

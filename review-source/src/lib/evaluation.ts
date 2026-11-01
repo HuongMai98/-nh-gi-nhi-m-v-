@@ -36,11 +36,11 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "self", label: "Tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Tổng hợp đầu vào", actor: "VP / Ban CL" },
   { key: "cqtt", label: "Rà soát, chấm điểm", actor: "CQTT" },
-  { key: "response", label: "Tiếp thu / bảo lưu", actor: "CQĐV/CQ" },
+  { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
   { key: "council", label: "Tổng hợp KPI", actor: "Hội đồng" },
   { key: "ceo", label: "Phê duyệt kết quả", actor: "TGĐ" },
-  { key: "council_adjust", label: "Điều chỉnh theo TGĐ", actor: "Hội đồng" },
+  { key: "council_adjust", label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" },
   { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
   { key: "sign", label: "Trình ký phiếu ĐG", actor: "CQĐV/CQ" },
@@ -128,6 +128,8 @@ export type Evaluation = {
   proposedKi?: Ki | undefined;
   reviewAssistant?: string;
   reviewRemark?: string;
+  councilSummaryCreated?: boolean;
+  councilReviewed?: boolean;
   councilScore?: number | undefined;
   ki?: Ki | undefined;
   note?: string;
@@ -259,8 +261,9 @@ export function allocatedTotal(criteria: Criterion[]): number | null {
   return Math.round(criteria.reduce((sum, c) => sum + c.weight * c.council!, 0) * 100) / 100;
 }
 export function templateResult(e: Evaluation) {
-  const score = e.approvedScore ?? e.councilScore,
-    ki = e.approvedKi ?? e.ki;
+  const unreviewed = e.step === "council" && !e.councilReviewed;
+  const score = unreviewed ? undefined : e.approvedScore ?? e.councilScore,
+    ki = unreviewed ? undefined : e.approvedKi ?? e.ki;
   const completion =
     ki === "K"
       ? "Không đánh giá"
@@ -372,7 +375,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, patch: Draft, at: st
     throw new Error("Tổng điểm CQTT không được vượt 5.");
   if (role === "cqtt") {
     const score = cqttTotal(next);
-    if (score !== null && next.proposedKi) { const issue = kiError({ ...next, councilScore: score, ki: next.proposedKi }); if (issue) throw new Error(issue); }
+    if (score !== null && next.proposedKi) { cqttScoreForKi(next, next.proposedKi, score); const issue = kiError({ ...next, councilScore: score, ki: next.proposedKi }); if (issue) throw new Error(issue); }
   }
   if (role === "cqtt")
     for (const key of [true, false]) {
@@ -383,7 +386,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, patch: Draft, at: st
       if (value !== undefined && value > max + 0.00001)
         throw new Error("Điểm nhóm vượt tỷ trọng đã giao.");
     }
-  if (role === "council") next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
+  if (role === "council") { next.criteria = allocateCouncilScores(next.criteria, next.councilScore); next.councilReviewed = !!next.ki; }
   return record(e, next, role, "Lưu nháp", patch.note ?? patch.responseNote ?? "", at);
 }
 export function transition(
@@ -436,7 +439,7 @@ export function transition(
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
-    next = { ...e, step: "ceo", criteria: allocateCouncilScores(e.criteria, e.councilScore) };
+    next = { ...e, step: "ceo", councilReviewed: true, criteria: allocateCouncilScores(e.criteria, e.councilScore) };
   } else if (e.step === "ceo") {
     if (action === "return") {
       requireReason();
@@ -466,13 +469,13 @@ export function forwardOfficeBatch(
   if (selected.length !== selectedIds.size || selected.some((e) => e.step !== "office"))
     throw new Error("Danh sách đã thay đổi. Chỉ gửi các phiếu đang tổng hợp.");
   const scope = selected[0]!;
-  if (selected.some((e) => e.period !== scope.period || e.block !== scope.block))
-    throw new Error("Mỗi lần gửi phải cùng kỳ và cùng khối đánh giá.");
+  if (selected.some((e) => e.period !== scope.period))
+    throw new Error("Mỗi lần gửi phải cùng kỳ đánh giá.");
   const forwarded = new Map(
     selected.map((e) => {
       const draft = drafts[e.id];
       const saved = draft && Object.keys(draft).length ? saveDraft(e, role, draft, at) : e;
-      return [e.id, { ...transition(saved, role, "send", {}, at), officeBatchId: `${scope.period}|${scope.block}|${at}` }] as const;
+      return [e.id, { ...transition(saved, role, "send", {}, at), officeBatchId: `${e.period}|${e.block}|${at}` }] as const;
     }),
   );
   return evaluations.map((e) => forwarded.get(e.id) ?? e);
@@ -606,6 +609,93 @@ export const EVALUATIONS: Evaluation[] = units.map(([unit, block, step, owner], 
   ),
 }));
 
+// Hồ sơ mẫu đã được CQTT gửi về để cá nhân tiếp thu/bảo lưu.
+EVALUATIONS.push({
+  ...EVALUATIONS[3]!,
+  id: "DG-2026-Q3-009",
+  step: "response",
+  assignmentRef: "GNV-2026-Q3-009",
+  evaluationDate: "2026-11-01",
+  deadline: "20/11/2026",
+  updated: "01/11/2026 14:50:00",
+  cqttKey: 0.8,
+  cqttFunction: 2.5,
+  proposedKi: "B",
+  note: "Bổ sung số liệu chứng minh kết quả thực hiện và giải trình chênh lệch điểm CQTT so với điểm tự đánh giá.",
+  history: [{ at: "01/11/2026 14:50:00", role: "cqtt", action: "request", note: "Bổ sung số liệu chứng minh kết quả thực hiện.", before: JSON.stringify({ step: "cqtt" }), after: JSON.stringify({ step: "response", cqttKey: 0.8, cqttFunction: 2.5 }) }],
+});
+
+// Dữ liệu minh họa bổ sung cho hai khối và các bước xử lý.
+const extraSamples: [string, string, Evaluation["block"], Step][] = [
+  ["Phạm Minh Anh", "Văn phòng Tập đoàn", "Khối Cơ quan", "self"],
+  ["Trần Hải Nam", "Tổng công ty Giải pháp doanh nghiệp Viettel", "Khối Đơn vị", "self"],
+  ["Nguyễn Thanh Mai", "Ban Tài chính", "Khối Cơ quan", "office"],
+  ["Lê Quốc Hưng", "Ban Nhân sự", "Khối Cơ quan", "office"],
+  ["Vũ Minh Đức", "Tổng công ty Viễn thông Viettel", "Khối Đơn vị", "office"],
+  ["Đặng Thu Trang", "Tổng công ty Mạng lưới Viettel", "Khối Đơn vị", "office"],
+  ["Hoàng Anh Tuấn", "Ban Kỹ thuật", "Khối Cơ quan", "cqtt"],
+  ["Phan Ngọc Linh", "Trung tâm Công nghệ thông tin", "Khối Đơn vị", "response"],
+  ["Ngô Minh Phúc", "Ban Chiến lược", "Khối Cơ quan", "cqtt_report"],
+  ["Đỗ Thanh Bình", "Tổng công ty Công nghiệp Công nghệ cao", "Khối Đơn vị", "council"],
+  ["Bùi Thu Hương", "Ban Pháp chế", "Khối Cơ quan", "ceo"],
+  ["Trịnh Quốc Việt", "Tổng công ty Viễn thông Viettel", "Khối Đơn vị", "council_adjust"],
+  ["Dương Khánh An", "Ban Đầu tư", "Khối Cơ quan", "approved"],
+  ["Mai Đức Long", "Tổng công ty Mạng lưới Viettel", "Khối Đơn vị", "dispatch"],
+  ["Nguyễn Hồng Nhung", "Văn phòng Tập đoàn", "Khối Cơ quan", "sign"],
+  ["Trần Việt Hoàng", "Tổng công ty Giải pháp doanh nghiệp Viettel", "Khối Đơn vị", "done"],
+];
+extraSamples.forEach(([owner, unit, block, step], index) => {
+  const sequence = String(index + 10).padStart(3, "0");
+  const reviewed = !["self", "office", "cqtt"].includes(step);
+  const council = ["council", "ceo", "council_adjust", "approved", "dispatch", "sign", "done"].includes(step);
+  const approved = ["approved", "dispatch", "sign", "done"].includes(step);
+  const criteria = EVALUATIONS[3]!.criteria.map((c) => ({ ...c, target: { ...c.target } }));
+  const note = step === "response" ? "CQTT yêu cầu bổ sung minh chứng và phản hồi về điểm đánh giá." : step === "council_adjust" ? "TGĐ yêu cầu Hội đồng rà soát lại điểm và căn cứ xếp Ki." : "";
+  EVALUATIONS.push({
+    id: "DG-2026-Q3-" + sequence, owner, unit, block, step,
+    period: "Quý III/2026", employeeId: String(92000 + index), jobTitle: "Chỉ huy cơ quan/đơn vị", location: "Hà Nội",
+    assignmentRef: "GNV-2026-Q3-" + sequence, evaluationDate: "2026-11-01", deadline: String(20 + index % 9) + "/11/2026", updated: "01/11/2026 14:55:00",
+    criteria: allocateCouncilScores(criteria, council ? 4.1 : undefined),
+    ...(step !== "self" ? { selfSubmittedAt: "01/11/2026 09:00:00" } : {}),
+    ...(!["self", "office"].includes(step) ? { officeBatchId: "Quý III/2026|" + block + "|Mau-bo-sung" } : {}),
+    ...(reviewed ? { cqttKey: 0.9, cqttFunction: 3.2, proposedKi: "A" as Ki } : {}),
+    ...(council ? { councilScore: 4.1, ki: "A" as Ki } : {}),
+    ...(approved ? { approvedScore: 4.1, approvedKi: "A" as Ki } : {}),
+    ...(step === "done" ? { submittedForSignatureAt: "01/11/2026 14:00:00" } : {}),
+    locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", cultureCompliance: "Tuân thủ", note,
+    history: [{ at: "01/11/2026 14:55:00", role: stageRole[step], action: "Khởi tạo dữ liệu mẫu", note, before: "{}", after: JSON.stringify({ step }) }],
+  });
+});
+
+// Tăng số lượng mẫu để thử bảng tổng hợp, tìm kiếm và lọc hai khối.
+const summaryUnits = [
+  ["Ban Tài chính", "Ban Nhân sự", "Ban Kỹ thuật", "Ban Pháp chế", "Văn phòng Tập đoàn"],
+  ["Tổng công ty Viễn thông Viettel", "Tổng công ty Mạng lưới Viettel", "Trung tâm Công nghệ thông tin", "Tổng công ty Giải pháp doanh nghiệp Viettel", "Tổng công ty Công nghiệp Công nghệ cao"],
+];
+const summaryNames = ["Nguyễn Minh", "Trần Thanh", "Lê Hoàng", "Phạm Ngọc", "Vũ Quốc", "Đỗ Hải", "Bùi Thu", "Hoàng Anh", "Phan Đức", "Đặng Hồng"];
+for (let i = 0; i < 60; i++) {
+  const blockIndex = i % 2;
+  const block: Evaluation["block"] = blockIndex === 0 ? "Khối Cơ quan" : "Khối Đơn vị";
+  const pending = i < 40;
+  const step: Step = pending ? "office" : ["cqtt", "council", "ceo", "done"][Math.floor((i - 40) / 2) % 4] as Step;
+  const sequence = String(i + 26).padStart(3, "0");
+  const council = ["council", "ceo", "done"].includes(step);
+  const baseRecord = EVALUATIONS[3]!;
+  EVALUATIONS.push({
+    ...baseRecord, id: "DG-2026-Q3-" + sequence,
+    owner: summaryNames[i % summaryNames.length] + " " + ["An", "Bình", "Dũng", "Hà", "Linh", "Nam"][Math.floor(i / 10)],
+    employeeId: String(93000 + i), unit: summaryUnits[blockIndex]![Math.floor(i / 2) % 5]!, block, step,
+    assignmentRef: "GNV-2026-Q3-" + sequence, evaluationDate: "2026-11-01", deadline: String(20 + i % 9) + "/11/2026", updated: "01/11/2026 15:00:00",
+    selfSubmittedAt: "01/11/2026 09:00:00",
+    criteria: allocateCouncilScores(baseRecord.criteria.map((c) => ({ ...c, target: { ...c.target } })), council ? 4.1 : undefined),
+    cqttKey: council ? 0.9 : undefined, cqttFunction: council ? 3.2 : undefined,
+    councilScore: council ? 4.1 : undefined, ki: council ? "A" : undefined,
+    ...(pending ? {} : { officeBatchId: "Quý III/2026|" + block + "|Dot-mau-" + Math.floor((i - 40) / 4) }),
+    ...(step === "done" ? { approvedScore: 4.1, approvedKi: "A" as Ki, submittedForSignatureAt: "01/11/2026 14:00:00" } : {}),
+    note: "", history: [],
+  });
+}
+
 export const getEvaluation = (id: string) => EVALUATIONS.find((e) => e.id === id);
 
 export function cqttBounds(e: Evaluation) {
@@ -614,16 +704,48 @@ export function cqttBounds(e: Evaluation) {
   const self = totalScore(e.criteria);
   return { min: Math.max(1, self * (1 - percent / 100)), max: Math.min(5, self * (1 + percent / 100)) };
 }
-export function proposeCqttKi(e: Evaluation, ki: Ki): Draft {
-  if (ki === "K") throw new Error("Ki K là không đánh giá; không tự điều chỉnh điểm để đạt Ki K.");
-  const bounds = { min: 1, max: 5 };
-  const minimum = { "A+": 3.5, A: 3.5, B: 2, C: 2, D: 1 }[ki];
-  const lower = Math.max(bounds.min, minimum);
-  const score = Math.ceil(Math.max(lower, Math.min(cqttTotal(e) ?? totalScore(e.criteria), bounds.max)) * 100 - 1e-8) / 100;
-  if (score > bounds.max + 1e-8) throw new Error("Biên độ hiện tại không đủ để đề xuất Ki " + ki + ".");
+export const KI_SCORE_RANGES = {
+  "A+": { min: 4.5, max: 5 }, A: { min: 3.5, max: 4.49 },
+  B: { min: 2.5, max: 3.49 }, C: { min: 2, max: 2.49 }, D: { min: 1, max: 1.99 },
+} as const;
+export function cqttScoreForKi(e: Evaluation, ki: Ki, score: number): Draft {
+  if (ki === "K") throw new Error("Ki K là không đánh giá, không nhập điểm.");
+  const range = KI_SCORE_RANGES[ki];
+  if (!Number.isFinite(score) || score < range.min - 1e-8 || score > range.max + 1e-8)
+    throw new Error("Điểm Ki " + ki + " phải trong khoảng " + range.min + "–" + range.max + ".");
   const issue = kiError({ ...e, councilScore: score, ki });
   if (issue) throw new Error(issue);
   const allocated = allocateCouncilScores(e.criteria, score);
   const key = Math.round(allocated.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight * c.council!, 0) * 100) / 100;
   return { proposedKi: ki, cqttKey: key, cqttFunction: Math.round((score - key) * 100) / 100 };
+}
+export function proposeCqttKi(e: Evaluation, ki: Ki): Draft {
+  if (ki === "K") throw new Error("Ki K là không đánh giá, không nhập điểm.");
+  return cqttScoreForKi(e, ki, KI_SCORE_RANGES[ki].min);
+}
+
+export function processCqttBatch(evaluations: Evaluation[], role: PreviewRole, ids: string[], drafts: Record<string, Draft>, request: boolean | "council", at: string): Evaluation[] {
+  if (role !== "cqtt") throw new Error("Chỉ CQTT được thực hiện thao tác này.");
+  if (!ids.length || new Set(ids).size !== ids.length) throw new Error("Không có hồ sơ hợp lệ để xử lý.");
+  const updates = new Map<string, Evaluation>();
+  for (const id of ids) {
+    const e = evaluations.find((item) => item.id === id);
+    if (!e || (e.step !== "cqtt" && !(request === "council" && e.step === "cqtt_report"))) throw new Error("Danh sách đã thay đổi, hồ sơ chưa đủ điều kiện CQTT xử lý.");
+    try {
+      const saved = e.step === "cqtt_report" ? e : saveDraft(e, role, drafts[id] ?? {}, at);
+      const next = request === "council" ? transition(saved.step === "cqtt" ? transition(saved, role, "finish", {}, at) : saved, role, "send", {}, at) : request ? transition(saved, role, "request", {}, at) : saved;
+      updates.set(id, next);
+    } catch (error) { throw new Error(e.owner + ": " + (error instanceof Error ? error.message : "Dữ liệu không hợp lệ")); }
+  }
+  return evaluations.map((e) => updates.get(e.id) ?? e);
+}
+
+export function councilAutoKi(e: Evaluation): Ki {
+  if (e.councilScore === undefined) return "K";
+  if (e.locationCompliance === "Không tuân thủ" || e.laborCompliance === "Bị xử lý kỷ luật lao động") return "D";
+  const ki = rating(e.councilScore).ki;
+  return e.laborCompliance === "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" && ["A+", "A"].includes(ki) ? "B" : ki;
+}
+export function councilKiDraft(ki: Ki): Draft {
+  return { ki, councilScore: ki === "K" ? undefined : KI_SCORE_RANGES[ki].min };
 }

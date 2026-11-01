@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download, ArrowUpRight, Send, CheckCheck, Pencil } from "lucide-react";
+import { Download, Save, Undo2, ArrowUpRight, Send, CheckCheck, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEvaluations } from "@/components/evaluation-context";
-import { cqttTotal, groupScore, proposeCqttKi, type Draft, type Evaluation, type Ki } from "@/lib/evaluation";
+import { cqttTotal, saveDraft, groupScore, proposeCqttKi, cqttScoreForKi, KI_SCORE_RANGES, type Draft, type Evaluation, type Ki } from "@/lib/evaluation";
 
 const format = (value: number | undefined | null) => (value == null ? "—" : value.toFixed(2));
 const baseInput =
@@ -13,25 +13,23 @@ export function AssessmentSummary({
   onExport,
   onDraftChange,
   batchCandidates,
+  onCouncilSummary,
 }: {
+  onCouncilSummary?: (() => void) | undefined;
   batchCandidates?: Evaluation[] | undefined;
   evaluations: Evaluation[];
   onExport: () => void;
   onDraftChange?: ((draft: Draft) => void) | undefined;
 }) {
-  const { previewRole, sendOfficeBatch } = useEvaluations();
+  const { previewRole, sendOfficeBatch, processCqttBatch } = useEvaluations();
   const [batchDrafts, setBatchDrafts] = useState<Record<string, Draft>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editAllVersion, setEditAllVersion] = useState(0);
   const [batchFeedback, setBatchFeedback] = useState("");
   const pending = (batchCandidates ?? []).filter((e) => e.step === "office");
-  const batches = [
-    ...pending
-      .reduce((groups, e) => {
-        const key = e.period + "|" + e.block;
-        groups.set(key, [...(groups.get(key) ?? []), e]);
-        return groups;
-      }, new Map<string, Evaluation[]>())
-      .values(),
-  ];
+  const countRows = pending.length ? pending : evaluations;
+  const agencyCount = new Set(countRows.filter((e) => e.block === "Khối Cơ quan").map((e) => e.unit)).size;
+  const unitCount = new Set(countRows.filter((e) => e.block === "Khối Đơn vị").map((e) => e.unit)).size;
   const canBatchSend = previewRole === "office" && batchCandidates !== undefined;
   const sendBatch = (batch: Evaluation[]) => {
     const ids = batch.map((e) => e.id);
@@ -41,6 +39,22 @@ export function AssessmentSummary({
       setBatchDrafts((current) =>
         Object.fromEntries(Object.entries(current).filter(([id]) => !ids.includes(id))),
       );
+  };
+  const cqttRows = evaluations.filter((e) => e.step === "cqtt");
+  const eligibleIds = cqttRows.filter((e) => { const current = { ...e, ...batchDrafts[e.id] }; const total = cqttTotal(current); return total !== null && Math.abs(total - groupScore(e, true) - groupScore(e, false)) >= 0.005; }).map((e) => e.id);
+  const selectedEligible = selectedIds.filter((id) => eligibleIds.includes(id));
+  const councilRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
+  const allScored = councilRows.length > 0 && councilRows.every((e) => {
+    try {
+      const saved = e.step === "cqtt" ? saveDraft(e, "cqtt", batchDrafts[e.id] ?? {}, "validation") : e;
+      const total = cqttTotal(saved);
+      return total !== null && total >= 1 && total <= 5;
+    } catch { return false; }
+  });
+  const handleCqttBatch = (request: boolean | "council") => {
+    const issue = processCqttBatch((request === true ? selectedEligible : (request === "council" ? councilRows : cqttRows).map((e) => e.id)), batchDrafts, request);
+    setBatchFeedback(issue ?? (request === "council" ? "Đã gửi hồ sơ sang Hội đồng." : request ? "Đã gửi điều chỉnh cho tất cả hồ sơ." : "Đã lưu tất cả hồ sơ."));
+    if (!issue) { setBatchDrafts((current) => request === true ? Object.fromEntries(Object.entries(current).filter(([id]) => !selectedEligible.includes(id))) : {}); if (request === true) setSelectedIds([]); }
   };
   const periods = [...new Set(evaluations.map((e) => e.period))];
   const blocks = [...new Set(evaluations.map((e) => e.block))];
@@ -74,7 +88,7 @@ export function AssessmentSummary({
               <span className="rounded-md bg-muted px-2 py-1 font-medium">
                 {periods.length === 1 ? periods[0] : "Các kỳ đánh giá"}
               </span>
-              <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>
+              {canBatchSend ? <span className="inline-flex flex-wrap items-center gap-1.5">{[["Cơ quan", agencyCount], ["Đơn vị", unitCount], ["Phiếu", countRows.length]].map(([label, count]) => <span key={label} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-muted-foreground">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b></span>)}</span> : <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>}
               <span className="text-border">|</span>
               <span className="text-muted-foreground">
                 CQTT đã chấm{" "}
@@ -90,21 +104,9 @@ export function AssessmentSummary({
             <Download />
             Xuất CSV
           </Button>
-          {canBatchSend &&
-            (batches.length ? (
-              batches.map((batch) => (
-                <Button key={batch[0]!.period + batch[0]!.block} onClick={() => sendBatch(batch)}>
-                  <Send />
-                  {batches.length > 1 ? `Gửi CQTT · ${batch[0]!.block}` : "Gửi CQTT"} (
-                  {batch.length} phiếu)
-                </Button>
-              ))
-            ) : (
-              <Button disabled>
-                <Send />
-                Gửi CQTT (0 phiếu)
-              </Button>
-            ))}
+          {previewRole === "cqtt" && <><Button variant="outline" disabled={!cqttRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length} onClick={() => handleCqttBatch(false)}><Save />Lưu tất cả</Button><Button disabled={!selectedEligible.length} onClick={() => handleCqttBatch(true)}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button><Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
+          {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
+          {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
         </div>
       </header>
       {batchFeedback && (
@@ -126,7 +128,7 @@ export function AssessmentSummary({
             Thường trực được đối chiếu theo nhóm nhiệm vụ.
           </caption>
           <colgroup>
-            {[44, 82, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, 120].map((width, i) => (
+            {[44, 82, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, 244].map((width, i) => (
               <col key={i} style={{ width }} />
             ))}
           </colgroup>
@@ -136,7 +138,7 @@ export function AssessmentSummary({
                 rowSpan={2}
                 className={primaryHeader + " sticky left-0 z-40 bg-muted text-center"}
               >
-                TT
+                {previewRole === "cqtt" ? <input type="checkbox" aria-label="Chọn tất cả hồ sơ lệch điểm" disabled={!eligibleIds.length} checked={eligibleIds.length > 0 && selectedEligible.length === eligibleIds.length} onChange={(event) => setSelectedIds(event.target.checked ? eligibleIds : [])} className="h-4 w-4 accent-primary" /> : "TT"}
               </th>
               <th rowSpan={2} className={primaryHeader + " sticky left-[44px] z-40 bg-muted"}>
                 Mã số
@@ -205,12 +207,15 @@ export function AssessmentSummary({
           <tbody>
             {evaluations.map((e, index) => (
               <AssessmentRow
-                key={`${e.id}-${e.step}-${previewRole}`}
+                key={`${e.id}-${e.step}-${previewRole}-${e.history?.length ?? 0}`}
                 evaluation={e}
                 index={index}
-                initialDraft={previewRole === "office" ? batchDrafts[e.id] : undefined}
+                selected={selectedEligible.includes(e.id)}
+                onSelect={() => setSelectedIds((ids) => ids.includes(e.id) ? ids.filter((id) => id !== e.id) : [...ids, e.id])}
+                editAllVersion={editAllVersion}
+                initialDraft={batchDrafts[e.id]}
                 onDraftChange={(draft) => {
-                  if (previewRole === "office")
+                  if (previewRole === "office" || previewRole === "cqtt")
                     setBatchDrafts((current) => ({ ...current, [e.id]: draft }));
                   onDraftChange?.(draft);
                 }}
@@ -237,19 +242,26 @@ function AssessmentRow({
   evaluation: e,
   index,
   initialDraft,
+  selected = false,
+  onSelect,
+  editAllVersion = 0,
   onDraftChange,
 }: {
   evaluation: Evaluation;
   index: number;
   initialDraft?: Draft | undefined;
+  selected?: boolean;
+  onSelect?: (() => void) | undefined;
+  editAllVersion?: number;
   onDraftChange?: ((draft: Draft) => void) | undefined;
 }) {
-  const { previewRole, updateEvaluation } = useEvaluations();
+  const { previewRole, updateEvaluation, processCqttBatch } = useEvaluations();
   const [draft, setDraft] = useState<Draft>(initialDraft ?? {});
   const [feedback, setFeedback] = useState("");
   const current = { ...e, ...draft };
   const canScore = previewRole === "cqtt" && e.step === "cqtt";
-  const [adjusting, setAdjusting] = useState(true);
+  const [adjusting, setAdjusting] = useState(false);
+  useEffect(() => { if (editAllVersion > 0 && canScore) setAdjusting(true); }, [editAllVersion, canScore]);
   const canMeta = (previewRole === "office" && e.step === "office") || canScore;
   const change = (patch: Draft) => {
     const next = { ...draft, ...patch };
@@ -282,19 +294,13 @@ function AssessmentRow({
   };
   const cell = "border-b border-border/70 px-3 py-3 align-top";
   return (
-    <tr className="group hover:bg-muted/20" onBlur={(event) => {
-      if (!canScore || event.currentTarget.contains(event.relatedTarget as Node | null) || !Object.keys(draft).length) return;
-      const issue = updateEvaluation(e.id, draft);
-      setFeedback(issue ?? "Đã lưu");
-      if (!issue) { setDraft({}); onDraftChange?.({}); }
-    }}>
-      <td
+    <tr className="group hover:bg-muted/20">      <td
         className={
           cell +
           " sticky left-0 z-10 bg-card text-center text-sm text-muted-foreground group-hover:bg-muted"
         }
       >
-        {index + 1}
+        <div className="flex flex-col items-center gap-2">{previewRole === "cqtt" && <input type="checkbox" aria-label={`Chọn gửi điều chỉnh ${e.id}`} checked={selected} disabled={!canScore || cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} onChange={onSelect} className="h-4 w-4 accent-primary" />}<span>{index + 1}</span></div>
       </td>
       <td
         className={
@@ -337,7 +343,14 @@ function AssessmentRow({
           " border-r border-violet-200 bg-violet-50/60 text-center font-semibold tabular-nums text-violet-800"
         }
       >
-        {format(cqttTotal(current))}
+        <div className="relative flex min-h-8 items-center justify-center"><span>{canScore && adjusting && current.proposedKi && current.proposedKi !== "K" ? <input aria-label={`Tổng điểm CQTT ${e.id}`} type="number" step="0.01" min={KI_SCORE_RANGES[current.proposedKi].min} max={KI_SCORE_RANGES[current.proposedKi].max} className="h-9 w-16 rounded-md border border-violet-200 bg-card px-1 text-center text-sm" value={cqttTotal(current) ?? ""} onChange={(event) => { try { change(cqttScoreForKi(current, current.proposedKi!, Number(event.target.value))); } catch (error) { setFeedback(error instanceof Error ? error.message : "Điểm không hợp lệ"); } }} /> : format(cqttTotal(current))}</span>{canScore && (
+          <Button type="button" variant={adjusting ? "outline" : "secondary"} size="icon" className="absolute left-[calc(50%+1.5rem)] top-1/2 h-7 w-7 -translate-y-1/2 shadow-none" title="Không điều chỉnh" aria-label={`Không điều chỉnh ${e.id}`} aria-pressed={!adjusting} onClick={() => {
+            const patch = { ...draft, cqttKey: groupScore(e, true), cqttFunction: groupScore(e, false), proposedKi: undefined };
+            change(patch);
+
+            setAdjusting(false);
+          }}><CheckCheck className="h-4 w-4" /></Button>
+        )}</div>
 
       </td>
       <td className={cell}>
@@ -346,7 +359,7 @@ function AssessmentRow({
           rows={2}
           disabled={!canScore}
           value={current.note ?? ""}
-          placeholder={canScore ? "Lý do điều chỉnh / nội dung rà soát" : ""}
+          placeholder={canScore ? "Lý do điều chỉnh / nội dung rà soát" : "—"}
           onChange={(event) => change({ note: event.target.value })}
           className={baseInput + " min-h-[68px] resize-y"}
         />
@@ -375,7 +388,8 @@ function AssessmentRow({
           ))}
         </select>
 
-      </td>
+
+        {canScore && current.proposedKi && current.proposedKi !== "K" && <p className="mt-1 text-xs text-muted-foreground">{KI_SCORE_RANGES[current.proposedKi].min}–{KI_SCORE_RANGES[current.proposedKi].max} điểm</p>}      </td>
       <td className={cell}>
         <input
           aria-label={`Trợ lý ${e.id}`}
@@ -400,17 +414,13 @@ function AssessmentRow({
       <td
         className={cell + " sticky right-0 z-10 border-l bg-card text-center group-hover:bg-muted"}
       >
-        {canScore && <div className="mb-2 flex items-center gap-1">
-          <Button type="button" variant={adjusting ? "outline" : "secondary"} size="icon" title="Không điều chỉnh" aria-label={`Không điều chỉnh ${e.id}`} aria-pressed={!adjusting} onClick={() => {
-            const patch = { ...draft, cqttKey: groupScore(e, true), cqttFunction: groupScore(e, false), proposedKi: undefined };
-            change(patch);
-            const issue = updateEvaluation(e.id, patch);
-            setFeedback(issue ?? "Đã lưu");
-            if (!issue) { setDraft({}); onDraftChange?.({}); }
-            setAdjusting(false);
-          }}><CheckCheck className="h-4 w-4" /></Button>
-          <Button type="button" variant={adjusting ? "secondary" : "outline"} size="icon" title="Điều chỉnh điểm" aria-label={`Điều chỉnh ${e.id}`} aria-pressed={adjusting} onClick={() => setAdjusting(true)}><Pencil className="h-4 w-4" /></Button>
+        {canScore && <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+
+          <Button type="button" variant={adjusting ? "secondary" : "outline"} size="icon" className="h-8 w-8 shrink-0 border-0 bg-transparent shadow-none hover:bg-card" title="Điều chỉnh điểm" aria-label={`Điều chỉnh ${e.id}`} aria-pressed={adjusting} onClick={() => setAdjusting(true)}><Pencil className="h-4 w-4" /></Button>
+          <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0 border-0 bg-transparent text-primary shadow-none hover:bg-card hover:text-primary" title="Lưu" aria-label={`Lưu ${e.id}`} onClick={() => { const issue = updateEvaluation(e.id, draft); setFeedback(issue ?? "Đã lưu"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Save className="h-4 w-4" /></Button>
+          <Button type="button" variant="outline" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="ml-1 h-8 gap-1.5 whitespace-nowrap border-primary/25 px-2.5 text-xs text-primary shadow-none hover:bg-accent hover:text-primary" onClick={() => { const issue = processCqttBatch([e.id], { [e.id]: draft }, true); setFeedback(issue ?? "Đã gửi điều chỉnh"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>
         </div>}
+        {previewRole === "cqtt" && e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} className="inline-flex h-9 items-center gap-1 rounded-md border px-3 text-sm font-medium text-primary hover:bg-accent"><Send className="h-4 w-4" />Trình Hội đồng</Link>}
         {feedback && (
           <p role="status" className="mt-2 text-xs">
             {feedback}

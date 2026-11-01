@@ -2,10 +2,14 @@ import { createContext, useContext, type Context } from "react";
 import type { Evaluation, PreviewRole, Draft, Action } from "@/lib/evaluation";
 type EvaluationState = {
   evaluations: Evaluation[];
+  processCeoBatch: (ids: string[], action: "approve" | "return", note: string) => string | null;
+  saveCouncilBatch: (ids: string[], drafts: Record<string, Draft>, submit?: boolean) => string | null;
+  createCouncilSummary: (ids: string[]) => void;
   replaceSelfEvaluation: (evaluation: Evaluation) => string | null;
   addEvaluation: (evaluation: Evaluation) => void;
   previewRole: PreviewRole;
   setPreviewRole: (role: PreviewRole) => void;
+  processCqttBatch: (ids: string[], drafts: Record<string, Draft>, request: boolean | "council") => string | null;
   sendOfficeBatch: (ids: string[], drafts?: Record<string, Draft>) => string | null;
   updateEvaluation: (id: string, patch: Draft, action?: Action) => string | null;
 };

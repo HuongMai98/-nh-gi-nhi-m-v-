@@ -1,5 +1,5 @@
 import { EVALUATIONS } from "@/lib/evaluation";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, ...props }: { children: React.ReactNode }) => <a {...props}>{children}</a>,
@@ -33,6 +33,10 @@ describe("workflow forms", () => {
       target: { value: "4.8" },
     });
     fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "A+" } });
+    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveValue(4.5);
+    fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "3.8" } });
+    expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveValue("A");
+    fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "4.8" } });
     fireEvent.click(screen.getByRole("button", { name: "Trình TGĐ" }));
     expect(record().step).toBe("ceo");
     expect(record().councilScore).toBe(4.8);
@@ -74,4 +78,53 @@ it("view mode locks evaluation fields and exposes the explicit edit action", () 
   expect(screen.getByLabelText("Kết quả thực hiện mục tiêu 1")).toHaveAttribute("readonly");
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa đánh giá" }));
   expect(onEdit).toHaveBeenCalledOnce();
+});
+
+it("saves council edits using the save-all action", () => {
+  render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
+  role("council");
+  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
+  expect(record().councilScore).toBe(2.5);
+  expect(record().ki).toBe("B");
+  expect(record().councilReviewed).toBe(true);
+});
+
+it("saves pending council edits and sends them to the CEO", () => {
+  render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
+  role("council");
+  fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "4.6" } });
+  fireEvent.click(screen.getByRole("button", { name: "Gửi TGĐ" }));
+  expect(record().step).toBe("ceo");
+  expect(record().councilScore).toBe(4.6);
+  expect(record().ki).toBe("A+");
+});
+it("updates Ki counts from unsaved council edits", () => {
+  render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
+  role("council");
+  expect(screen.getByTestId("ki-count-A")).toHaveTextContent("1");
+  fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "3" } });
+  expect(screen.getByTestId("ki-count-A")).toHaveTextContent("0");
+  expect(screen.getByTestId("ki-count-B")).toHaveTextContent("1");
+  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "K" } });
+  expect(screen.getByTestId("ki-count-B")).toHaveTextContent("0");
+  expect(screen.getByTestId("ki-count-K")).toHaveTextContent("1");
+});
+it("lets CEO review read-only totals and return to council with a required reason", () => {
+  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
+  role("ceo");
+  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001")).toBeDisabled();
+  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp KPI — BM01" })).getByRole("button", { name: "Yêu cầu Hội đồng điều chỉnh" }));
+  expect(screen.getByRole("button", { name: "Gửi điều chỉnh" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Yêu cầu điều chỉnh của TGĐ"), { target: { value: "Rà soát căn cứ xếp Ki" } });
+  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh" }));
+  expect(record().step).toBe("council_adjust");
+  expect(record().note).toBe("Rà soát căn cứ xếp Ki");
+});
+it("lets CEO approve the council results from the summary", () => {
+  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
+  role("ceo");
+  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp KPI — BM01" })).getByRole("button", { name: "Phê duyệt" }));
+  expect(record().step).toBe("approved");
+  expect(record().approvedScore).toBe(4.1);
 });

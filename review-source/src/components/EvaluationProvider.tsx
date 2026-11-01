@@ -2,6 +2,8 @@ import { CURRENT_USER, canSubmitEvaluation, validateSelfSubmission } from "@/lib
 import { useState, type ReactNode } from "react";
 import {
   EVALUATIONS,
+  kiError,
+  processCqttBatch,
   forwardOfficeBatch,
   saveDraft,
   transition,
@@ -73,11 +75,48 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
     <EvaluationContext.Provider
       value={{
         evaluations,
+        processCeoBatch: (ids, action, note) => {
+          if (previewRole !== "ceo") return "Chỉ TGĐ được phê duyệt hoặc yêu cầu Hội đồng điều chỉnh.";
+          try {
+            if (!ids.length) throw new Error("Không có hồ sơ chờ phê duyệt.");
+            const updates = new Map(ids.map((id) => {
+              const e = evaluations.find((e) => e.id === id);
+              if (!e || e.step !== "ceo") throw new Error("Hồ sơ không còn chờ TGĐ phê duyệt.");
+              return [id, transition(e, "ceo", action, { note }, new Date().toLocaleString("vi-VN"))] as const;
+            }));
+            setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể xử lý hồ sơ."; }
+        },
+        saveCouncilBatch: (ids, drafts, submit = false) => {
+          if (previewRole !== "council") return "Chỉ Hội đồng được lưu đánh giá.";
+          try {
+            if (!ids.length) throw new Error("Không có hồ sơ để lưu.");
+            const updates = new Map(ids.map((id) => {
+              const e = evaluations.find((e) => e.id === id);
+              if (!e || !["council", "council_adjust"].includes(e.step)) throw new Error("Hồ sơ không còn ở bước Hội đồng đánh giá.");
+              const next = saveDraft(e, "council", drafts[id] ?? {}, new Date().toLocaleString("vi-VN"));
+              const issue = kiError(next);
+              if (issue) throw new Error(e.owner + ": " + issue);
+              return [id, submit ? transition(next, "council", "submit", {}, next.updated) : next] as const;
+            }));
+            setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể lưu tất cả."; }
+        },
+        createCouncilSummary: (ids) => {
+          if (previewRole !== "council") return;
+          setEvaluations((current) => current.map((e) => ids.includes(e.id) && ["council", "council_adjust"].includes(e.step) ? { ...e, councilSummaryCreated: true } : e));
+        },
         replaceSelfEvaluation,
         previewRole,
         setPreviewRole,
         updateEvaluation,
         sendOfficeBatch,
+        processCqttBatch: (ids, drafts, request) => {
+          try { setEvaluations(processCqttBatch(evaluations, previewRole, ids, drafts, request, new Date().toLocaleString("vi-VN"))); return null; }
+          catch (error) { return error instanceof Error ? error.message : "Không thể xử lý danh sách."; }
+        },
         addEvaluation: (e) => setEvaluations((current) => [e, ...current]),
       }}
     >
