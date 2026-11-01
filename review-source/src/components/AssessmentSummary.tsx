@@ -1,3 +1,4 @@
+import { STAGES, type StageKey } from "@/lib/workflow";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Download, Save, Undo2, ArrowUpRight, Send, CheckCheck, Pencil } from "lucide-react";
@@ -21,7 +22,16 @@ export function AssessmentSummary({
   onExport: () => void;
   onDraftChange?: ((draft: Draft) => void) | undefined;
 }) {
-  const { previewRole, sendOfficeBatch, processCqttBatch } = useEvaluations();
+  const { previewRole, sendOfficeBatch, processCqttBatch, workflows } = useEvaluations();
+  // Bước được phép trả về từ CQTT (giao của các khối đang hiển thị); người xử lý chọn 1 bước.
+  const cqttTargets = (() => {
+    const lists = [...new Set(evaluations.map((e) => e.block))].map((b) => workflows[b].stages.find((s) => s.key === "cqtt")?.returnTo ?? []);
+    return lists.length ? lists.reduce((a, l) => a.filter((x) => l.includes(x))) : [];
+  })();
+  const cqttReturnOn = cqttTargets.length > 0;
+  const showActions = previewRole === "cqtt" && evaluations.some((e) => e.step === "cqtt" || e.step === "cqtt_report");
+  const [cqttReturnStage, setCqttReturnStage] = useState<StageKey | "">("");
+  const chosenReturn = cqttTargets.includes(cqttReturnStage as StageKey) ? (cqttReturnStage as StageKey) : cqttTargets[0];
   const [batchDrafts, setBatchDrafts] = useState<Record<string, Draft>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editAllVersion, setEditAllVersion] = useState(0);
@@ -52,7 +62,8 @@ export function AssessmentSummary({
     } catch { return false; }
   });
   const handleCqttBatch = (request: boolean | "council") => {
-    const issue = processCqttBatch((request === true ? selectedEligible : (request === "council" ? councilRows : cqttRows).map((e) => e.id)), batchDrafts, request);
+    const drafts = request === true && chosenReturn ? Object.fromEntries(selectedEligible.map((id) => [id, { ...(batchDrafts[id] ?? {}), returnStage: chosenReturn }])) : batchDrafts;
+    const issue = processCqttBatch((request === true ? selectedEligible : (request === "council" ? councilRows : cqttRows).map((e) => e.id)), drafts, request);
     setBatchFeedback(issue ?? (request === "council" ? "Đã gửi hồ sơ sang Hội đồng." : request ? "Đã gửi điều chỉnh cho tất cả hồ sơ." : "Đã lưu tất cả hồ sơ."));
     if (!issue) { setBatchDrafts((current) => request === true ? Object.fromEntries(Object.entries(current).filter(([id]) => !selectedEligible.includes(id))) : {}); if (request === true) setSelectedIds([]); }
   };
@@ -104,7 +115,7 @@ export function AssessmentSummary({
             <Download />
             Xuất CSV
           </Button>
-          {previewRole === "cqtt" && <><Button variant="outline" disabled={!cqttRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length} onClick={() => handleCqttBatch(false)}><Save />Lưu tất cả</Button><Button disabled={!selectedEligible.length} onClick={() => handleCqttBatch(true)}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button><Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
+          {previewRole === "cqtt" && <><Button variant="outline" disabled={!cqttRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length} onClick={() => handleCqttBatch(false)}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => handleCqttBatch(true)}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
           {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
           {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
         </div>
@@ -175,12 +186,14 @@ export function AssessmentSummary({
               <th rowSpan={2} className={primaryHeader + " bg-muted"}>
                 Ghi chú
               </th>
-              <th
-                rowSpan={2}
-                className={primaryHeader + " sticky right-0 z-40 border-l bg-muted text-center"}
-              >
-                Thao tác
-              </th>
+              {showActions && (
+                <th
+                  rowSpan={2}
+                  className={primaryHeader + " sticky right-0 z-40 border-l bg-muted text-center"}
+                >
+                  Thao tác
+                </th>
+              )}
             </tr>
             <tr>
               {[false, true].flatMap((standing) =>
@@ -210,6 +223,7 @@ export function AssessmentSummary({
                 key={`${e.id}-${e.step}-${previewRole}-${e.history?.length ?? 0}`}
                 evaluation={e}
                 index={index}
+                showActions={showActions}
                 selected={selectedEligible.includes(e.id)}
                 onSelect={() => setSelectedIds((ids) => ids.includes(e.id) ? ids.filter((id) => id !== e.id) : [...ids, e.id])}
                 editAllVersion={editAllVersion}
@@ -241,6 +255,7 @@ export function AssessmentSummary({
 function AssessmentRow({
   evaluation: e,
   index,
+  showActions = true,
   initialDraft,
   selected = false,
   onSelect,
@@ -249,13 +264,15 @@ function AssessmentRow({
 }: {
   evaluation: Evaluation;
   index: number;
+  /** Cột Thao tác (ghim phải) chỉ hiện khi CQTT đang có hồ sơ cần chấm. */
+  showActions?: boolean;
   initialDraft?: Draft | undefined;
   selected?: boolean;
   onSelect?: (() => void) | undefined;
   editAllVersion?: number;
   onDraftChange?: ((draft: Draft) => void) | undefined;
 }) {
-  const { previewRole, updateEvaluation, processCqttBatch } = useEvaluations();
+  const { previewRole, updateEvaluation, processCqttBatch, workflows } = useEvaluations();
   const [draft, setDraft] = useState<Draft>(initialDraft ?? {});
   const [feedback, setFeedback] = useState("");
   const current = { ...e, ...draft };
@@ -287,7 +304,7 @@ function AssessmentRow({
           change({ [key]: event.target.value === "" ? undefined : Number(event.target.value) })
         }
         className={
-          baseInput + " text-center tabular-nums enabled:border-violet-200 enabled:bg-violet-50/50"
+          baseInput + " min-w-16 text-center tabular-nums [appearance:textfield] enabled:border-violet-200 enabled:bg-violet-50/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         }
       />
     );
@@ -411,14 +428,14 @@ function AssessmentRow({
           className={baseInput + " min-h-[68px] resize-y"}
         />
       </td>
-      <td
+      {showActions && <td
         className={cell + " sticky right-0 z-10 border-l bg-card text-center group-hover:bg-muted"}
       >
         {canScore && <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
 
           <Button type="button" variant={adjusting ? "secondary" : "outline"} size="icon" className="h-8 w-8 shrink-0 border-0 bg-transparent shadow-none hover:bg-card" title="Điều chỉnh điểm" aria-label={`Điều chỉnh ${e.id}`} aria-pressed={adjusting} onClick={() => setAdjusting(true)}><Pencil className="h-4 w-4" /></Button>
-          <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0 border-0 bg-transparent text-primary shadow-none hover:bg-card hover:text-primary" title="Lưu" aria-label={`Lưu ${e.id}`} onClick={() => { const issue = updateEvaluation(e.id, draft); setFeedback(issue ?? "Đã lưu"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Save className="h-4 w-4" /></Button>
-          <Button type="button" variant="outline" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="ml-1 h-8 gap-1.5 whitespace-nowrap border-primary/25 px-2.5 text-xs text-primary shadow-none hover:bg-accent hover:text-primary" onClick={() => { const issue = processCqttBatch([e.id], { [e.id]: draft }, true); setFeedback(issue ?? "Đã gửi điều chỉnh"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>
+          <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Lưu" aria-label={`Lưu ${e.id}`} onClick={() => { const issue = updateEvaluation(e.id, draft); setFeedback(issue ?? "Đã lưu"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Save /></Button>
+          {(workflows[e.block].stages.find((s) => s.key === "cqtt")?.returnTo.length ?? 0) > 0 && <Button type="button" variant="return" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="ml-1 h-8 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none" onClick={() => { const issue = processCqttBatch([e.id], { [e.id]: draft }, true); setFeedback(issue ?? "Đã gửi điều chỉnh"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>}
         </div>}
         {previewRole === "cqtt" && e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} className="inline-flex h-9 items-center gap-1 rounded-md border px-3 text-sm font-medium text-primary hover:bg-accent"><Send className="h-4 w-4" />Trình Hội đồng</Link>}
         {feedback && (
@@ -426,7 +443,7 @@ function AssessmentRow({
             {feedback}
           </p>
         )}
-      </td>
+      </td>}
     </tr>
   );
 }

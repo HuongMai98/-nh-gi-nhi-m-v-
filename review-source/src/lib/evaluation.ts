@@ -1,3 +1,4 @@
+import { branches, customStageOf, handlerFor, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
 export type Step =
   | "self"
   | "office"
@@ -10,8 +11,10 @@ export type Step =
   | "approved"
   | "dispatch"
   | "sign"
-  | "done";
-export type PreviewRole = "performer" | "office" | "cqtt" | "council" | "ceo";
+  | "done"
+  /** Bước duyệt tùy chỉnh theo cấu hình (xem customStageId). */
+  | "custom";
+export type PreviewRole = "performer" | "office" | "cqtt" | "council" | "ceo" | "admin";
 export type Ki = "A+" | "A" | "B" | "C" | "D" | "K";
 export const ROLES: Record<PreviewRole, string> = {
   performer: "CQĐV/CQ",
@@ -19,7 +22,10 @@ export const ROLES: Record<PreviewRole, string> = {
   cqtt: "CQTT",
   council: "Hội đồng",
   ceo: "TGĐ",
+  admin: "Quản trị hệ thống",
 };
+/** Chỉ Quản trị hệ thống được cấu hình luồng duyệt. */
+export const canConfigureWorkflow = (role: PreviewRole) => role === "admin";
 export const ASSIGNING_UNIT = {
   name: "Tập đoàn Công nghệ - Viễn thông Quân đội",
   label: "Tập đoàn",
@@ -28,10 +34,10 @@ export const MOCK_CURRENT_PERFORMER = "Đinh Ngọc Tuấn";
 export const mockPerformerFor = (e: Evaluation) =>
   ["self", "response", "sign"].includes(e.step) ? e.owner : MOCK_CURRENT_PERFORMER;
 export const canSelfEvaluate = (e: Evaluation, performer: string) => e.owner === performer;
+/** Đơn vị tổng hợp/phát hành kết quả theo cấu hình luồng duyệt của Khối. */
 export const officeFor = (e: Evaluation) =>
-  e.block === "Khối Cơ quan" ? "Văn phòng" : "Ban Chiến lược";
-export const appendixFor = (e: Evaluation) =>
-  e.block === "Khối Cơ quan" ? "PL I — Kết quả Khối Cơ quan" : "PL2 — Kết quả Khối Đơn vị";
+  handlerFor(e.block, stageOf(e.step) === "dispatch" ? "dispatch" : "office");
+export const appendixFor = (_e: Evaluation) => "Phụ lục Kết quả";
 export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "self", label: "Tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Tổng hợp đầu vào", actor: "VP / Ban CL" },
@@ -45,6 +51,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
   { key: "sign", label: "Trình ký phiếu ĐG", actor: "CQĐV/CQ" },
   { key: "done", label: "Đã trình ký", actor: "CQĐV/CQ" },
+  { key: "custom", label: "Bước bổ sung", actor: "Theo cấu hình" },
 ];
 export const MAIN_STEPS = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
@@ -55,7 +62,20 @@ export const MAIN_STEPS = [
   { key: "approved", label: "Đã phê duyệt", actor: "Hội đồng → VP/Ban CL → CQĐV/CQ" },
 ] as const;
 export type MainStage = (typeof MAIN_STEPS)[number]["key"];
+const MAIN_OF_STAGE: Record<StageKey, MainStage> = { self: "self", office: "office", cqtt: "cqtt", council: "council", ceo: "ceo", dispatch: "approved", sign: "approved" };
+/** Nhóm trạng thái chính của hồ sơ; bước tùy chỉnh thuộc nhóm của bước đặt trước nó. */
+export function mainStageOf(e: Evaluation): MainStage {
+  if (e.step !== "custom") return mainStage(e.step);
+  return MAIN_OF_STAGE[customStageOf(e.block, e.customStageId)?.after ?? "council"];
+}
+/** Vai trò xử lý hồ sơ ở bước hiện tại (bước tùy chỉnh lấy theo cấu hình). */
+export const roleOf = (e: Evaluation): PreviewRole =>
+  e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.role ?? "council") : stageRole[e.step];
+/** Nhãn trạng thái hiển thị (bước tùy chỉnh dùng tên bước). */
+export const statusLabelOf = (e: Evaluation) =>
+  e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.name ?? "Bước bổ sung") : STATUS[e.step].label;
 export function mainStage(step: Step): MainStage {
+  if (step === "custom") return "council";
   if (step === "response" || step === "cqtt_report") return "cqtt";
   if (step === "council_adjust") return "council";
   if (["approved", "dispatch", "sign", "done"].includes(step)) return "approved";
@@ -76,6 +96,7 @@ const statusTones: Record<Step, StatusTone> = {
   dispatch: "success",
   sign: "success",
   done: "success",
+  custom: "review",
 };
 export const STATUS = Object.fromEntries(
   STEPS.map((s) => [s.key, { label: s.label, tone: statusTones[s.key] }]),
@@ -135,14 +156,24 @@ export type Evaluation = {
   note?: string;
   response?: "Tiếp thu" | "Bảo lưu";
   responseNote?: string;
+  /** Dữ liệu cá nhân tại thời điểm CQTT gửi điều chỉnh — dùng để giữ nguyên khi CQ/CQĐV bảo lưu. */
+  responseBaseline?: Criterion[] | undefined;
   locationCompliance?: string;
   laborCompliance?: string;
   cultureCompliance?: string;
+  /** Bước tùy chỉnh hiện tại (khi step = "custom"). */
+  customStageId?: string | undefined;
+  /** Bước cố định đặt trước bước tùy chỉnh — để đi tiếp nếu bước tùy chỉnh bị xóa khỏi cấu hình. */
+  customAfter?: StageKey | undefined;
+  /** Thời điểm hồ sơ vào bước hiện tại (ISO) — dùng tính hạn xử lý. */
+  stageEnteredAt?: string;
+  /** TGĐ đã điều chỉnh trực tiếp điểm/Ki của Hội đồng trước khi phê duyệt. */
+  ceoAdjusted?: boolean;
   approvedScore?: number | undefined;
   approvedKi?: Ki | undefined;
   submittedForSignatureAt?: string;
 };
-export type Draft = Partial<
+export type Draft = { /** Bước đích người xử lý chọn khi trả về (không lưu vào hồ sơ). */ returnStage?: StageKey } & Partial<
   Pick<
     Evaluation,
     | "criteria"
@@ -177,6 +208,7 @@ export const stageRole: Record<Step, PreviewRole> = {
   dispatch: "office",
   sign: "performer",
   done: "performer",
+  custom: "council",
 };
 export const selfEditable = (e: Evaluation, role: PreviewRole) =>
   role === "performer" && e.step === "self";
@@ -310,19 +342,25 @@ function record(
       responseNote: x.responseNote,
       criteria: x.criteria,
     });
+  const enteredNewStage =
+    stageOf(next.step) !== stageOf(e.step) ||
+    next.customStageId !== e.customStageId ||
+    (next.step !== e.step && ["response", "council_adjust", "custom"].includes(next.step));
   return {
     ...next,
     updated: at,
+    ...(enteredNewStage ? { stageEnteredAt: new Date().toISOString() } : {}),
     history: [
       ...(e.history ?? []),
       { at, role, action, note, before: snapshot(e), after: snapshot(next) },
     ],
   };
 }
-export function saveDraft(e: Evaluation, role: PreviewRole, patch: Draft, at: string): Evaluation {
+export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: string): Evaluation {
+  const { returnStage: _returnStage, ...patch } = draft;
   if (
-    stageRole[e.step] !== role ||
-    ["approved", "dispatch", "sign", "done", "ceo"].includes(e.step)
+    roleOf(e) !== role ||
+    ["approved", "dispatch", "sign", "done"].includes(e.step)
   )
     throw new Error("Vai trò hoặc trạng thái không cho phép sửa hồ sơ.");
   let next = { ...e };
@@ -342,21 +380,27 @@ export function saveDraft(e: Evaluation, role: PreviewRole, patch: Draft, at: st
                 "cultureCompliance",
                 "note",
               ]
+            : role === "ceo" && e.step === "ceo" && branches(e.block).ceoDirectAdjust
+              ? ["councilScore", "ki", "locationCompliance", "laborCompliance", "cultureCompliance"]
             : role === "performer" && e.step === "response"
               ? ["response", "responseNote", "criteria"]
               : [];
   if (Object.keys(patch).some((k) => !allowed.includes(k)))
     throw new Error("Không được sửa trường dữ liệu ở bước này.");
-  if (patch.criteria) {
+  if (patch.criteria && e.step === "response") {
+    // Tiếp thu: cá nhân được cập nhật lại toàn bộ dữ liệu đã chấm (nhiệm vụ, tỷ trọng, kết quả, điểm).
+    if (!patch.criteria.length) throw new Error("Phiếu phải có ít nhất một nhiệm vụ.");
+    if (patch.criteria.some((c) => !Number.isInteger(c.self) || c.self < 0 || c.self > 5))
+      throw new Error("Điểm tự đánh giá từ 1–5.");
+    next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined }));
+  } else if (patch.criteria) {
     if (patch.criteria.length !== e.criteria.length)
       throw new Error("Không được thay đổi mục tiêu gốc.");
     next.criteria = e.criteria.map((c, i) => {
       const incoming = patch.criteria![i]!;
       if (!Number.isInteger(incoming.self) || incoming.self < 0 || incoming.self > 5)
         throw new Error("Điểm tự đánh giá từ 1–5.");
-      return e.step === "response"
-        ? { ...c, result: incoming.result }
-        : { ...c, self: incoming.self, result: incoming.result };
+      return { ...c, self: incoming.self, result: incoming.result };
     });
   }
   const { criteria: ignored, ...fields } = patch;
@@ -387,7 +431,72 @@ export function saveDraft(e: Evaluation, role: PreviewRole, patch: Draft, at: st
         throw new Error("Điểm nhóm vượt tỷ trọng đã giao.");
     }
   if (role === "council") { next.criteria = allocateCouncilScores(next.criteria, next.councilScore); next.councilReviewed = !!next.ki; }
+  if (role === "ceo") {
+    // TGĐ điều chỉnh trực tiếp: kiểm tra điều kiện Ki và phân bổ lại điểm xuống từng mục tiêu.
+    const issue = kiError(next);
+    if (issue) throw new Error(issue);
+    next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
+    next.ceoAdjusted = true;
+  }
+  if (role === "ceo") {
+    const changes = [
+      next.councilScore !== e.councilScore && `Điểm ${e.councilScore?.toFixed(2) ?? "—"} → ${next.councilScore?.toFixed(2) ?? "—"}`,
+      next.ki !== e.ki && `Ki ${e.ki ?? "—"} → ${next.ki ?? "—"}`,
+    ].filter(Boolean).join("; ");
+    return record(e, next, role, "TGĐ điều chỉnh trực tiếp", changes, at);
+  }
   return record(e, next, role, "Lưu nháp", patch.note ?? patch.responseNote ?? "", at);
+}
+/**
+ * Đưa hồ sơ vào bước `key` theo cấu hình luồng duyệt, khởi tạo dữ liệu còn thiếu khi bỏ qua bước
+ * (vd. tắt CQTT → Hội đồng kế thừa điểm tự đánh giá; tắt TGĐ → kết quả Hội đồng là kết quả phê duyệt).
+ */
+export function enterStage(e: Evaluation, key: StageKey): Evaluation {
+  const withScore = (x: Evaluation): Evaluation => {
+    if (x.councilScore !== undefined && x.ki) return x;
+    const score = cqttTotal(x) ?? Math.round(totalScore(x.criteria) * 100) / 100;
+    return { ...x, councilScore: score, ki: rating(score).ki, criteria: allocateCouncilScores(x.criteria, score) };
+  };
+  const approved = (x: Evaluation): Evaluation =>
+    x.approvedScore !== undefined ? x : { ...x, approvedScore: x.councilScore, approvedKi: x.ki };
+  switch (key) {
+    case "office":
+      return { ...e, step: "office" };
+    case "cqtt":
+      return { ...e, step: "cqtt", note: "" };
+    case "council": {
+      const score = cqttTotal(e) ?? Math.round(totalScore(e.criteria) * 100) / 100;
+      return { ...e, step: "council", councilScore: score, ki: rating(score).ki, criteria: allocateCouncilScores(e.criteria, score) };
+    }
+    case "ceo":
+      return { ...withScore(e), step: "ceo" };
+    case "dispatch":
+      return { ...approved(withScore(e)), step: "approved" };
+    case "sign":
+      return { ...approved(withScore(e)), step: "sign" };
+    default:
+      return { ...e, step: "self" };
+  }
+}
+/** Trả hồ sơ từ bước `from` về bước đích đã cấu hình, bắt buộc lý do; dữ liệu đã chấm được giữ để tham chiếu. */
+/** Chuyển hồ sơ sang bước bật kế tiếp sau nút `from` theo cấu hình (có thể là bước tùy chỉnh). */
+export function advance(e: Evaluation, from: FlowNode): Evaluation {
+  const anchor = from.kind === "custom" ? e.customAfter : from.key;
+  const node = nextNode(e.block, from, anchor);
+  const base: Evaluation = { ...e, customStageId: undefined, customAfter: undefined };
+  if (node.kind === "fixed") return enterStage(base, node.key);
+  const cs = customStageOf(e.block, node.id)!;
+  return { ...base, step: "custom", customStageId: node.id, customAfter: cs.after, note: "" };
+}
+function returnTo(e: Evaluation, role: PreviewRole, from: StageKey | "custom", chosen: StageKey | undefined, reason: string, at: string): Evaluation {
+  const allowed = from === "custom" ? (customStageOf(e.block, e.customStageId)?.returnTo ?? []) : returnTargets(e.block, from);
+  const target = chosen ? (allowed.includes(chosen) ? chosen : null) : (allowed[0] ?? null);
+  if (!target) throw new Error("Luồng duyệt của khối không cho phép trả về ở bước này.");
+  if (!reason) throw new Error("Vui lòng nhập lý do trả về.");
+  const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council_adjust";
+  const { response: _r, responseNote: _n, responseBaseline: _b, ...rest } = e;
+  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
+  return record(e, next, role, `Trả về ${handlerFor(e.block, target)}`, reason, at);
 }
 export function transition(
   e: Evaluation,
@@ -396,7 +505,7 @@ export function transition(
   patch: Draft,
   at: string,
 ): Evaluation {
-  if (stageRole[e.step] !== role) throw new Error("Vai trò không được thực hiện bước này.");
+  if (roleOf(e) !== role) throw new Error("Vai trò không được thực hiện bước này.");
   const reason = (patch.note ?? e.note ?? "").trim();
   const requireReason = () => {
     if (!reason) throw new Error("Vui lòng nhập lý do yêu cầu điều chỉnh.");
@@ -411,45 +520,86 @@ export function transition(
       next.criteria.some((c) => !c.result.trim())
     )
       throw new Error("Nhập đủ kết quả, điểm 1–5 và tổng tỷ trọng 100%.");
-    next = { ...next, step: "office", selfSubmittedAt: at };
+    next = { ...advance(next, { kind: "fixed", key: "self" }), selfSubmittedAt: at };
   } else if (e.step === "office") {
-    if (action === "send") next = { ...e, step: "cqtt", note: "" };
+    if (action === "send") next = advance(e, { kind: "fixed", key: "office" });
+    else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
     else throw new Error("Thao tác không hợp lệ.");
   } else if (e.step === "cqtt") {
     if (!["request", "finish"].includes(action)) throw new Error("Thao tác không hợp lệ.");
     if (cqttTotal(e) === null) throw new Error("Nhập đủ điểm CQTT trước khi chuyển bước.");
+    const cqttTarget = resolveReturn(e.block, "cqtt", patch.returnStage);
+    if (action === "request" && !cqttTarget)
+      throw new Error("Luồng duyệt của khối không cho phép CQTT trả về.");
     if (action === "request") requireReason();
-    next = { ...e, step: action === "request" ? "response" : "cqtt_report", note: reason };
+    if (action === "request" && cqttTarget !== "self") return returnTo(e, role, "cqtt", cqttTarget!, reason, at);
+    next =
+      action === "request"
+        ? (({ response: _response, responseNote: _responseNote, ...rest }) => ({
+            ...rest,
+            step: "response" as const,
+            note: reason,
+            responseBaseline: e.criteria.map((c) => ({ ...c, target: { ...c.target } })),
+          }))(e)
+        : { ...e, step: "cqtt_report", note: reason };
   } else if (e.step === "response" && action === "respond") {
     next = saveDraft(e, role, patch, at);
-    if (!["Tiếp thu", "Bảo lưu"].includes(next.response ?? "") || !next.responseNote?.trim())
-      throw new Error("Chọn tiếp thu/bảo lưu và nhập nội dung phản hồi.");
-    next = { ...next, step: "cqtt_report" };
+    if (next.response === "Bảo lưu") {
+      // Bảo lưu: CQTT ghi nhận, giữ nguyên dữ liệu cá nhân và điểm CQTT → Tổng hợp báo cáo.
+      if (!next.responseNote?.trim()) throw new Error("Vui lòng nhập lý do bảo lưu.");
+      next = {
+        ...next,
+        criteria: e.responseBaseline ?? e.criteria,
+        responseBaseline: undefined,
+        step: "cqtt_report",
+      };
+    } else if (next.response === "Tiếp thu") {
+      // Tiếp thu: cá nhân cập nhật lại dữ liệu và gửi CQTT rà soát, chấm điểm lại.
+      if (
+        !scoresComplete(next.criteria) ||
+        Math.abs(next.criteria.reduce((s, c) => s + c.weight, 0) - 1) > 0.00001 ||
+        next.criteria.some((c) => !c.result.trim())
+      )
+        throw new Error("Nhập đủ kết quả, điểm 1–5 và tổng tỷ trọng 100% trước khi gửi lại CQTT.");
+      next = { ...next, responseBaseline: undefined, step: "cqtt" };
+    } else throw new Error("Chọn Tiếp thu hoặc Bảo lưu.");
+    return record(
+      e,
+      next,
+      role,
+      next.response === "Bảo lưu" ? "Bảo lưu" : "Tiếp thu",
+      next.responseNote?.trim() ?? "",
+      at,
+    );
   } else if (e.step === "cqtt_report" && action === "send") {
     const score = cqttTotal(e);
     if (score === null || score < 1 || score > 5) throw new Error("Điểm CQTT phải từ 1–5.");
-    next = {
-      ...e,
-      step: "council",
-      councilScore: score,
-      ki: rating(score).ki,
-      criteria: allocateCouncilScores(e.criteria, score),
-    };
+    next = advance(e, { kind: "fixed", key: "cqtt" });
+  } else if (["council", "council_adjust"].includes(e.step) && action === "return") {
+    return returnTo(e, role, "council", patch.returnStage, reason, at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
-    next = { ...e, step: "ceo", councilReviewed: true, criteria: allocateCouncilScores(e.criteria, e.councilScore) };
+    next = advance({ ...e, councilReviewed: true, criteria: allocateCouncilScores(e.criteria, e.councilScore) }, { kind: "fixed", key: "council" });
   } else if (e.step === "ceo") {
     if (action === "return") {
+      const ceoTarget = resolveReturn(e.block, "ceo", patch.returnStage);
+      if (!ceoTarget) throw new Error("Luồng duyệt của khối không cho phép TGĐ trả về.");
+      if (ceoTarget !== "council") return returnTo(e, role, "ceo", ceoTarget, reason, at);
       requireReason();
       next = { ...e, step: "council_adjust", note: reason };
     } else if (action === "approve") {
       if (kiError(e)) throw new Error(kiError(e));
-      next = { ...e, step: "approved", approvedScore: e.councilScore, approvedKi: e.ki };
+      next = advance({ ...e, approvedScore: e.councilScore, approvedKi: e.ki }, { kind: "fixed", key: "ceo" });
     } else throw new Error("Thao tác không hợp lệ.");
   } else if (e.step === "approved" && action === "send") next = { ...e, step: "dispatch" };
-  else if (e.step === "dispatch" && action === "send") next = { ...e, step: "sign" };
+  else if (e.step === "dispatch" && action === "send") next = advance(e, { kind: "fixed", key: "dispatch" });
+  else if (e.step === "custom" && action === "send") {
+    const cs = customStageOf(e.block, e.customStageId);
+    next = advance(e, { kind: "custom", id: e.customStageId ?? "" });
+    return record(e, next, role, `Duyệt — ${cs?.name ?? "Bước bổ sung"}`, (patch.note ?? "").trim(), at);
+  } else if (e.step === "custom" && action === "return") return returnTo(e, role, "custom", patch.returnStage, reason, at);
   else if (e.step === "sign" && action === "sign")
     next = { ...e, step: "done", submittedForSignatureAt: at };
   else throw new Error("Thao tác không hợp lệ ở trạng thái hiện tại.");
@@ -733,7 +883,7 @@ export function processCqttBatch(evaluations: Evaluation[], role: PreviewRole, i
     if (!e || (e.step !== "cqtt" && !(request === "council" && e.step === "cqtt_report"))) throw new Error("Danh sách đã thay đổi, hồ sơ chưa đủ điều kiện CQTT xử lý.");
     try {
       const saved = e.step === "cqtt_report" ? e : saveDraft(e, role, drafts[id] ?? {}, at);
-      const next = request === "council" ? transition(saved.step === "cqtt" ? transition(saved, role, "finish", {}, at) : saved, role, "send", {}, at) : request ? transition(saved, role, "request", {}, at) : saved;
+      const next = request === "council" ? transition(saved.step === "cqtt" ? transition(saved, role, "finish", {}, at) : saved, role, "send", {}, at) : request ? transition(saved, role, "request", drafts[id]?.returnStage ? { returnStage: drafts[id]!.returnStage } : {}, at) : saved;
       updates.set(id, next);
     } catch (error) { throw new Error(e.owner + ": " + (error instanceof Error ? error.message : "Dữ liệu không hợp lệ")); }
   }

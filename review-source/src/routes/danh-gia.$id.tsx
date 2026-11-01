@@ -6,7 +6,7 @@ import { AppShell, StatusPill, statusStepClasses } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { AggregateForm, exportCsv, fieldClass } from "@/components/AggregateForm";
 import { useEvaluations } from "@/components/evaluation-context";
-import {
+import { roleOf, statusLabelOf,
   STATUS,
   MAIN_STEPS,
   mainStage,
@@ -26,6 +26,7 @@ import {
   type Draft,
 } from "@/lib/evaluation";
 import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
+import { STAGES, handlerFor, returnLabel, slaFor, slaLabel, stageOf, type StageKey } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/danh-gia/$id")({
   validateSearch: (search: Record<string, unknown>): { mode?: "edit" } => search["mode"] === "edit" ? { mode: "edit" } : {},
@@ -41,9 +42,9 @@ function Detail() {
   const navigate = Route.useNavigate();
   const ev = evaluations.find((e) => e.id === id) ?? loaded;
   if (!ev) throw notFound();
-  const editAllowed = ev.step !== "done" && stageRole[ev.step] === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
+  const editAllowed = ev.step !== "done" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   const showView = () => { void navigate({ search: {} }); };
-  if (mode === "edit" && ev.step === "self" && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<span>Đánh giá › Chỉnh sửa đánh giá</span>}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
+  if (mode === "edit" && (ev.step === "self" || ev.step === "response") && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<span>Đánh giá › Chỉnh sửa đánh giá</span>}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
   return (
     <EvaluationDetail
       key={`${ev.id}-${ev.updated}-${ev.history?.length ?? 0}-${ev.step}-${previewRole}-${mode ?? "view"}`}
@@ -54,7 +55,7 @@ function Detail() {
   );
 }
 export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluation; readOnly?: boolean; onEdit?: (() => void) | undefined }) {
-  const { previewRole, updateEvaluation } = useEvaluations();
+  const { previewRole, updateEvaluation, workflows } = useEvaluations();
   const [tab, setTab] = useState<"personal" | "kpi" | "ki" | "appendix" | "assignment">(
     ["council", "council_adjust", "ceo"].includes(ev.step)
       ? "ki"
@@ -69,18 +70,35 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
   const [responseNote, setResponseNote] = useState(ev.responseNote ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const own = !readOnly && stageRole[ev.step] === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
+  const own = !readOnly && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   const canSelf = own && selfEditable(ev, previewRole);
   const canRespond = own && ev.step === "response";
   const result = templateResult(ev);
+  // Trả về theo cấu hình luồng duyệt: người xử lý chọn bước đích trong danh sách được phép.
+  const flow = workflows[ev.block];
+  const fromStage = stageOf(ev.step);
+  const currentCustom = ev.step === "custom" ? flow.customStages?.find((s) => s.id === ev.customStageId) : undefined;
+  const allowedReturns: StageKey[] = !own
+    ? []
+    : ev.step === "custom"
+      ? (currentCustom?.returnTo ?? [])
+      : ["office", "cqtt", "council", "council_adjust", "ceo"].includes(ev.step)
+        ? (flow.stages.find((s) => s.key === fromStage)?.returnTo ?? [])
+        : [];
+  const [returnStage, setReturnStage] = useState<StageKey | "">("");
+  const chosenReturn = allowedReturns.includes(returnStage as StageKey) ? (returnStage as StageKey) : allowedReturns[0];
+  const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
+  const returnText =
+    allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
   const run = (action?: Action) => {
     let patch: Draft =
-      own && ["office", "cqtt", "council", "council_adjust"].includes(ev.step)
+      own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))
         ? aggregateDraft
         : {};
     if (canSelf) patch = { criteria: items };
     else if (canRespond) patch = { criteria: items, response, responseNote };
-    else if (action === "return") patch = { note };
+    else if (action === "return") patch = { note, ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
+    else if (ev.step === "cqtt" && own && action === "request") patch = { ...patch, ...(note.trim() ? { note } : {}), ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && note.trim()) patch = { ...patch, note };
     const issue = updateEvaluation(ev.id, patch, action);
     setError(issue ?? "");
@@ -93,10 +111,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
       : ev.step === "office"
         ? []
         : ev.step === "cqtt"
-          ? [
-              { action: "request", label: "Gửi điều chỉnh CQ/CQĐV", outline: true },
-              { action: "finish", label: "Hoàn tất rà soát" },
-            ]
+          ? [{ action: "finish", label: "Hoàn tất rà soát" }]
           : ev.step === "response"
             ? [{ action: "respond", label: "Gửi phản hồi CQTT" }]
             : ev.step === "cqtt_report"
@@ -109,17 +124,20 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
                     },
                   ]
                 : ev.step === "ceo"
-                  ? [
-                      { action: "return", label: "Yêu cầu Hội đồng điều chỉnh", outline: true },
-                      { action: "approve", label: "Phê duyệt" },
-                    ]
+                  ? [{ action: "approve", label: "Phê duyệt" }]
                   : ev.step === "approved"
                     ? [{ action: "send", label: `Gửi kết quả về ${officeFor(ev)}` }]
                     : ev.step === "dispatch"
                       ? [{ action: "send", label: "Gửi kết quả CQĐV/CQ" }]
                       : ev.step === "sign"
                         ? [{ action: "sign", label: "Trình ký phiếu ĐG kèm phiếu GNV" }]
-                        : [];
+                        : ev.step === "custom"
+                          ? [{ action: "send", label: "Duyệt" }]
+                          : [];
+  // Nút trả về chỉ hiện khi bước hiện tại được cấu hình cho phép trả về.
+  const visibleActions = allowedReturns.length
+    ? [{ action: returnAction, label: returnText, outline: true }, ...actions]
+    : actions;
   function downloadTemplate() {
     exportCsv(`Template-${ev.id}`, [
       ["Phiếu", ev.id],
@@ -163,8 +181,20 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
       ]),
     ]);
   }
-  const active = mainStage(ev.step);
-  const activeIndex = MAIN_STEPS.findIndex((s) => s.key === active);
+  const active: string = ev.step === "custom" ? `custom:${ev.customStageId}` : mainStage(ev.step);
+  // Tiến trình theo cấu hình luồng duyệt: chỉ hiện bước đang áp dụng (kèm bước tùy chỉnh); bước đã tắt bị bỏ qua.
+  const stageForMain = (key: string): StageKey | null => (key === "approved" || key.startsWith("custom:") ? null : (key as StageKey));
+  const shownSteps: { key: string; label: string; actor: string }[] = MAIN_STEPS.filter((s) => {
+    const stage = stageForMain(s.key);
+    return !stage || s.key === active || flow.stages.find((x) => x.key === stage)?.enabled;
+  }).flatMap((s) => [
+    s,
+    ...(flow.customStages ?? [])
+      .filter((cs) => cs.after === s.key && (cs.enabled || active === `custom:${cs.id}`))
+      .map((cs) => ({ key: `custom:${cs.id}`, label: cs.name, actor: cs.handler })),
+  ]);
+  const activeIndex = shownSteps.findIndex((s) => s.key === active);
+  const sla = slaFor(ev);
   return (
     <AppShell
       crumbs={
@@ -189,10 +219,10 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
               Lưu nháp
             </Button>
           )}
-          {actions.map((a) => (
+          {visibleActions.map((a) => (
             <Button
               key={a.action}
-              variant={a.outline ? "outline" : "default"}
+              variant={a.outline ? "return" : "default"}
               onClick={() => run(a.action)}
             >
               {a.outline ? <Undo2 /> : a.action === "approve" ? <Check /> : <Send />}
@@ -216,7 +246,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
         aria-label="Tiến trình đánh giá"
         className="mb-5 flex overflow-x-auto rounded-lg border p-4"
       >
-        {MAIN_STEPS.map((s, i) => {
+        {shownSteps.map((s, i) => {
           const complete = i < activeIndex || active === "approved";
           const current = s.key === active;
           return (
@@ -247,10 +277,15 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
                   {s.label}
                 </div>
                 <div className="mt-0.5 text-muted-foreground">
-                  {s.key === "office" ? officeFor(ev) : s.actor}
+                  {stageForMain(s.key) ? handlerFor(ev.block, stageForMain(s.key)!) : s.actor}
                 </div>
+                {current && sla && (
+                  <div className={cn("mt-1 font-medium", sla.overdue ? "text-primary" : "text-muted-foreground")}>
+                    Hạn {sla.due.toLocaleDateString("vi-VN")} · {slaLabel(sla)}
+                  </div>
+                )}
               </div>
-              {i < MAIN_STEPS.length - 1 && (
+              {i < shownSteps.length - 1 && (
                 <div
                   className={cn("mx-1 h-px min-w-5 flex-1", complete ? "bg-success" : "bg-border")}
                 />
@@ -270,7 +305,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
       )}
       {!own && ev.step !== "done" && (
         <p className="mb-4 text-sm text-muted-foreground">
-          {readOnly ? "Chế độ xem đánh giá." : `Chọn vai trò ${ROLES[stageRole[ev.step]]} để xử lý bước hiện tại.`}
+          {readOnly ? "Chế độ xem đánh giá." : `Chọn vai trò ${ROLES[roleOf(ev)]} để xử lý bước hiện tại.`}
         </p>
       )}
       {canRespond && (
@@ -296,17 +331,17 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
             placeholder="Nội dung tiếp thu hoặc giải trình bảo lưu..."
           />
           <p className="text-xs text-muted-foreground">
-            Bổ sung kết quả thực hiện tại tab Template cá nhân. Điểm tự đánh giá và điểm CQTT giữ
+            Bổ sung kết quả thực hiện tại tab Cá nhân đánh giá. Điểm tự đánh giá và điểm CQTT giữ
             nguyên.
           </p>
         </section>
       )}
       {own && ["cqtt", "council", "council_adjust"].includes(ev.step) && (
         <p className="mb-4 text-sm text-info">
-          Thay đổi trên bảng tổng hợp được lưu khi chọn Lưu dòng hoặc chuyển bước/trình duyệt.
+          Thay đổi trên bảng tổng hợp được lưu khi chọn Lưu hoặc chuyển bước/trình duyệt.
         </p>
       )}
-      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV tiếp thu hoặc bảo lưu; điểm CQTT được giữ nguyên." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
+      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV bấm Chỉnh sửa đánh giá để Tiếp thu (cập nhật dữ liệu, gửi CQTT chấm lại) hoặc Bảo lưu (CQTT ghi nhận, giữ nguyên điểm chấm)." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <details open className="group mb-4 overflow-hidden rounded-lg border">
@@ -333,7 +368,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
             <div>
               <div className="text-xs text-muted-foreground">Trạng thái</div>
               <div className="mt-1">
-                <StatusPill tone={STATUS[ev.step].tone}>{STATUS[ev.step].label}</StatusPill>
+                <StatusPill tone={STATUS[ev.step].tone}>{statusLabelOf(ev)}</StatusPill>
               </div>
             </div>
             <div><div className="text-xs text-muted-foreground">Ngày đánh giá</div><div className="mt-1 font-medium">{ev.evaluationDate?.split("-").reverse().join("/") ?? "—"}</div></div>
@@ -348,11 +383,10 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
           >
             {(
               [
-                ["personal", "Template cá nhân"],
+                ["personal", "Cá nhân đánh giá"],
                 ["kpi", "Tổng hợp đánh giá"],
                 ["ki", "Tổng hợp KPI"],
                 ["appendix", appendixFor(ev)],
-                ["assignment", "Phiếu giao nhiệm vụ"],
               ] as const
             )
               .filter(([key]) => ev.step !== "office" || key === "personal" || key === "kpi")
@@ -374,7 +408,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
               ))}
           </div>
           {tab === "kpi" || tab === "ki" || tab === "appendix" ? (
-            <fieldset disabled={readOnly}><AggregateForm evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
+            <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><AggregateForm evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
           ) : (
             <section className="space-y-4">
               <PersonalTable
@@ -469,11 +503,28 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
                 <b>{ev.response}:</b> {ev.responseNote} · Điểm CQTT được giữ nguyên.
               </p>
             )}
-            {own && ["ceo", "cqtt"].includes(ev.step) && (
+            {allowedReturns.length > 1 && (
+              <label className="mb-2 block text-xs">
+                Trả về bước
+                <select
+                  aria-label="Trả về bước"
+                  className="mt-1 block h-9 w-full rounded-md border bg-card px-2 text-sm"
+                  value={chosenReturn}
+                  onChange={(e) => setReturnStage(e.target.value as StageKey)}
+                >
+                  {allowedReturns.map((k) => (
+                    <option key={k} value={k}>{STAGES[k].name} — {handlerFor(ev.block, k)}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {allowedReturns.length > 0 && (
               <label className="block text-xs">
-                {ev.step === "ceo"
+                {ev.step === "ceo" && chosenReturn === "council"
                   ? "Chỉ đạo điều chỉnh của TGĐ"
-                  : "Nội dung yêu cầu phản hồi (để trống để dùng góp ý đã lưu)"}
+                  : ev.step === "cqtt" && chosenReturn === "self"
+                    ? "Nội dung yêu cầu phản hồi (để trống để dùng góp ý đã lưu)"
+                    : "Lý do trả về"}
                 <textarea
                   aria-label="Lý do điều chỉnh"
                   className="mt-2 block min-h-20 w-full rounded-md border p-2 text-sm"

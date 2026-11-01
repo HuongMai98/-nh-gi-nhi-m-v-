@@ -1,3 +1,5 @@
+import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
+import { Check, Download, Save, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AssessmentSummary } from "@/components/AssessmentSummary";
@@ -12,7 +14,6 @@ import {
   templateResult,
   rating,
   kiError,
-  appendixFor,
   type Evaluation,
   type Draft,
   type Ki,
@@ -48,6 +49,15 @@ export function exportCsv(name: string, rows: (string | number | null | undefine
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+/** Màu nhận diện mức Ki (dùng chung cho thẻ, thanh phân bố, nhãn). */
+const KI_TONES = [
+  { ki: "A+", label: "Vượt xa yêu cầu", badge: "bg-emerald-600 text-white", bar: "bg-emerald-500", text: "text-emerald-600", card: "border-emerald-200 bg-emerald-50/60" },
+  { ki: "A", label: "Vượt yêu cầu", badge: "bg-blue-600 text-white", bar: "bg-blue-500", text: "text-blue-600", card: "border-blue-200 bg-blue-50/60" },
+  { ki: "B", label: "Đạt yêu cầu", badge: "bg-violet-600 text-white", bar: "bg-violet-500", text: "text-violet-600", card: "border-violet-200 bg-violet-50/60" },
+  { ki: "C", label: "Gần đạt yêu cầu", badge: "bg-amber-500 text-white", bar: "bg-amber-500", text: "text-amber-600", card: "border-amber-200 bg-amber-50/60" },
+  { ki: "D", label: "Không đạt yêu cầu", badge: "bg-rose-600 text-white", bar: "bg-rose-500", text: "text-rose-600", card: "border-rose-200 bg-rose-50/60" },
+  { ki: "K", label: "Không đánh giá", badge: "bg-slate-500 text-white", bar: "bg-slate-400", text: "text-slate-600", card: "border-slate-200 bg-slate-50" },
+] as const;
 export function AggregateForm({
   evaluations,
   mode,
@@ -61,7 +71,17 @@ export function AggregateForm({
   evaluations: Evaluation[];
   mode: "kpi" | "ki" | "appendix";
 }) {
-  const { previewRole, saveCouncilBatch, processCeoBatch } = useEvaluations();
+  const { previewRole, saveCouncilBatch, processCeoBatch, workflows } = useEvaluations();
+  // Nhánh TGĐ theo cấu hình luồng duyệt của các khối đang hiển thị.
+  const ceoBlocks = [...new Set(evaluations.map((e) => e.block))];
+  const ceoTargets = ceoBlocks.length
+    ? ceoBlocks.map((b) => workflows[b].stages.find((s) => s.key === "ceo")?.returnTo ?? []).reduce((a, l) => a.filter((x) => l.includes(x)))
+    : [];
+  const ceoReturnOn = ceoTargets.length > 0;
+  const [ceoReturnStage, setCeoReturnStage] = useState<StageKey | "">("");
+  const ceoChosen = ceoTargets.includes(ceoReturnStage as StageKey) ? (ceoReturnStage as StageKey) : ceoTargets[0];
+  const ceoReturnText = ceoTargets.length === 1 && ceoBlocks[0] ? returnLabel(ceoBlocks[0], "ceo", ceoTargets[0]!) : "Trả về / yêu cầu điều chỉnh";
+  const ceoAdjustOn = ceoBlocks.some((b) => workflows[b].branches.ceoDirectAdjust);
   const [councilDrafts, setCouncilDrafts] = useState<Record<string, Draft>>({});
   const [ceoReturnOpen, setCeoReturnOpen] = useState(false);
   const [ceoReason, setCeoReason] = useState("");
@@ -71,7 +91,7 @@ export function AggregateForm({
       ? "Tổng hợp đánh giá"
       : mode === "ki"
         ? "Tổng hợp KPI — BM01"
-        : "Phụ lục kết quả theo khối";
+        : "Phụ lục Kết quả";
   const isKpi = mode === "kpi";
   const summaryRecords = evaluations.map((e) => ({ ...e, ...councilDrafts[e.id], ...(mode === "ki" ? { councilReviewed: true } : {}) }));
   const counts = KI.map((ki) => ({
@@ -162,55 +182,73 @@ export function AggregateForm({
     );
   return (
     <section className="space-y-4" aria-label={title}>
-      <div className={mode === "ki" ? "sticky top-14 z-30 space-y-4 bg-card pb-1" : "space-y-4"}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="space-y-3">
+      <div className={"flex flex-wrap items-center justify-between gap-3" + (mode === "ki" ? " sticky z-30 bg-card py-2 " + (previewRole === "council" ? "top-14" : "top-0") : "")}>
+        <div className="min-w-0 flex-1 basis-40">
           <h2 className="font-semibold">{title}</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {isKpi
-              ? "Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."
-              : "Hội đồng kế thừa điểm CQTT và chỉnh tổng điểm tại đây. Template cá nhân tự phân bổ điểm theo tỷ lệ tự đánh giá, giới hạn 1–5 và khớp tổng theo tỷ trọng."}
-          </p>
+          {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="flex items-center gap-2"><Button variant="outline" onClick={exportData}>Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.some((e) => ["council", "council_adjust"].includes(e.step))} onClick={() => {
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2"><Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button variant="outline" disabled={!evaluations.some((e) => ["council", "council_adjust"].includes(e.step))} onClick={() => {
           const ids = evaluations.filter((e) => ["council", "council_adjust"].includes(e.step)).map((e) => e.id);
           const issue = saveCouncilBatch(ids, councilDrafts);
           setBatchMessage(issue ?? "Đã lưu tất cả đánh giá.");
           if (!issue) setCouncilDrafts({});
-        }}>Lưu tất cả</Button>}{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
+        }}><Save />Lưu tất cả</Button>}{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
           const issue = saveCouncilBatch(evaluations.map((e) => e.id), councilDrafts, true);
           setBatchMessage(issue ?? "Đã gửi tất cả đánh giá lên TGĐ.");
           if (!issue) setCouncilDrafts({});
-        }}>Gửi TGĐ</Button>}{mode === "ki" && previewRole === "ceo" && <><Button variant="outline" disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => setCeoReturnOpen((open) => !open)}>Yêu cầu Hội đồng điều chỉnh</Button><Button disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "approve", ""); setBatchMessage(issue ?? "Đã phê duyệt kết quả."); }}>Phê duyệt</Button></>}</div>
+        }}><Send />Gửi TGĐ</Button>}{mode === "ki" && previewRole === "ceo" && <>{ceoAdjustOn && <Button variant="outline" disabled={!evaluations.some((e) => e.step === "ceo")} onClick={() => {
+          const issue = processCeoBatch(evaluations.filter((e) => e.step === "ceo").map((e) => e.id), "save", "", councilDrafts);
+          setBatchMessage(issue ?? "Đã lưu tất cả điều chỉnh của TGĐ.");
+          if (!issue) setCouncilDrafts({});
+        }}><Save />Lưu tất cả</Button>}{ceoReturnOn && <Button variant="return" disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => setCeoReturnOpen((open) => !open)}><Undo2 />{ceoReturnText}</Button>}<Button disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "approve", "", councilDrafts); setBatchMessage(issue ?? "Đã phê duyệt kết quả."); if (!issue) setCouncilDrafts({}); }}><Check />Phê duyệt</Button></>}</div>
       </div>
-      {previewRole === "ceo" && ceoReturnOpen && <div className="space-y-3 rounded-lg border bg-muted/30 p-4"><label className="block space-y-2 text-sm font-medium">Nội dung yêu cầu Hội đồng điều chỉnh<textarea aria-label="Yêu cầu điều chỉnh của TGĐ" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm font-normal" value={ceoReason} onChange={(e) => setCeoReason(e.target.value)} /></label><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setCeoReturnOpen(false)}>Hủy</Button><Button disabled={!ceoReason.trim() || !evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "return", ceoReason); setBatchMessage(issue ?? "Đã gửi Hội đồng điều chỉnh."); if (!issue) { setCeoReturnOpen(false); setCeoReason(""); } }}>Gửi điều chỉnh</Button></div></div>}
+      {previewRole === "ceo" && ceoReturnOpen && <div className="space-y-3 rounded-lg border bg-muted/30 p-4">{ceoTargets.length > 1 && <label className="block space-y-2 text-sm font-medium">Trả về bước<select aria-label="Trả về bước" className="block h-9 w-64 rounded-md border bg-card px-2 text-sm font-normal" value={ceoChosen} onChange={(e) => setCeoReturnStage(e.target.value as StageKey)}>{ceoTargets.map((k) => <option key={k} value={k}>{STAGES[k].name}</option>)}</select></label>}<label className="block space-y-2 text-sm font-medium">{ceoChosen === "council" ? "Nội dung yêu cầu Hội đồng điều chỉnh" : "Lý do trả về"}<textarea aria-label="Yêu cầu điều chỉnh của TGĐ" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm font-normal" value={ceoReason} onChange={(e) => setCeoReason(e.target.value)} /></label><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setCeoReturnOpen(false)}>Hủy</Button><Button disabled={!ceoReason.trim() || !evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "return", ceoReason, undefined, ceoChosen); setBatchMessage(issue ?? "Đã gửi Hội đồng điều chỉnh."); if (!issue) { setCeoReturnOpen(false); setCeoReason(""); } }}>Gửi điều chỉnh</Button></div></div>}
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}
-      {!isKpi && <section aria-label="Phân bố xếp hạng Ki" className="rounded-lg border bg-muted/20 p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3><span className="text-xs text-muted-foreground">{classified}/{evaluations.length} cá nhân có Ki · {evaluations.length - classified} chưa xếp · Tỷ lệ không gồm Ki K</span></div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      {!isKpi && <section aria-label="Phân bố xếp hạng Ki" className="rounded-xl border bg-card p-3 shadow-sm 2xl:p-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3>
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Tổng <b className="tabular-nums text-foreground">{evaluations.length}</b></span>
+          </div>
+          <span className="ml-auto text-[11px] text-muted-foreground">Tỷ lệ tính trên số cá nhân có Ki (không gồm K)</span>
+        </div>
+        {/* Thanh phân bố tổng: mỗi đoạn là tỷ lệ một mức Ki. */}
+        <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={"Tỷ lệ Ki: " + KI_TONES.filter((x) => x.ki !== "K").map((x) => x.ki + " " + (denominator ? Math.round((counts.find((c) => c.ki === x.ki)?.n ?? 0) / denominator * 100) : 0) + "%").join(", ")}>
+          {KI_TONES.filter((x) => x.ki !== "K").map((x) => {
+            const n = counts.find((c) => c.ki === x.ki)?.n ?? 0;
+            return n && denominator ? <div key={x.ki} className={"h-full transition-[width] first:rounded-l-full last:rounded-r-full " + x.bar} style={{ width: (n / denominator) * 100 + "%" }} title={`${x.ki}: ${Math.round((n / denominator) * 100)}%`} /> : null;
+          })}
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-6 2xl:gap-3">
           {counts.map((c) => {
             const percent = c.ki === "K" || !denominator ? 0 : Math.round(c.n / denominator * 100);
-            const tones = {
-              "A+": { badge: "bg-emerald-100 text-emerald-800", bar: "bg-emerald-500", label: "Vượt xa yêu cầu" },
-              A: { badge: "bg-blue-100 text-blue-800", bar: "bg-blue-500", label: "Vượt yêu cầu" },
-              B: { badge: "bg-violet-100 text-violet-800", bar: "bg-violet-500", label: "Đạt yêu cầu" },
-              C: { badge: "bg-amber-100 text-amber-800", bar: "bg-amber-500", label: "Gần đạt yêu cầu" },
-              D: { badge: "bg-rose-100 text-rose-800", bar: "bg-rose-500", label: "Không đạt yêu cầu" },
-              K: { badge: "bg-slate-100 text-slate-700", bar: "bg-slate-400", label: "Không đánh giá" },
-            }[c.ki];
-            return <div key={c.ki} className="rounded-lg border bg-card px-3 py-3">
-              <div className="flex items-center justify-between gap-2"><span className={"inline-flex min-w-9 justify-center rounded-md px-2 py-1 text-sm font-semibold " + tones.badge}>{c.ki}</span><span className="text-xs tabular-nums text-muted-foreground">{c.ki === "K" ? "—" : percent + "%"}</span></div>
-              <div className="mt-3 flex items-baseline gap-1.5"><strong data-testid={`ki-count-${c.ki}`} className="text-2xl font-semibold tabular-nums leading-none">{c.n}</strong><span className="text-xs text-muted-foreground">cá nhân</span></div>
-              <p className="mt-2 text-xs text-muted-foreground">{tones.label}</p>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted"><div className={"h-full rounded-full transition-[width] " + tones.bar} style={{ width: percent + "%" }} /></div>
+            const tone = KI_TONES.find((x) => x.ki === c.ki)!;
+            const active = c.n > 0;
+            return <div key={c.ki} className={"relative overflow-hidden rounded-lg border px-3 py-2.5 transition-colors " + (active ? tone.card : "bg-card opacity-70")}>
+              <span aria-hidden className={"absolute inset-y-0 left-0 w-1 " + (active ? tone.bar : "bg-transparent")} />
+              <div className="flex items-center justify-between gap-2">
+                <span className={"inline-flex min-w-9 justify-center rounded-md px-2 py-0.5 text-sm font-bold " + tone.badge}>{c.ki}</span>
+                <span className="truncate text-[11px] font-medium text-muted-foreground" title={tone.label}>{tone.label}</span>
+              </div>
+              <div className="mt-2 flex items-end justify-between gap-2">
+                <span className="flex flex-col leading-none">
+                  <span className={"text-2xl font-bold tabular-nums 2xl:text-3xl " + (active ? tone.text : "text-muted-foreground")}>{c.ki === "K" ? "—" : percent}<span className="ml-0.5 text-sm font-semibold">{c.ki === "K" ? "" : "%"}</span></span>
+                  <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">tỷ lệ</span>
+                </span>
+                <span className="flex flex-col items-end leading-none">
+                  <strong data-testid={`ki-count-${c.ki}`} className={"text-2xl font-bold tabular-nums 2xl:text-3xl " + (active ? "text-foreground" : "text-muted-foreground")}>{c.n}</strong>
+                  <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">cá nhân</span>
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/5"><div className={"h-full rounded-full transition-[width] " + tone.bar} style={{ width: (c.ki === "K" ? 0 : percent) + "%" }} /></div>
             </div>;
           })}
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Thống kê theo các dòng đang hiển thị và dữ liệu đang nhập; thay đổi được ghi nhận khi lưu.</p>
       </section>}
       </div>
-      <div className={mode === "ki" ? "relative isolate max-h-[50dvh] overflow-auto rounded-lg border" : "overflow-x-auto rounded-lg border"}>
-        <table className="w-full min-w-[1100px] text-left text-sm">
+      <div className={mode === "ki" ? "relative isolate max-h-[calc(100dvh-8rem)] overflow-auto rounded-lg border" : "overflow-x-auto rounded-lg border"}>
+        <table className={"w-full text-left text-sm " + (mode === "ki" ? "min-w-[880px]" : "min-w-[1100px]")}>
           <thead className={mode === "ki" ? "sticky top-0 z-20 bg-muted" : "bg-muted"}>
             <tr>
               {(isKpi
@@ -226,18 +264,18 @@ export function AggregateForm({
                     "Thao tác",
                   ]
                 : [
-                    "CQĐV/CQ · Cá nhân",
+                    "Cá nhân",
                     "Điểm CQTT",
                     "Điểm đánh giá",
                     "Xếp loại",
                     "Tuân thủ địa điểm",
                     "Tuân thủ nội quy",
                     "Ki",
-                    "Mức độ hoàn thành / Kiểm tra",
+                    "Hoàn thành / Kiểm tra",
                     "Thao tác",
                   ]
               ).map((h) => (
-                <th className="px-3 py-3 font-medium" key={h}>
+                <th className={(mode === "ki" ? "px-2 py-2.5 leading-tight 2xl:px-3 2xl:py-3" : "px-3 py-3") + " font-medium"} key={h}>
                   {h}
                 </th>
               ))}
@@ -274,11 +312,11 @@ function AggregateRow({
   evaluation: Evaluation;
   mode: "kpi" | "ki" | "appendix";
 }) {
-  const { previewRole, updateEvaluation } = useEvaluations();
+  const { previewRole, updateEvaluation, workflows } = useEvaluations();
   const isKpi = mode === "kpi";
   const editable = isKpi
     ? previewRole === "cqtt" && e.step === "cqtt"
-    : mode === "ki" && previewRole === "council" && ["council", "council_adjust"].includes(e.step);
+    : mode === "ki" && ((previewRole === "council" && ["council", "council_adjust"].includes(e.step)) || (previewRole === "ceo" && e.step === "ceo" && workflows[e.block].branches.ceoDirectAdjust));
   const [draft, setDraft] = useState<Draft>({});
   const [error, setError] = useState("");
   const [kiDriven, setKiDriven] = useState(false);
@@ -292,7 +330,7 @@ function AggregateRow({
   const numeric = (key: "cqttKey" | "cqttFunction" | "councilScore", label: string) => (
     <input
       aria-label={`${label} ${e.id}`}
-      className={fieldClass + " w-24"}
+      className={fieldClass + (mode === "ki" ? " w-20" : " w-24")}
       type="number"
       step="0.01"
       min={key === "councilScore" ? kiDriven && current.ki && current.ki !== "K" ? KI_SCORE_RANGES[current.ki].min : 1 : 0}
@@ -315,7 +353,7 @@ function AggregateRow({
     <select
       aria-label={`${label} ${e.id}`}
       disabled={!editable}
-      className={fieldClass + (key === "laborCompliance" ? " w-52" : " w-36")}
+      className={fieldClass + (key === "laborCompliance" ? " w-36 2xl:w-52" : key === "ki" ? " w-20 2xl:w-28" : " w-24 2xl:w-36")}
       value={current[key] ?? ""}
       onChange={(event) => {
         const value = event.target.value;
@@ -331,10 +369,10 @@ function AggregateRow({
       ))}
     </select>
   );
-  const cell = "px-3 py-3 align-top";
+  const cell = mode === "ki" ? "px-2 py-2.5 align-top 2xl:px-3 2xl:py-3" : "px-3 py-3 align-top";
   return (
     <tr className="border-t">
-      <td className={cell}>
+      <td className={cell + (isKpi ? "" : " min-w-40 2xl:min-w-52")}>
         <Link
           to="/danh-gia/$id"
           params={{ id: e.id }}
@@ -346,9 +384,6 @@ function AggregateRow({
         <div className="mt-1 text-xs text-muted-foreground">
           {e.employeeId ?? "—"} · {e.jobTitle ?? "—"}
         </div>
-        {mode === "appendix" && (
-          <div className="mt-1 text-xs text-muted-foreground">{appendixFor(e)}</div>
-        )}
       </td>
       {isKpi ? (
         <>
@@ -375,7 +410,7 @@ function AggregateRow({
         <>
           <td className={cell}>{number(cqttTotal(e))}</td>
           <td className={cell}>{numeric("councilScore", "Điểm đánh giá")}</td>
-          <td className={cell}>{result.rating}</td>
+          <td className={cell + " min-w-24"}>{result.rating}</td>
           <td className={cell}>
             {choose("locationCompliance", ["Tuân thủ", "Không tuân thủ"], "Tuân thủ địa điểm")}
           </td>
@@ -393,6 +428,10 @@ function AggregateRow({
         {editable && (
           <Button
             variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            title="Lưu"
+            aria-label={`Lưu ${e.id}`}
             onClick={() => {
               if (kiDriven && current.ki && current.ki !== "K") {
                 const range = KI_SCORE_RANGES[current.ki];
@@ -402,7 +441,7 @@ function AggregateRow({
               setError(issue ?? "Đã lưu");
             }}
           >
-            Lưu dòng
+            <Save />
           </Button>
         )}
         <Link to="/danh-gia/$id" params={{ id: e.id }} className="mt-2 block text-xs text-primary">

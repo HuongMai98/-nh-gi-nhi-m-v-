@@ -1,10 +1,10 @@
 import { useState, useRef, type FormEvent } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
-import { totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
+import { cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
 import { CURRENT_USER, USERS, sameUnitPerformers, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
@@ -15,7 +15,11 @@ const blankCriterion = (): Criterion => ({ group: "A", goal: "", kpi: "", unit: 
 const selectClass = "h-9 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring";
 
 export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing }: { existing?: Evaluation; open: boolean; onOpenChange: (open: boolean) => void; onCreated: (evaluation: Evaluation) => void }) {
-  const { evaluations, addEvaluation, replaceSelfEvaluation } = useEvaluations();
+  const { evaluations, addEvaluation, replaceSelfEvaluation, updateEvaluation } = useEvaluations();
+  // Phiếu CQTT gửi điều chỉnh về: cập nhật tại đây, gửi phản hồi CQTT ở màn chi tiết.
+  const responding = existing?.step === "response";
+  const cqttScore = responding ? cqttTotal(existing!) : null;
+  const [responseNote, setResponseNote] = useState(existing?.responseNote ?? "");
   const unit = existing?.unit ?? CURRENT_USER.unit;
   const block = existing?.block ?? CURRENT_USER.block;
   const [performerId, setPerformerId] = useState(existing?.employeeId ?? CURRENT_USER.employeeId);
@@ -27,7 +31,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [evaluationDate, setEvaluationDate] = useState(existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   const [deadline, setDeadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? "");
   const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.employeeId === existing.employeeId && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
-  const submitIntent = useRef<"draft" | "send">("draft");
+  const submitIntent = useRef<"draft" | "send" | "accept">("draft");
   const [error, setError] = useState("");
   const setCriteria = (change: FormCriterion[] | ((current: FormCriterion[]) => FormCriterion[])) => {
     const next = typeof change === "function" ? change(criteria) : change;
@@ -40,6 +44,13 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   };
   const weight = Math.round(criteria.reduce((sum, item) => sum + item.weight, 0) * 10000) / 100;
 
+  function reserve() {
+    if (!responseNote.trim()) { setError("Vui lòng nhập lý do bảo lưu tại mục Phản hồi CQTT."); return; }
+    const issue = updateEvaluation(existing!.id, { response: "Bảo lưu", responseNote: responseNote.trim() }, "respond");
+    if (issue) { setError(issue); return; }
+    onCreated(existing!);
+    onOpenChange(false);
+  }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!unit.trim() || !performer || criteria.some((item) => !item.goal.trim() || !item.kpi.trim())) {
@@ -48,8 +59,20 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     }
     if (criteria.some((item) => !tasksFor(item.group).some((task) => task.id === item.sourceTaskId))) { setError("Vui lòng chọn nhiệm vụ đã kết thúc hoặc đã đóng đúng nhóm của người thực hiện."); return; }
     if (new Set(criteria.map((c) => c.sourceTaskId)).size !== criteria.length) { setError("Mỗi nhiệm vụ chỉ được chọn một lần."); return; }
-    const send = submitIntent.current === "send";
+    const intent = submitIntent.current;
+    const send = intent === "send";
     submitIntent.current = "draft";
+    if (responding) {
+      const accept = intent === "accept";
+      const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, ...c }) => c);
+      const issue = accept
+        ? updateEvaluation(existing!.id, { criteria: updatedCriteria, response: "Tiếp thu", responseNote: responseNote.trim() }, "respond")
+        : updateEvaluation(existing!.id, { criteria: updatedCriteria, responseNote });
+      if (issue) { setError(issue); return; }
+      onCreated({ ...existing!, criteria: updatedCriteria });
+      onOpenChange(false);
+      return;
+    }
     const [y, m, d] = deadline.split("-");
     const period = `Quý ${quarter}/${year}`;
     const prefix = `DG-${year}-Q${["I", "II", "III", "IV"].indexOf(quarter) + 1}-`;
@@ -106,12 +129,27 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
           <section className="border-t pt-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h2 className="text-sm font-semibold">2. Đánh giá kết quả thực hiện nhiệm vụ, công việc</h2><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
             <Button type="button" variant="outline" className="mb-4" onClick={() => setCriteria(SOURCE_TASKS.filter((task) => task.employeeId === performerId && (task.status === "Đã đóng" || task.status === "Đã kết thúc")).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
-            <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} />
+            <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} />
             <Button type="button" variant="outline" className="mt-3" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
           </section>
+          {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
+            <h2 className="mb-3 text-sm font-semibold">3. Phản hồi yêu cầu điều chỉnh của CQTT</h2>
+            <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <div><span className="font-medium">CQTT yêu cầu:</span> {existing!.note || "—"}</div>
+              <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
+            </div>
+            <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => setResponseNote(e.target.value)} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              <li><span className="font-medium text-foreground">Tiếp thu & gửi CQTT:</span> lưu toàn bộ dữ liệu đã cập nhật ở bảng trên và gửi CQTT rà soát, chấm điểm lại.</li>
+              <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
+            </ul>
+          </section>}
           {error && <p role="alert" className="text-sm text-primary">{error}</p>}
         </div>
-        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button><Button type="submit" onClick={() => { submitIntent.current = "send"; }} value="send">Gửi đánh giá</Button></div>
+        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button>{responding ? <>
+          <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
+          <Button type="submit" onClick={() => { submitIntent.current = "accept"; }} value="accept">Tiếp thu & gửi CQTT</Button>
+        </> : <Button type="submit" onClick={() => { submitIntent.current = "send"; }} value="send">Gửi đánh giá</Button>}</div>
       </form>
     </DialogContent>
   </Dialog>;

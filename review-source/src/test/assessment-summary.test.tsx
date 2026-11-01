@@ -66,7 +66,7 @@ describe("assessment summary template", () => {
     fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-005"), {
       target: { value: "Cần bổ sung" },
     });
-    expect(screen.queryByRole("button", { name: "Lưu dòng" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Lưu" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Trợ lý DG-2026-Q3-005")).toHaveValue("quyendv");
     expect(screen.getByLabelText("Ghi chú DG-2026-Q3-005")).toHaveValue("Cần bổ sung");
     expect(record().cqttKey).toBeUndefined();

@@ -15,14 +15,20 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Settings,
   SlidersHorizontal,
 } from "lucide-react";
 import { AppShell, StatusPill } from "@/components/AppShell";
+import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import {
   ASSIGNING_UNIT,
   STATUS,
   MAIN_STEPS,
   mainStage,
+  mainStageOf,
+  canConfigureWorkflow,
+  roleOf,
+  statusLabelOf,
   selfEditable,
   templateResult,
   cqttTotal,
@@ -36,8 +42,11 @@ import { AggregateForm } from "@/components/AggregateForm";
 import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { useEvaluations } from "@/components/evaluation-context";
 
+/** Tổng hợp KPI (Ki) và Phụ lục chỉ có dữ liệu khi CQTT đã hoàn tất rà soát và gửi Hội đồng. */
+const KI_DATA_STEPS: Step[] = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"];
+const hasKiData = (e: Evaluation) => KI_DATA_STEPS.includes(e.step) || (e.step === "custom" && e.councilScore !== undefined);
 const FILTER_STEPS = [...MAIN_STEPS.slice(0, 3), { key: "response" as const, label: "Chờ CQ/CQĐV phản hồi", actor: "CQ/CQĐV" }, MAIN_STEPS[3], { key: "council_adjust" as const, label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" }, ...MAIN_STEPS.slice(4)];
-const listStage = (step: Step) => step === "response" || step === "council_adjust" ? step : mainStage(step);
+const listStage = (e: Evaluation) => e.step === "response" || e.step === "council_adjust" ? e.step : mainStageOf(e);
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,7 +79,7 @@ function Index() {
     catch { setRefreshMessage("Chưa thể làm mới. Vui lòng thử lại."); }
     finally { setRefreshing(false); }
   }
-  const { evaluations, previewRole, createCouncilSummary } = useEvaluations();
+  const { evaluations, previewRole, createCouncilSummary, workflows } = useEvaluations();
   const [view, setView] = useState<"list" | "kpi" | "ki" | "appendix">(
     previewRole === "office" ? "kpi" : "list",
   );
@@ -95,7 +104,10 @@ function Index() {
       evaluations.filter(
         (e) =>
           e.period === period &&
-          (previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e.step))) &&
+          // Bước tùy chỉnh: hiện ở nhóm "chờ xử lý" của vai trò được cấu hình xử lý bước đó.
+          (e.step === "custom" && previewRole !== "performer" && roleOf(e) === previewRole
+            ? (previewRole === "office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter) === "pending"
+            : previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e))) &&
           (block === "all" || e.block === block) &&
           (!unitFilter || e.unit === unitFilter) &&
           (!kiFilter || (kiFilter === "unrated" ? !e.ki : (e.approvedKi ?? e.ki) === kiFilter)) &&
@@ -117,23 +129,30 @@ function Index() {
       title="Đánh giá nhiệm vụ"
       actions={
         <>
+          {canConfigureWorkflow(previewRole) && <Button variant="outline" className="h-10" asChild><Link to="/cau-hinh-luong-duyet"><Settings className="h-4 w-4" />Cấu hình luồng duyệt</Link></Button>}
           <Button variant="outline" size="icon" className="h-10 w-10" title="Làm mới" aria-label="Làm mới" disabled={refreshing} onClick={refresh}><RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} /></Button>
-          <Button
-            onClick={() => {
-              setEditing(undefined);
-              setCreated("");
-              setCreateOpen(true);
-            }}
-            className="h-10"
-          >
-            <Plus />
-            Tạo đánh giá
-          </Button>
+          {/* Chỉ CQĐV/CQ được tạo phiếu đánh giá. */}
+          {previewRole === "performer" && (
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setCreated("");
+                setCreateOpen(true);
+              }}
+              className="h-10"
+            >
+              <Plus />
+              Tạo đánh giá
+            </Button>
+          )}
+          {/* Nút thao tác chính theo vai trò, đặt bên phải cùng các nút khác. */}
+          {previewRole === "ceo" && activeView === "list" && <Button variant="outline" className="h-10" disabled={!rows.length} onClick={() => setView("ki")}><BarChart3 />Xem tổng hợp Ki</Button>}
+          {previewRole === "office" && activeView === "list" && officeStatus === "pending" && <Button className="h-10" onClick={() => setView("kpi")} disabled={!evaluations.some((e) => e.period === period && (block === "all" || e.block === block) && e.step === "office")}><KanbanSquare />Tổng hợp</Button>}
         </>
       }
     >
       {refreshMessage && <p role="status" className="mb-3 text-sm text-muted-foreground">{refreshMessage}</p>}
-      {createOpen && (
+      {createOpen && previewRole === "performer" && (
         <CreateEvaluationDialog
           {...(editing ? { existing: editing } : {})}
           key={editing?.id ?? "new"}
@@ -166,7 +185,7 @@ function Index() {
             ["list", "Danh sách"],
             ["kpi", "Tổng hợp đánh giá"],
             ["ki", "Tổng hợp KPI"],
-            ["appendix", "Phụ lục theo khối"],
+            ["appendix", "Phụ lục Kết quả"],
           ] as const
         )
           .filter(([key]) => previewRole !== "performer" || key === "list")
@@ -189,7 +208,7 @@ function Index() {
       </div>
 
       <div className="flex gap-4">
-        <aside className="w-60 shrink-0 rounded-lg bg-muted/60 p-4 text-sm">
+        <aside className="w-52 shrink-0 rounded-lg bg-muted/60 p-4 text-sm xl:w-60">
           <div className="mb-3 font-medium">Kỳ đánh giá</div>
           <select
             aria-label="Kỳ đánh giá"
@@ -227,7 +246,7 @@ function Index() {
                 <span>{s.label}</span>
                 <span className="ml-auto text-xs text-muted-foreground">
                   {
-                    evaluations.filter((e) => e.period === period && mainStage(e.step) === s.key)
+                    evaluations.filter((e) => e.period === period && mainStageOf(e) === s.key)
                       .length
                   }
                 </span>
@@ -239,8 +258,6 @@ function Index() {
 
         <div className="min-w-0 flex-1">
           <div className={"mb-3 flex flex-wrap items-center gap-3 " + (previewRole === "council" && activeView === "ki" ? "sticky top-0 z-40 bg-card py-2" : "")}>
-            {previewRole === "ceo" && activeView === "list" && <Button variant="outline" disabled={!rows.length} onClick={() => setView("ki")}>Xem tổng hợp Ki</Button>}
-            {previewRole === "office" && activeView === "list" && officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!evaluations.some((e) => e.period === period && (block === "all" || e.block === block) && e.step === "office")}>Tổng hợp</Button>}
             <div className="flex min-w-0 w-80 items-center gap-2 rounded-md border border-primary/30 px-3 py-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
@@ -270,9 +287,9 @@ function Index() {
             </div>
           </div>
 
-          {previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || e.councilReviewed || !["council"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại tab Tổng hợp đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => setView("kpi")}>Mở Tổng hợp đánh giá</Button></div> : activeView !== "list" ? (
+          {(activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi Hội đồng.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || e.councilReviewed || !["council"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại tab Tổng hợp đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => setView("kpi")}>Mở Tổng hợp đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
-              evaluations={previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || e.councilReviewed || e.step !== "council") : rows}
+              evaluations={(previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || e.councilReviewed || e.step !== "council") : rows).filter((e) => activeView === "kpi" || hasKiData(e))}
               mode={activeView}
               onCouncilSummary={() => { createCouncilSummary(rows.map((e) => e.id)); setView("ki"); }}
               batchCandidates={evaluations.filter(
@@ -348,8 +365,17 @@ function Index() {
                         <td className="px-3 py-4">{result.ki}</td>
                         <td className="px-3 py-4">
                           <StatusPill tone={STATUS[e.step].tone}>
-                            {FILTER_STEPS.find((s) => s.key === listStage(e.step))?.label}
+                            {e.step === "custom" ? statusLabelOf(e) : FILTER_STEPS.find((s) => s.key === listStage(e))?.label}
                           </StatusPill>
+                          {(() => {
+                            const sla = slaFor(e);
+                            const n = { ...DEFAULT_NOTIFICATIONS, ...(workflows[e.block].notifications ?? {}) };
+                            return sla && ((sla.overdue && n.overdueAlert) || (!sla.overdue && n.remindBeforeDays > 0 && sla.daysLeft <= n.remindBeforeDays)) ? (
+                              <div className={"mt-1 text-xs " + (sla.overdue ? "font-medium text-primary" : "text-amber-700")} title={`Hạn xử lý ${sla.due.toLocaleDateString("vi-VN")} (${sla.slaDays} ngày)`}>
+                                {slaLabel(sla)}
+                              </div>
+                            ) : null;
+                          })()}
                         </td>
                         <td className="px-3 py-4">
                           <div className="flex gap-3 text-muted-foreground">

@@ -1,8 +1,9 @@
 import { createContext, useContext, type Context } from "react";
 import type { Evaluation, PreviewRole, Draft, Action } from "@/lib/evaluation";
+import type { Block, StageKey, WorkflowConfig, WorkflowVersion } from "@/lib/workflow";
 type EvaluationState = {
   evaluations: Evaluation[];
-  processCeoBatch: (ids: string[], action: "approve" | "return", note: string) => string | null;
+  processCeoBatch: (ids: string[], action: "approve" | "return" | "save", note: string, drafts?: Record<string, Draft>, returnStage?: StageKey) => string | null;
   saveCouncilBatch: (ids: string[], drafts: Record<string, Draft>, submit?: boolean) => string | null;
   createCouncilSummary: (ids: string[]) => void;
   replaceSelfEvaluation: (evaluation: Evaluation) => string | null;
@@ -12,6 +13,13 @@ type EvaluationState = {
   processCqttBatch: (ids: string[], drafts: Record<string, Draft>, request: boolean | "council") => string | null;
   sendOfficeBatch: (ids: string[], drafts?: Record<string, Draft>) => string | null;
   updateEvaluation: (id: string, patch: Draft, action?: Action) => string | null;
+  /** Cấu hình đang áp dụng hôm nay của từng khối. */
+  workflows: Record<Block, WorkflowVersion>;
+  saveWorkflow: (config: WorkflowConfig) => string | null;
+  /** Tất cả phiên bản cấu hình (kể cả sắp áp dụng / hết hiệu lực). */
+  workflowVersions: WorkflowVersion[];
+  saveWorkflowVersion: (version: WorkflowVersion) => string | null;
+  deleteWorkflowVersion: (id: string) => string | null;
 };
 const previousContext = import.meta.hot?.data?.evaluationContext as
   Context<EvaluationState | null> | undefined;

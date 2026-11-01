@@ -13,8 +13,79 @@ import {
   type Evaluation,
 } from "@/lib/evaluation";
 import { EvaluationContext } from "@/components/evaluation-context";
+import {
+  defaultVersions,
+  effectiveVersion,
+  normalizeBranches,
+  setWorkflowVersions,
+  todayIso,
+  upgradeWorkflow,
+  validateVersion,
+  versionState,
+  versionStatus,
+  BLOCKS,
+  type Block,
+  type WorkflowConfig,
+  type WorkflowVersion,
+} from "@/lib/workflow";
+
+const VERSIONS_KEY = "danh-gia.workflow-versions.v1";
+const LEGACY_KEY = "danh-gia.workflow-config.v1";
+const upgrade = (raw: unknown): WorkflowVersion => {
+  const v = raw as WorkflowVersion;
+  return { ...normalizeBranches(upgradeWorkflow(v as Parameters<typeof upgradeWorkflow>[0])), id: v.id, name: v.name, effectiveFrom: v.effectiveFrom, state: versionState(v) };
+};
+/** Đọc danh sách phiên bản đã lưu; chuyển cấu hình bản cũ (1 cấu hình/khối) thành phiên bản. */
+function loadVersions(): WorkflowVersion[] {
+  const defaults = defaultVersions();
+  try {
+    if (typeof localStorage === "undefined") return defaults;
+    const raw = localStorage.getItem(VERSIONS_KEY);
+    if (raw) {
+      const list = (JSON.parse(raw) as unknown[]).map(upgrade).filter((v, _, all) => !validateVersion(v, all).length);
+      if (BLOCKS.every((b) => effectiveVersion(list, b))) return list;
+    }
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      const saved = JSON.parse(legacy) as Partial<Record<Block, WorkflowConfig>>;
+      return defaults.map((d) => (saved[d.block] ? upgrade({ ...saved[d.block], id: d.id, name: d.name, effectiveFrom: d.effectiveFrom }) : d));
+    }
+  } catch { /* dữ liệu lỗi: dùng mặc định */ }
+  return defaults;
+}
 export function EvaluationProvider({ children }: { children: ReactNode }) {
   const [evaluations, setEvaluations] = useState(EVALUATIONS);
+  const [workflowVersions, setVersionState] = useState(() => { const v = loadVersions(); setWorkflowVersions(v); return v; });
+  const today = todayIso();
+  // Phiên bản đang áp dụng hôm nay của từng khối — các màn xử lý hồ sơ dùng cấu hình này.
+  const workflows = Object.fromEntries(BLOCKS.map((b) => [b, effectiveVersion(workflowVersions, b, today)!])) as Record<Block, WorkflowVersion>;
+  function commitVersions(next: WorkflowVersion[]): string | null {
+    const missing = BLOCKS.find((b) => !effectiveVersion(next, b, today));
+    if (missing) return `${missing} phải luôn có một cấu hình đang áp dụng (ngày áp dụng không sau hôm nay).`;
+    setWorkflowVersions(next);
+    setVersionState(next);
+    try { localStorage.setItem(VERSIONS_KEY, JSON.stringify(next)); } catch { /* chỉ lưu trong phiên */ }
+    return null;
+  }
+  function saveWorkflowVersion(version: WorkflowVersion): string | null {
+    const existing = workflowVersions.find((v) => v.id === version.id);
+    const { published: _legacy, ...clean } = version;
+    const normalized: WorkflowVersion = { ...clean, state: versionState(version), ...normalizeBranches(version), id: version.id, name: version.name.trim(), effectiveFrom: version.effectiveFrom, updatedAt: new Date().toLocaleString("vi-VN") };
+    const errors = validateVersion(normalized, workflowVersions);
+    if (errors.length) return errors[0]!;
+    return commitVersions(existing ? workflowVersions.map((v) => (v.id === version.id ? normalized : v)) : [...workflowVersions, normalized]);
+  }
+  function deleteWorkflowVersion(id: string): string | null {
+    const v = workflowVersions.find((x) => x.id === id);
+    if (!v) return "Không tìm thấy cấu hình.";
+    if (versionStatus(v, workflowVersions, today) === "active") return "Không xóa được cấu hình đang áp dụng.";
+    return commitVersions(workflowVersions.filter((x) => x.id !== id));
+  }
+  /** Lưu nhanh cấu hình đang áp dụng của khối (giữ tương thích). */
+  function saveWorkflow(config: WorkflowConfig): string | null {
+    const current = workflows[config.block];
+    return saveWorkflowVersion({ ...current, ...config, id: current.id, name: current.name, effectiveFrom: current.effectiveFrom });
+  }
   const [previewRole, setPreviewRole] = useState<PreviewRole>("performer");
   function updateEvaluation(id: string, patch: Draft, action?: Action): string | null {
     const e = evaluations.find((item) => item.id === id);
@@ -33,7 +104,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         if (issue) return issue;
       }
       const next = action
-        ? transition(saved, previewRole, action, returnAction ? patch : {}, now)
+        ? transition(saved, previewRole, action, returnAction ? patch : patch.returnStage ? { returnStage: patch.returnStage } : {}, now)
         : saved;
       const attributed = { ...next, history: (next.history ?? []).map((entry, index) => e.step === "self" && index >= (e.history?.length ?? 0) ? { ...entry, actorName: CURRENT_USER.name, actorId: CURRENT_USER.employeeId } : entry) };
       setEvaluations((current) => current.map((item) => (item.id === id ? attributed : item)));
@@ -75,14 +146,20 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
     <EvaluationContext.Provider
       value={{
         evaluations,
-        processCeoBatch: (ids, action, note) => {
+        processCeoBatch: (ids, action, note, drafts = {}, returnStage) => {
           if (previewRole !== "ceo") return "Chỉ TGĐ được phê duyệt hoặc yêu cầu Hội đồng điều chỉnh.";
           try {
             if (!ids.length) throw new Error("Không có hồ sơ chờ phê duyệt.");
+            if (action === "save" && !ids.some((id) => Object.keys(drafts[id] ?? {}).length)) throw new Error("Chưa có thay đổi để lưu.");
             const updates = new Map(ids.map((id) => {
               const e = evaluations.find((e) => e.id === id);
               if (!e || e.step !== "ceo") throw new Error("Hồ sơ không còn chờ TGĐ phê duyệt.");
-              return [id, transition(e, "ceo", action, { note }, new Date().toLocaleString("vi-VN"))] as const;
+              const now = new Date().toLocaleString("vi-VN");
+              const draft = drafts[id] ?? {};
+              // Phê duyệt: áp điều chỉnh trực tiếp của TGĐ (nếu có) rồi phê duyệt.
+              const adjusted = action !== "return" && Object.keys(draft).length ? saveDraft(e, "ceo", draft, now) : e;
+              // Lưu tất cả: chỉ lưu điều chỉnh trực tiếp, hồ sơ vẫn chờ TGĐ phê duyệt.
+              return [id, action === "save" ? adjusted : transition(adjusted, "ceo", action, { note, ...(returnStage ? { returnStage } : {}) }, now)] as const;
             }));
             setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
             return null;
@@ -118,6 +195,11 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
           catch (error) { return error instanceof Error ? error.message : "Không thể xử lý danh sách."; }
         },
         addEvaluation: (e) => setEvaluations((current) => [e, ...current]),
+        workflows,
+        saveWorkflow,
+        workflowVersions,
+        saveWorkflowVersion,
+        deleteWorkflowVersion,
       }}
     >
       {children}

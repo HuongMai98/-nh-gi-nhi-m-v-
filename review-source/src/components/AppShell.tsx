@@ -12,7 +12,8 @@ import {
   Settings,
   UserSquare,
 } from "lucide-react";
-import { ROLES, stageRole, STATUS, type PreviewRole } from "@/lib/evaluation";
+import { ROLES, canConfigureWorkflow, roleOf, stageRole, statusLabelOf, STATUS, type PreviewRole } from "@/lib/evaluation";
+import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEvaluations } from "@/components/evaluation-context";
@@ -40,17 +41,29 @@ export function AppShell({
   crumbs,
   title,
   actions,
+  activeNav = "evaluation",
 }: {
   children: ReactNode;
   crumbs: ReactNode;
   title: string;
   actions?: ReactNode;
+  activeNav?: "evaluation" | "config";
 }) {
-  const { evaluations, previewRole, setPreviewRole } = useEvaluations();
+  const { evaluations, previewRole, setPreviewRole, workflows } = useEvaluations();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const notifications = evaluations.filter(
-    (item) => stageRole[item.step] === previewRole && item.step !== "done",
-  );
+  // Thông báo theo cấu hình luồng duyệt của khối: đến bước / nhắc trước hạn / cảnh báo quá hạn, kênh hệ thống.
+  const notifications = evaluations
+    .filter((item) => roleOf(item) === previewRole && item.step !== "done")
+    .map((item) => {
+      const n = { ...DEFAULT_NOTIFICATIONS, ...(workflows[item.block].notifications ?? {}) };
+      const sla = slaFor(item);
+      const overdue = !!sla?.overdue && n.overdueAlert;
+      const dueSoon = !!sla && !sla.overdue && n.remindBeforeDays > 0 && sla.daysLeft <= n.remindBeforeDays;
+      const show = n.inApp && (n.onArrival || overdue || dueSoon);
+      return { item, show, tag: overdue ? slaLabel(sla!) : dueSoon ? `Sắp đến hạn · ${slaLabel(sla!)}` : "", overdue };
+    })
+    .filter((x) => x.show)
+    .sort((a, b) => Number(b.overdue) - Number(a.overdue));
   const unread = notifications.length;
   return (
     <div className="flex min-h-screen bg-background">
@@ -58,26 +71,41 @@ export function AppShell({
         <div className="mb-4 flex h-10 w-10 items-center justify-center text-2xl font-black text-primary">
           V
         </div>
-        {side.map((Icon, i) => (
+        {side.map((Icon, i) => {
+          const navClass = cn(
+            "flex h-10 w-10 items-center justify-center rounded-lg text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
+            (activeNav === "config" ? i === 0 : i === 5) && "bg-primary text-primary-foreground hover:bg-primary",
+          );
+          if (i === 0 && canConfigureWorkflow(previewRole))
+            return (
+              <Link key={i} to="/cau-hinh-luong-duyet" title="Cấu hình luồng duyệt" aria-label="Cấu hình luồng duyệt" className={navClass}>
+                <Icon className="h-5 w-5" />
+              </Link>
+            );
+          if (i === 5)
+            return (
+              <Link key={i} to="/" title="Đánh giá nhiệm vụ" aria-label="Đánh giá nhiệm vụ" className={navClass}>
+                <Icon className="h-5 w-5" />
+              </Link>
+            );
+          return (
           <button
             key={i}
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
-              i === 5 && "bg-primary text-primary-foreground hover:bg-primary",
-            )}
+            className={navClass}
           >
             <Icon className="h-5 w-5" />
           </button>
-        ))}
+          );
+        })}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-end justify-between pr-4 pt-3">
-          <nav className="flex gap-1">
+          <nav className="flex min-w-0 gap-1 overflow-x-auto">
             {tabs.map((t) => (
               <span
                 key={t}
                 className={cn(
-                  "rounded-t-xl px-6 py-3 text-sm text-muted-foreground",
+                  "whitespace-nowrap rounded-t-xl px-3 py-3 text-sm text-muted-foreground xl:px-6",
                   t === "Đánh giá" && "bg-card font-medium text-primary",
                 )}
               >
@@ -85,7 +113,7 @@ export function AppShell({
               </span>
             ))}
           </nav>
-          <div className="flex items-center gap-4 pb-2">
+          <div className="flex shrink-0 items-center gap-2 pb-2 xl:gap-4">
             <div className="relative">
               <Button
                 variant="ghost"
@@ -111,7 +139,7 @@ export function AppShell({
                   {notifications.length === 0 ? (
                     <p className="px-4 py-6 text-sm text-muted-foreground">Không có thông báo</p>
                   ) : (
-                    notifications.map((item) => (
+                    notifications.map(({ item, tag, overdue }) => (
                       <Button
                         key={item.id}
                         asChild
@@ -127,7 +155,8 @@ export function AppShell({
                         >
                           <span className="block">
                             <span className="block font-semibold">
-                              {item.owner} · {STATUS[item.step].label}
+                              {item.owner} · {statusLabelOf(item)}
+                              {tag && <span className={cn("ml-2 rounded px-1.5 py-0.5 text-[11px] font-medium", overdue ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-800")}>{tag}</span>}
                             </span>
                             <span className="mt-1 block text-xs text-muted-foreground">
                               {item.id} · {item.unit}
@@ -150,7 +179,7 @@ export function AppShell({
                 setPreviewRole(event.target.value as PreviewRole);
                 setNotificationsOpen(false);
               }}
-              className="h-9 rounded-md border border-input bg-card px-2 text-sm"
+              className="h-9 w-36 rounded-md border border-input bg-card px-2 text-sm 2xl:w-auto"
             >
               {Object.entries(ROLES).map(([key, label]) => (
                 <option key={key} value={key}>
@@ -162,7 +191,7 @@ export function AppShell({
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
                 ĐT
               </div>
-              <div className="text-sm leading-tight">
+              <div className="hidden text-sm leading-tight 2xl:block">
                 <div className="font-medium">{ROLES[previewRole]}</div>
                 <div className="text-xs text-muted-foreground">Xem mẫu theo vai trò</div>
               </div>
