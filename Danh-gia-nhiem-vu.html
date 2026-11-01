@@ -1,0 +1,562 @@
+<title>Đánh giá nhiệm vụ quý</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: tài liệu đọc dọc (mục lục dính bên trái trên desktop) + khung mockup giả lập vOffice ở mục 5 */
+:root{
+  --bg:#f6f4f4; --surface:#ffffff; --sunk:#f1eeee; --line:#e6e0e1; --fg:#1f1b1c; --muted:#6b6466;
+  --accent:#d7141f; --accent-soft:#fde8e9;
+  --ok:#1e8a57; --ok-soft:#e3f4ea; --warn:#a86a0c; --warn-soft:#fdf1dc; --bad:#c4202b; --bad-soft:#fde6e7; --info:#2463b8; --info-soft:#e5eefb;
+  --f-body:"Be Vietnam Pro",system-ui,"Segoe UI",Roboto,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151213; --surface:#201c1d; --sunk:#1a1718; --line:#3a3335; --fg:#f1ecec; --muted:#a8a0a2;
+  --accent:#ff4f59; --accent-soft:#3a1c1f; --ok:#4cc58a; --ok-soft:#173226; --warn:#e3a640; --warn-soft:#382a12; --bad:#ff6b73; --bad-soft:#3b1a1d; --info:#6ea4f0; --info-soft:#18263b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151213; --surface:#201c1d; --sunk:#1a1718; --line:#3a3335; --fg:#f1ecec; --muted:#a8a0a2;
+  --accent:#ff4f59; --accent-soft:#3a1c1f; --ok:#4cc58a; --ok-soft:#173226; --warn:#e3a640; --warn-soft:#382a12; --bad:#ff6b73; --bad-soft:#3b1a1d; --info:#6ea4f0; --info-soft:#18263b; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px;display:flex;flex-direction:column;gap:2px}
+nav.toc a{color:var(--muted);text-decoration:none;padding:5px 10px;border-left:2px solid var(--line)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}
+main{min-width:0;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:30px;font-weight:700}
+h2{font-size:22px;font-weight:700;display:flex;gap:10px;align-items:baseline}
+h2 .n{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+h3{font-size:16px;font-weight:600}
+p{margin:0;max-width:72ch}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lead{color:var(--muted);font-size:16px}
+.src{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.box ul,.box ol{margin:0;padding-left:20px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--sunk);font-weight:600;font-size:12.5px;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+code,.mono{font-family:var(--f-mono);font-size:12.5px}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;border:1px solid transparent}
+.c-ok{background:var(--ok-soft);color:var(--ok)} .c-warn{background:var(--warn-soft);color:var(--warn)} .c-bad{background:var(--bad-soft);color:var(--bad)} .c-info{background:var(--info-soft);color:var(--info)} .c-mute{background:var(--sunk);color:var(--muted);border-color:var(--line)}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 6px 6px 0;font-size:14px}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;overflow-x:auto;margin:0}
+
+/* ===== mockup shell ===== */
+.roles{display:flex;flex-wrap:wrap;gap:6px}
+.roles button{font:inherit;font-size:13px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.roles button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.roles button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);display:grid;grid-template-columns:56px minmax(0,1fr);min-height:620px}
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 0}
+.rail .logo{width:30px;height:30px;border-radius:8px;background:var(--accent)}
+.rail i{width:22px;height:22px;border-radius:6px;border:2px solid var(--muted);opacity:.55}
+.rail i.on{border-color:var(--accent);background:var(--accent-soft);opacity:1}
+.appmain{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;gap:4px;align-items:flex-end;padding:10px 16px 0;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto}
+.topbar span{padding:8px 14px;font-size:13px;color:var(--muted);white-space:nowrap;border-radius:8px 8px 0 0}
+.topbar span.on{color:var(--accent);background:var(--bg);font-weight:600}
+.page{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.crumb{font-size:12px;color:var(--muted)}
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pagehead h3{font-size:19px}
+.btn{font:inherit;font-size:13px;padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 14px}
+select,input[type=text],textarea{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg)}
+textarea{width:100%;min-height:34px;resize:vertical}
+.steps{display:flex;gap:0;overflow-x:auto;padding:12px 14px}
+.step{flex:1 0 120px;display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-left:3px solid var(--line);font-size:12px;color:var(--muted)}
+.step b{font-size:20px;color:var(--fg);font-variant-numeric:tabular-nums}
+.step.cur{border-color:var(--accent)} .step.cur b{color:var(--accent)}
+.grp td{background:var(--sunk);font-weight:600;font-size:12.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;padding:12px 14px;font-size:13px}
+.meta span{color:var(--muted)} .meta b{font-weight:600}
+.sticky{position:sticky;bottom:0;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.total{display:flex;gap:22px;flex-wrap:wrap;align-items:baseline;font-size:13px;color:var(--muted)}
+.total b{font-size:20px;color:var(--fg);font-variant-numeric:tabular-nums}
+.msg{font-size:13px;padding:8px 12px;border-radius:6px}
+.diff{background:var(--warn-soft)}
+.err{color:var(--bad);font-size:12px}
+.link{color:var(--info);text-decoration:underline;cursor:pointer}
+.thread{display:flex;flex-direction:column;gap:8px;padding:12px 14px;font-size:13px}
+.bubble{padding:8px 12px;border-radius:8px;background:var(--sunk);max-width:640px}
+.bubble small{display:block;color:var(--muted);font-size:11.5px}
+.dist{display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.dist div{display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#fff;font-weight:600;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:12px 14px}
+.mini div{font-size:12px;color:var(--muted)} .mini b{display:block;font-size:18px;color:var(--fg);font-variant-numeric:tabular-nums}
+@media (max-width:860px){.wrap{grid-template-columns:1fr} nav.toc{position:static;flex-direction:row;flex-wrap:wrap} nav.toc a{border-left:0;border-bottom:2px solid var(--line)} .app{grid-template-columns:1fr} .rail{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Mục lục">
+  <a href="#tong-quan">1. Tổng quan</a>
+  <a href="#quy-trinh">2. Quy trình &amp; trạng thái</a>
+  <a href="#quy-tac">3. Quy tắc tính điểm</a>
+  <a href="#du-lieu">4. Dữ liệu</a>
+  <a href="#mockup">5. Mockup</a>
+  <a href="#stories">6. User story</a>
+  <a href="#cau-hoi">7. Câu hỏi mở</a>
+</nav>
+<main>
+
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="eyebrow">Tài liệu phân tích nghiệp vụ · bản nháp v0.1 · 30/10/2026</span>
+  <h1>Đánh giá kết quả thực hiện nhiệm vụ quý của chỉ huy cơ quan, đơn vị</h1>
+  <p class="lead">Số hóa quy trình đang chạy bằng Excel (BM01 và file chấm KPI theo quý) thành một luồng trên hệ thống quản lý nhiệm vụ hiện có: tự đánh giá, rà soát, chấm Ki, phê duyệt và ban hành.</p>
+  <p class="src">Nguồn: sơ đồ "Đánh giá_Khối Cơ quan", "Đánh giá_Khối Đơn vị"; BM 01 Phiếu giao nhiệm vụ và đánh giá kết quả (11/06/2025); Chấm điểm KPI KCQ Q1.2026; màn hình Nhiệm vụ thực hiện (môi trường UAT).</p>
+</header>
+
+<!-- 1 -->
+<section id="tong-quan">
+  <h2><span class="n">01</span>Tổng quan</h2>
+  <div class="grid2">
+    <div class="box"><h3>Vấn đề hiện tại</h3><ul>
+      <li>Phiếu tự đánh giá, góp ý của Thường trực, phản hồi tiếp thu/bảo lưu nằm rải rác trong nhiều file và cột ghi chú.</li>
+      <li>Ràng buộc xếp loại Ki chỉ được kiểm tra bằng công thức Excel, dễ bị ghi đè.</li>
+      <li>Số nhiệm vụ đúng hạn (cột "Tỷ lệ việc đúng hạn" ở Q3) phải đếm tay, dù dữ liệu đã có trong module Nhiệm vụ.</li>
+      <li>Không có lịch sử điểm qua từng vòng (tự đánh giá → Thường trực → Hội đồng → TGĐ).</li>
+    </ul></div>
+    <div class="box"><h3>Mục tiêu</h3><ul>
+      <li>Một phiếu đánh giá điện tử cho mỗi chỉ huy, mỗi kỳ, đi qua đủ 5 vai trò.</li>
+      <li>Tự tính tổng điểm, xếp loại, gợi ý Ki và chặn các tổ hợp Ki sai quy định.</li>
+      <li>Kéo số liệu nhiệm vụ đúng hạn từ module Nhiệm vụ làm bằng chứng.</li>
+      <li>Xuất Phụ lục I (Khối Cơ quan), Phụ lục II (Khối Đơn vị) và phiếu đánh giá để trình ký.</li>
+    </ul></div>
+  </div>
+  <h3>Tác nhân</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Vai trò</th><th>Khối Cơ quan</th><th>Khối Đơn vị</th><th>Việc chính trên hệ thống</th></tr></thead>
+    <tbody>
+      <tr><td><b>CQĐV</b> (cơ quan/đơn vị được đánh giá)</td><td>Các Ban, Văn phòng, CQ Chính trị</td><td>Tổng công ty, Viện, Trung tâm</td><td>Tự đánh giá, phản hồi tiếp thu/bảo lưu, trình ký phiếu</td></tr>
+      <tr><td><b>Đầu mối tổng hợp</b></td><td>Văn phòng</td><td>Ban Chiến lược</td><td>Mở kỳ, đôn đốc, tổng hợp gửi CQTT, ban hành kết quả về CQĐV</td></tr>
+      <tr><td><b>CQTT</b> (cơ quan thường trực, gồm trợ lý được phân công)</td><td colspan="2">Theo phân công</td><td>Rà soát, chấm điểm từng mục tiêu, góp ý, tổng hợp báo cáo</td></tr>
+      <tr><td><b>Hội đồng</b></td><td colspan="2">Hội đồng đánh giá</td><td>Chấm điểm, xếp Ki, tổng hợp; điều chỉnh theo yêu cầu TGĐ</td></tr>
+      <tr><td><b>TGĐ</b></td><td colspan="2">Tổng Giám đốc (có thể ủy quyền PTGĐ phụ trách)</td><td>Phê duyệt hoặc yêu cầu điều chỉnh</td></tr>
+    </tbody></table></div>
+  <p class="note">Hai sơ đồ chỉ khác nhau ở đầu mối tổng hợp (Văn phòng / Ban Chiến lược). Đề xuất làm <b>một quy trình</b>, cấu hình đầu mối theo khối, không làm hai luồng riêng.</p>
+</section>
+
+<!-- 2 -->
+<section id="quy-trinh">
+  <h2><span class="n">02</span>Quy trình và trạng thái phiếu</h2>
+  <p>Các bước theo đúng sơ đồ. Điểm cần chú ý: khi CQTT yêu cầu điều chỉnh, CQĐV chỉ <b>phản hồi một vòng</b> (tiếp thu hoặc bảo lưu). Nếu bảo lưu, CQTT ghi nhận nhưng giữ nguyên điểm đã chấm, phiếu đi tiếp, không quay vòng.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>Bước</th><th>Ai làm</th><th>Trạng thái sau bước</th><th>Ghi chú hệ thống</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Mở kỳ đánh giá</td><td>Đầu mối tổng hợp</td><td><span class="chip c-mute">Chưa tự đánh giá</span></td><td>Chọn kỳ (Quý 1–4, Năm), khối, danh sách chỉ huy, hạn từng bước. Phiếu sinh từ phiếu giao nhiệm vụ (GNV) đã ký đầu kỳ.</td></tr>
+      <tr><td>1</td><td>Tự đánh giá</td><td>CQĐV</td><td><span class="chip c-info">Chờ tổng hợp</span></td><td>Nhập kết quả, chấm 1–5 từng mục tiêu, đính kèm bằng chứng.</td></tr>
+      <tr><td>2</td><td>Tổng hợp KQ</td><td>VP / B.CL</td><td><span class="chip c-info">CQTT rà soát</span></td><td>Kiểm tra đủ phiếu, có thể trả lại nếu thiếu thông tin. Gửi theo lô.</td></tr>
+      <tr><td>3</td><td>Rà soát, chấm điểm</td><td>CQTT</td><td><span class="chip c-warn">Chờ CQĐV phản hồi</span> hoặc <span class="chip c-info">Chờ Hội đồng</span></td><td>Có điều chỉnh → bắt buộc ghi lý do từng mục bị đổi điểm.</td></tr>
+      <tr><td>3a</td><td>Tiếp thu / bảo lưu</td><td>CQĐV</td><td><span class="chip c-info">CQTT rà soát</span></td><td>Tiếp thu: CQĐV được sửa kết quả/bằng chứng. Bảo lưu: nhập giải trình. Điểm CQTT không đổi.</td></tr>
+      <tr><td>4</td><td>Tổng hợp báo cáo</td><td>CQTT</td><td><span class="chip c-info">Chờ Hội đồng</span></td><td>Chốt điểm, sinh bảng tổng hợp theo khối.</td></tr>
+      <tr><td>5</td><td>Chấm điểm, tính Ki, tổng hợp</td><td>Hội đồng</td><td><span class="chip c-info">Chờ TGĐ duyệt</span></td><td>Hệ thống gợi ý Ki và chặn tổ hợp sai (mục 3).</td></tr>
+      <tr><td>6</td><td>Phê duyệt</td><td>TGĐ</td><td><span class="chip c-ok">Đã phê duyệt</span> hoặc <span class="chip c-warn">Hội đồng điều chỉnh</span></td><td>Yêu cầu điều chỉnh → về Hội đồng, sửa rồi trình lại (có thể nhiều vòng).</td></tr>
+      <tr><td>7</td><td>Gửi lại KQ / ban hành</td><td>Hội đồng → VP / B.CL</td><td><span class="chip c-ok">Đã ban hành</span></td><td>Xuất Phụ lục I/II, thông báo CQĐV.</td></tr>
+      <tr><td>8</td><td>Trình ký phiếu ĐG (kèm phiếu GNV)</td><td>CQĐV</td><td><span class="chip c-ok">Hoàn tất</span></td><td>Liên thông luồng trình ký có sẵn; đề xuất ký số.</td></tr>
+    </tbody></table></div>
+  <pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> ChuaTuDG: Mở kỳ
+  ChuaTuDG --> ChoTongHop: CQĐV gửi
+  ChoTongHop --> ChuaTuDG: VP/B.CL trả lại
+  ChoTongHop --> CQTTRaSoat: Gửi CQTT
+  CQTTRaSoat --> ChoPhanHoi: Có điều chỉnh
+  ChoPhanHoi --> CQTTRaSoat: Tiếp thu / Bảo lưu
+  CQTTRaSoat --> ChoHoiDong: Chốt điểm
+  ChoHoiDong --> ChoTGD: Trình duyệt
+  ChoTGD --> ChoHoiDong: Yêu cầu điều chỉnh
+  ChoTGD --> DaBanHanh: Phê duyệt
+  DaBanHanh --> HoanTat: Ký phiếu
+  HoanTat --> [*]
+  </pre>
+</section>
+
+<!-- 3 -->
+<section id="quy-tac">
+  <h2><span class="n">03</span>Quy tắc tính điểm và xếp loại</h2>
+  <p class="src">Lấy từ công thức trong BM01 (sheet "Phieu Danh gia", "Tong hop Ki") và file chấm KPI KCQ.</p>
+  <div class="grid2">
+    <div class="box"><h3>BR-01 · Cơ cấu mục tiêu</h3><ul>
+      <li>Nhóm A – Nhiệm vụ trọng tâm, trọng điểm (NVTT): <b>20%</b></li>
+      <li>Nhóm B – Theo chức năng: <b>80%</b>, gồm B.I Mục tiêu theo chức năng và B.II Chỉ số kiểm soát ngành dọc</li>
+      <li>Tổng tỷ trọng các mục tiêu = 100%. Không cho gửi nếu lệch.</li>
+    </ul></div>
+    <div class="box"><h3>BR-02 · Điểm mục tiêu</h3><ul>
+      <li>Thang nguyên 1–5 (chọn 5, 4, 3, 2, 1).</li>
+      <li>Mỗi mục tiêu có mức T (tối thiểu), B (mong đợi), S (thách thức) làm căn cứ chấm.</li>
+      <li>Tổng điểm = Σ(tỷ trọng × điểm), làm tròn 2 số lẻ.</li>
+    </ul></div>
+  </div>
+  <div class="grid2">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>BR-03 · Tổng điểm</th><th>Xếp loại kết quả</th><th>Ki gợi ý</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">4,5 – 5</td><td>Vượt xa yêu cầu</td><td><b>A+</b></td></tr>
+        <tr><td class="mono">3,5 – &lt; 4,5</td><td>Vượt yêu cầu</td><td><b>A</b></td></tr>
+        <tr><td class="mono">2,5 – &lt; 3,5</td><td>Đạt yêu cầu</td><td><b>B</b></td></tr>
+        <tr><td class="mono">2 – &lt; 2,5</td><td>Gần đạt yêu cầu</td><td><b>C</b></td></tr>
+        <tr><td class="mono">&lt; 2</td><td>Không đạt yêu cầu</td><td><b>D</b></td></tr>
+        <tr><td>—</td><td>Không đánh giá</td><td><b>K</b></td></tr>
+      </tbody></table></div>
+    <div class="box"><h3>BR-04 · Tuân thủ (QLTT/Hội đồng chọn)</h3><ul>
+      <li>Địa điểm làm việc: Tuân thủ / Không tuân thủ</li>
+      <li>Nội quy lao động: Tuân thủ / Vi phạm nhưng chưa đến mức xử lý kỷ luật / Bị xử lý kỷ luật lao động</li>
+      <li>Văn hóa doanh nghiệp: nhận xét</li>
+    </ul></div>
+  </div>
+  <h3>BR-05 · Ràng buộc Ki (hệ thống chặn khi trình duyệt)</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Điều kiện</th><th>Ki hợp lệ</th><th>Thông báo lỗi</th></tr></thead>
+    <tbody>
+      <tr><td>Xếp loại = Không đánh giá</td><td>Chỉ K</td><td>Xếp loại Ki phải là K</td></tr>
+      <tr><td>Ki = K nhưng xếp loại khác "Không đánh giá"</td><td>Khác K</td><td>Xếp loại Ki phải khác K</td></tr>
+      <tr><td>Không tuân thủ địa điểm, hoặc bị xử lý kỷ luật lao động</td><td>Chỉ D</td><td>Xếp loại Ki phải là D</td></tr>
+      <tr><td>Không đạt yêu cầu</td><td>Chỉ D</td><td>Xếp loại Ki phải là D</td></tr>
+      <tr><td>Vi phạm nội quy nhưng chưa đến mức kỷ luật</td><td>Tối đa B</td><td>Mức xếp loại Ki sau khi hạ vượt quá Ki B</td></tr>
+      <tr><td>Gần đạt yêu cầu</td><td>B, C, D</td><td>Không đạt điều kiện tối thiểu của mức Ki …</td></tr>
+      <tr><td>Đạt yêu cầu</td><td>Không được A+</td><td>Không đạt điều kiện tối thiểu của mức Ki A+</td></tr>
+    </tbody></table></div>
+  <div class="grid2">
+    <div class="box"><h3>BR-06 · Mức độ hoàn thành NV/CV</h3>
+      <p>Ki = K → "Không đánh giá". Ki = D và (Không đạt/Gần đạt yêu cầu hoặc vi phạm tuân thủ) → "Không hoàn thành NV/CV". Còn lại → "Hoàn thành NV/CV".</p></div>
+    <div class="box"><h3>BR-07 · Tỷ lệ xếp loại Ki</h3>
+      <p>Tỷ lệ mỗi mức = số người mức đó / (tổng số người − số người Ki K). Hiển thị ở bảng tổng hợp và trang phê duyệt.</p></div>
+    <div class="box"><h3>BR-08 · Góp ý và phản hồi</h3>
+      <p>Điểm CQTT khác điểm tự đánh giá → bắt buộc nhập nội dung góp ý ở mục đó. CQĐV bảo lưu → bắt buộc nhập giải trình. Lưu toàn bộ lịch sử, không cho xóa.</p></div>
+    <div class="box"><h3>BR-09 · Liên thông module Nhiệm vụ</h3>
+      <p>Trong kỳ, tự đếm: tổng nhiệm vụ được giao, số hoàn thành đúng hạn, tỷ lệ đúng hạn, số "Quá hạn chưa hoàn thành". Chỉ hiển thị làm bằng chứng, không tự quy đổi ra điểm (cần xác nhận, xem câu hỏi Q3).</p></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="du-lieu">
+  <h2><span class="n">04</span>Dữ liệu chính</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Đối tượng</th><th>Trường chính</th></tr></thead>
+    <tbody>
+      <tr><td><b>Kỳ đánh giá</b></td><td>Loại kỳ (Quý 1–4/Năm), năm, khối (KCQ/Khối ĐV), đầu mối tổng hợp, CQTT, hạn từng bước, trạng thái kỳ</td></tr>
+      <tr><td><b>Phiếu đánh giá</b></td><td>Kỳ, chỉ huy (mã NV, họ tên, chức danh), cơ quan/đơn vị, địa điểm làm việc, phiếu GNV tham chiếu, trạng thái, điểm tự ĐG, điểm CQTT, điểm Hội đồng, xếp loại, tuân thủ (3 trường), Ki, mức độ hoàn thành, trợ lý phụ trách</td></tr>
+      <tr><td><b>Mục tiêu (dòng phiếu)</b></td><td>Nhóm (A / B.I / B.II), mục tiêu, chỉ số KPI, phương pháp đo, đơn vị đo, tỷ trọng, T/B/S, ngày bắt đầu/hoàn thành, kết quả thực hiện, file bằng chứng, điểm tự ĐG, điểm CQTT, điểm HĐ, nhiệm vụ liên kết</td></tr>
+      <tr><td><b>NVTT – ma trận 9-box</b></td><td>Mức độ mới/khó, phạm vi tác động/tính trọng yếu, vị trí trên ma trận (vd 3C), lý do; đánh giá lại của Thường trực</td></tr>
+      <tr><td><b>Góp ý / phản hồi</b></td><td>Phiếu, mục tiêu (tùy chọn), người góp ý, nội dung, loại phản hồi (Tiếp thu / Bảo lưu), giải trình, thời gian</td></tr>
+      <tr><td><b>Lịch sử</b></td><td>Mọi thay đổi điểm, Ki, trạng thái: ai, khi nào, giá trị cũ/mới, vòng</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- 5 -->
+<section id="mockup">
+  <h2><span class="n">05</span>Mockup</h2>
+  <p>Đặt tính năng trong tab <b>KPI hiệu suất công việc</b> đã có trên thanh menu. Chọn vai trò để xem màn hình tương ứng. Các ô điểm, Ki, tuân thủ đều bấm được và tự tính lại. Dữ liệu là ví dụ.</p>
+  <div class="roles" role="tablist" aria-label="Màn hình">
+    <button role="tab" data-s="list" aria-selected="true">① Danh sách phiếu (VP/B.CL)</button>
+    <button role="tab" data-s="self" aria-selected="false">② Tự đánh giá (CQĐV)</button>
+    <button role="tab" data-s="review" aria-selected="false">③ Rà soát (CQTT)</button>
+    <button role="tab" data-s="ki" aria-selected="false">④ Tổng hợp Ki (Hội đồng)</button>
+    <button role="tab" data-s="ceo" aria-selected="false">⑤ Phê duyệt (TGĐ)</button>
+  </div>
+
+  <div class="app">
+    <div class="rail"><div class="logo"></div><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i></div>
+    <div class="appmain">
+      <div class="topbar"><span>Điều hành</span><span>Thực hiện</span><span class="on">KPI hiệu suất công việc</span><span>Quản lý nhóm nhiệm vụ</span></div>
+
+      <!-- S1 list -->
+      <div class="page" data-p="list">
+        <div class="crumb">Trang chủ › KPI hiệu suất công việc › Đánh giá nhiệm vụ</div>
+        <div class="pagehead"><h3>Đánh giá nhiệm vụ · Quý III/2026</h3><div style="display:flex;gap:8px"><button class="btn">Xuất Phụ lục I</button><button class="btn pri">+ Mở kỳ đánh giá</button></div></div>
+        <div class="card filters">
+          <select id="f-ky" aria-label="Kỳ"><option>Quý III/2026</option><option>Quý II/2026</option><option>Năm 2025</option></select>
+          <select id="f-khoi" aria-label="Khối"><option>Khối Cơ quan</option><option>Khối Đơn vị</option></select>
+          <input id="f-q" type="text" placeholder="Tìm cơ quan, chỉ huy" aria-label="Tìm">
+          <span class="src" style="margin-left:auto">Hạn tự đánh giá: 05/10 · Hạn CQTT: 15/10 · Hạn trình TGĐ: 25/10</span>
+        </div>
+        <div class="card steps" id="steps"></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Cơ quan</th><th>Chỉ huy</th><th class="num">Tự ĐG</th><th class="num">CQTT</th><th>Ki</th><th>Trạng thái</th><th>Trợ lý</th><th>Thao tác</th></tr></thead>
+          <tbody id="list-body"></tbody></table></div>
+      </div>
+
+      <!-- S2 self -->
+      <div class="page" data-p="self" hidden>
+        <div class="crumb">Trang chủ › KPI hiệu suất công việc › Đánh giá nhiệm vụ › Phiếu tự đánh giá</div>
+        <div class="pagehead"><h3>Phiếu đánh giá kết quả thực hiện nhiệm vụ</h3><span class="chip c-mute" id="self-status">Chưa tự đánh giá</span></div>
+        <div class="card meta">
+          <div><span>Họ tên </span><b>Nguyễn Văn An</b></div><div><span>Mã NV </span><b class="mono">091599</b></div>
+          <div><span>Chức danh </span><b>Trưởng Ban</b></div><div><span>Cơ quan </span><b>Ban Công nghệ thông tin</b></div>
+          <div><span>Kỳ </span><b>Quý III/2026</b></div><div><span>Phiếu GNV </span><span class="link">GNV-Q3-2026-014</span></div>
+        </div>
+        <div class="card">
+          <div style="padding:12px 14px 0;font-size:13px;font-weight:600">Nhiệm vụ trong kỳ (tự lấy từ module Nhiệm vụ thực hiện)</div>
+          <div class="mini"><div>Được giao<b>75</b></div><div>Đúng hạn<b>73</b></div><div>Tỷ lệ đúng hạn<b>97,3%</b></div><div>Quá hạn chưa hoàn thành<b style="color:var(--bad)">2</b></div><div><span class="link">Xem danh sách</span></div></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>TT</th><th>Mục tiêu / KPI</th><th class="num">Tỷ trọng</th><th>T / B / S</th><th style="min-width:220px">Kết quả thực hiện</th><th>Bằng chứng</th><th>Tự ĐG (1–5)</th></tr></thead>
+          <tbody id="self-body"></tbody></table></div>
+        <div class="sticky">
+          <div class="total"><span>Tổng tỷ trọng <b id="s-w">100%</b></span><span>Tổng điểm <b id="s-t">–</b></span><span>Xếp loại <b id="s-r" style="font-size:15px">–</b></span></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span id="s-msg" class="err"></span><button class="btn">Lưu nháp</button><button class="btn pri" id="s-send">Gửi đánh giá</button></div>
+        </div>
+      </div>
+
+      <!-- S3 review -->
+      <div class="page" data-p="review" hidden>
+        <div class="crumb">Trang chủ › KPI hiệu suất công việc › Đánh giá nhiệm vụ › Rà soát</div>
+        <div class="pagehead"><h3>Rà soát, chấm điểm · Ban Công nghệ thông tin</h3><span class="chip c-info" id="r-status">CQTT rà soát</span></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>TT</th><th>Mục tiêu</th><th class="num">Tỷ trọng</th><th>Kết quả CQĐV báo cáo</th><th class="num">Tự ĐG</th><th>CQTT chấm</th><th style="min-width:230px">Nội dung góp ý</th></tr></thead>
+          <tbody id="rev-body"></tbody></table></div>
+        <div class="card">
+          <div style="padding:12px 14px 0;font-size:13px;font-weight:600">Trao đổi với CQĐV (vòng trước)</div>
+          <div class="thread">
+            <div class="bubble"><small>CQTT · trợ lý Trần Minh Quyền · 12/10 09:20 · Mục 1</small>Chưa thấy biên bản nghiệm thu giai đoạn 2, đề nghị bổ sung hoặc hạ điểm xuống 4.</div>
+            <div class="bubble" style="margin-left:24px"><small>CQĐV · Ban CNTT · 13/10 16:05 · <span class="chip c-warn">Bảo lưu</span></small>Biên bản đã ký ngày 25/09, đang chờ đóng dấu. Đề nghị giữ điểm 5.</div>
+            <div class="msg c-mute">CQTT ghi nhận, giữ nguyên điểm đã chấm (theo quy trình, không mở vòng phản hồi thứ hai).</div>
+          </div>
+        </div>
+        <div class="sticky">
+          <div class="total"><span>Tự ĐG <b id="r-self">–</b></span><span>CQTT <b id="r-t">–</b></span><span>Xếp loại <b id="r-r" style="font-size:15px">–</b></span></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span id="r-msg" class="err"></span><button class="btn" id="r-back">Yêu cầu CQĐV phản hồi</button><button class="btn pri" id="r-ok">Chốt điểm, gửi Hội đồng</button></div>
+        </div>
+      </div>
+
+      <!-- S4 ki -->
+      <div class="page" data-p="ki" hidden>
+        <div class="crumb">Trang chủ › KPI hiệu suất công việc › Đánh giá nhiệm vụ › Tổng hợp Ki</div>
+        <div class="pagehead"><h3>Tổng hợp kết quả và xếp hạng Ki · Khối Cơ quan · Quý III/2026</h3><button class="btn">Xuất Excel</button></div>
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <div class="dist" id="dist"></div><div class="legend" id="legend"></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Cơ quan</th><th class="num">Tự ĐG</th><th class="num">CQTT</th><th class="num">Hội đồng</th><th>Xếp loại</th><th>Địa điểm</th><th>Nội quy</th><th>Ki</th><th>Mức độ hoàn thành</th><th>Kiểm tra</th></tr></thead>
+          <tbody id="ki-body"></tbody></table></div>
+        <div class="sticky"><span id="ki-msg" class="err"></span><button class="btn pri" id="ki-send">Trình TGĐ phê duyệt</button></div>
+      </div>
+
+      <!-- S5 ceo -->
+      <div class="page" data-p="ceo" hidden>
+        <div class="crumb">Trang chủ › KPI hiệu suất công việc › Đánh giá nhiệm vụ › Phê duyệt</div>
+        <div class="pagehead"><h3>Phê duyệt kết quả Ki · Khối Cơ quan · Quý III/2026</h3><span class="chip c-info" id="c-status">Chờ TGĐ duyệt</span></div>
+        <div class="card mini" id="ceo-mini"></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Cơ quan</th><th>Chỉ huy</th><th class="num">Điểm</th><th>Xếp loại</th><th>Ki</th><th>Đổi so với CQTT</th><th>Điều chỉnh</th></tr></thead>
+          <tbody id="ceo-body"></tbody></table></div>
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <label for="c-note" style="font-size:13px;font-weight:600">Ý kiến chỉ đạo</label>
+          <textarea id="c-note" placeholder="Bắt buộc khi yêu cầu điều chỉnh"></textarea>
+          <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center"><span id="c-msg" class="err"></span><button class="btn" id="c-back">Yêu cầu Hội đồng điều chỉnh</button><button class="btn pri" id="c-ok">Phê duyệt</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="stories">
+  <h2><span class="n">06</span>User story và tiêu chí chấp nhận</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>ID</th><th>User story</th><th>Tiêu chí chấp nhận chính</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">US-01</td><td>Là đầu mối tổng hợp, tôi mở kỳ đánh giá cho một khối để các CQĐV bắt đầu tự đánh giá.</td><td>Sinh phiếu từ phiếu GNV đã ký; gửi thông báo; không mở trùng kỳ/khối; cấu hình hạn từng bước.</td></tr>
+      <tr><td class="mono">US-02</td><td>Là CQĐV, tôi tự chấm từng mục tiêu và đính kèm bằng chứng.</td><td>Tổng điểm, xếp loại tính ngay (BR-02, BR-03); không gửi khi thiếu điểm/kết quả hoặc Σ tỷ trọng ≠ 100%; lưu nháp được.</td></tr>
+      <tr><td class="mono">US-03</td><td>Là CQĐV, tôi thấy số nhiệm vụ đúng hạn trong kỳ lấy từ module Nhiệm vụ.</td><td>Số liệu khớp bộ lọc Danh sách nhiệm vụ theo đơn vị và khoảng ngày của kỳ; bấm mở được danh sách.</td></tr>
+      <tr><td class="mono">US-04</td><td>Là CQTT, tôi chấm lại và góp ý từng mục tiêu.</td><td>Ô đổi điểm được tô màu; bắt buộc góp ý khi khác điểm tự ĐG; chọn được "Yêu cầu phản hồi" hoặc "Chốt điểm".</td></tr>
+      <tr><td class="mono">US-05</td><td>Là CQĐV, tôi tiếp thu hoặc bảo lưu ý kiến CQTT.</td><td>Chỉ một vòng; bảo lưu bắt buộc giải trình; điểm CQTT không đổi; phiếu trở về CQTT.</td></tr>
+      <tr><td class="mono">US-06</td><td>Là Hội đồng, tôi xếp Ki cho toàn khối.</td><td>Ki gợi ý theo điểm; kiểm tra BR-05 trên từng dòng; không trình TGĐ khi còn lỗi; tỷ lệ Ki theo BR-07.</td></tr>
+      <tr><td class="mono">US-07</td><td>Là TGĐ, tôi phê duyệt hoặc yêu cầu điều chỉnh.</td><td>Thấy phân bố Ki và các dòng bị đổi; yêu cầu điều chỉnh bắt buộc ý kiến; mỗi vòng lưu lịch sử.</td></tr>
+      <tr><td class="mono">US-08</td><td>Là CQĐV, tôi trình ký phiếu đánh giá kèm phiếu GNV sau khi kết quả được ban hành.</td><td>Sinh phiếu theo mẫu BM01; đi vào luồng trình ký sẵn có của hệ thống.</td></tr>
+    </tbody></table></div>
+</section>
+
+<!-- 7 -->
+<section id="cau-hoi">
+  <h2><span class="n">07</span>Câu hỏi mở cần chốt với nghiệp vụ</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>Câu hỏi</th><th>Đề xuất của BA</th></tr></thead>
+    <tbody>
+      <tr><td>Q1</td><td>Đối tượng đánh giá chỉ là chỉ huy cơ quan/đơn vị, hay mở rộng cho CBNV (BM01 dùng chung cho CBNV)?</td><td>Giai đoạn 1 chỉ chỉ huy; thiết kế dữ liệu đủ để mở rộng.</td></tr>
+      <tr><td>Q2</td><td>Hội đồng chấm lại từng mục tiêu hay chỉ chấm tổng và Ki?</td><td>Chấm tổng + Ki, cho phép mở chi tiết khi cần (file Q3 chỉ có "Điểm sau khi xin ý kiến PTGĐ").</td></tr>
+      <tr><td>Q3</td><td>Tỷ lệ nhiệm vụ đúng hạn có quy đổi thành điểm mục tiêu "Hoàn thành nhiệm vụ BTGĐ giao" không?</td><td>Hiển thị làm bằng chứng trước; quy đổi khi có công thức chính thức.</td></tr>
+      <tr><td>Q4</td><td>Có bước PTGĐ phụ trách cho ý kiến trước TGĐ không (cột "PTGĐ Vũ/Chiến/Phương" trong file Q3)?</td><td>Thêm bước tùy chọn "Xin ý kiến PTGĐ" trong vai trò Hội đồng.</td></tr>
+      <tr><td>Q5</td><td>Đề xuất bổ sung NVTT giữa kỳ và đánh giá ma trận 9-box nằm trong tính năng này hay ở bước giao nhiệm vụ?</td><td>Đặt ở bước giao nhiệm vụ; màn đánh giá chỉ đọc vị trí ma trận.</td></tr>
+      <tr><td>Q6</td><td>Phân quyền xem: CQĐV có thấy điểm của cơ quan khác trước khi ban hành không?</td><td>Không; chỉ thấy phiếu của mình đến khi ban hành.</td></tr>
+      <tr><td>Q7</td><td>Quá hạn tự đánh giá xử lý thế nào: khóa phiếu, cho gửi muộn có đánh dấu, hay chuyển Ki K?</td><td>Cho gửi muộn, đánh dấu "Nộp muộn", đầu mối được gia hạn.</td></tr>
+    </tbody></table></div>
+</section>
+
+</main>
+</div>
+
+<script>
+// ---------- quy tắc (BR-03, BR-05, BR-06) ----------
+const rating=s=>s==null?'–':s<2?'Không đạt yêu cầu':s<2.5?'Gần đạt yêu cầu':s<3.5?'Đạt yêu cầu':s<4.5?'Vượt yêu cầu':'Vượt xa yêu cầu';
+const suggestKi=s=>s>=4.5?'A+':s>=3.5?'A':s>=2.5?'B':s>=2?'C':'D';
+const VP='Vi phạm chưa đến mức kỷ luật', KL='Bị xử lý kỷ luật';
+function kiError(r,dd,nq,ki){
+  if(r==='Không đánh giá'&&ki!=='K')return'Ki phải là K';
+  if(ki==='K'&&r!=='Không đánh giá')return'Ki phải khác K';
+  if((nq===KL||dd==='Không tuân thủ')&&ki!=='D')return'Ki phải là D';
+  if(r==='Không đạt yêu cầu'&&ki!=='D')return'Ki phải là D';
+  if(nq===VP&&(ki==='A'||ki==='A+'))return'Vi phạm nội quy: Ki tối đa B';
+  if(r==='Gần đạt yêu cầu'&&!['B','C','D'].includes(ki))return'Gần đạt: Ki tối đa B';
+  if(r==='Đạt yêu cầu'&&ki==='A+')return'Đạt YC: không được A+';
+  return'';
+}
+const completion=(r,dd,nq,ki)=>ki==='K'?'Không đánh giá':(ki==='D'&&(r==='Không đạt yêu cầu'||r==='Gần đạt yêu cầu'||dd==='Không tuân thủ'||nq!=='Tuân thủ'))?'Không hoàn thành NV/CV':'Hoàn thành NV/CV';
+const fmt=n=>n==null?'–':n.toFixed(2).replace('.',',');
+const pct=w=>Math.round(w*100)+'%';
+const sum=(items,key)=>items.some(i=>i[key]==null)?null:Math.round(items.reduce((a,i)=>a+i.w*i[key],0)*100)/100;
+const opts=(arr,v)=>arr.map(o=>`<option${o===v?' selected':''}>${o}</option>`).join('');
+
+// ---------- dữ liệu ví dụ ----------
+const items=[
+ {g:'A. Nhóm mục tiêu theo nhiệm vụ trọng tâm, trọng điểm (20%)'},
+ {id:1,t:'Hoàn thành nền tảng điều hành số giai đoạn 2',k:'% chức năng được nghiệm thu',w:.10,tbs:'80 / 90 / 100%',kq:'100% chức năng nghiệm thu ngày 25/09',f:2,self:5,cq:4,note:'Chưa có biên bản nghiệm thu bản đóng dấu'},
+ {id:2,t:'Chuyển hồ sơ trình ký sang ký số',k:'Tỷ lệ hồ sơ ký số',w:.10,tbs:'85 / 95 / 100%',kq:'96% hồ sơ ký số',f:1,self:4,cq:4,note:''},
+ {g:'B.I Mục tiêu theo chức năng'},
+ {id:3,t:'Đảm bảo hoạt động hệ thống lõi',k:'Uptime',w:.20,tbs:'99,5 / 99,8 / 99,9%',kq:'99,86%',f:1,self:4,cq:4,note:''},
+ {id:4,t:'Xử lý yêu cầu hỗ trợ đúng SLA',k:'Tỷ lệ đúng SLA',w:.15,tbs:'90 / 95 / 98%',kq:'',f:0,self:null,cq:3,note:''},
+ {id:5,t:'Hoàn thành nhiệm vụ BTGĐ giao đúng hạn',k:'Tỷ lệ đúng hạn',w:.15,tbs:'85 / 95 / 100%',kq:'73/75 nhiệm vụ đúng hạn (97,3%), số liệu từ module Nhiệm vụ',f:0,self:4,cq:4,note:''},
+ {g:'B.II Chỉ số kiểm soát ngành dọc'},
+ {id:6,t:'Không để xảy ra sự cố an toàn thông tin nghiêm trọng',k:'Số sự cố',w:.15,tbs:'≤1 / 0 / 0 + diễn tập',kq:'0 sự cố, diễn tập 2 lần',f:1,self:5,cq:5,note:''},
+ {id:7,t:'Báo cáo định kỳ đúng hạn',k:'Tỷ lệ đúng hạn',w:.15,tbs:'90 / 100 / 100%',kq:'100%',f:0,self:5,cq:5,note:''},
+];
+const rows=()=>items.filter(i=>i.id);
+const units=[
+ {u:'Ban Công nghệ thông tin',n:'Nguyễn Văn An',s:4.25,c:4.15,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ Hội đồng',tl:'quyendv'},
+ {u:'Ban Chiến lược',n:'Lê Thị Bình',s:4.75,c:4.65,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ Hội đồng',tl:'anhcn4'},
+ {u:'Ban Pháp chế',n:'Phạm Thu Cúc',s:4.9,c:4.8,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ Hội đồng',tl:'chauna'},
+ {u:'Ban Tài chính Kế toán',n:'Hoàng Minh Đức',s:4.6,c:4.6,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ Hội đồng',tl:'thanhnv34'},
+ {u:'Ban Kỹ thuật',n:'Vũ Quang Hải',s:3.6,c:3.4,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ CQĐV phản hồi',tl:'minhhd4',ki:'A+'},
+ {u:'Ban Hành chính',n:'Đỗ Thị Hạnh',s:4.3,c:4.3,dd:'Tuân thủ',nq:VP,st:'CQTT rà soát',tl:'quyendv'},
+ {u:'Ban Đối ngoại',n:'Bùi Văn Khoa',s:4.5,c:4.45,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chờ tổng hợp',tl:'anhcn4'},
+ {u:'Văn phòng',n:'Trần Hữu Long',s:null,c:null,dd:'Tuân thủ',nq:'Tuân thủ',st:'Chưa tự đánh giá',tl:'phamducnguyen'},
+];
+units.forEach(x=>{x.h=x.c;if(!x.ki)x.ki=x.c==null?'K':suggestKi(x.c)});
+const stChip={'Chưa tự đánh giá':'c-mute','Chờ tổng hợp':'c-info','CQTT rà soát':'c-info','Chờ CQĐV phản hồi':'c-warn','Chờ Hội đồng':'c-info','Chờ TGĐ duyệt':'c-info','Đã ban hành':'c-ok'};
+const chip=(t,c)=>`<span class="chip ${c}">${t}</span>`;
+
+// ---------- S1 danh sách ----------
+function renderList(){
+  const order=['Chưa tự đánh giá','Chờ tổng hợp','CQTT rà soát','Chờ CQĐV phản hồi','Chờ Hội đồng','Chờ TGĐ duyệt','Đã ban hành'];
+  document.getElementById('steps').innerHTML=order.map(s=>{const n=units.filter(u=>u.st===s).length;return`<div class="step${s==='Chờ Hội đồng'?' cur':''}"><b>${n}</b>${s}</div>`}).join('');
+  const q=(document.getElementById('f-q').value||'').toLowerCase();
+  document.getElementById('list-body').innerHTML=units.filter(u=>(u.u+u.n).toLowerCase().includes(q)).map(u=>`<tr><td>${u.u}</td><td>${u.n}</td><td class="num">${fmt(u.s)}</td><td class="num">${fmt(u.c)}</td><td>${u.c==null?'–':'<b>'+u.ki+'</b>'}</td><td>${chip(u.st,stChip[u.st])}</td><td class="mono">${u.tl}</td><td><span class="link">${u.st==='Chưa tự đánh giá'?'Nhắc hạn':'Xem phiếu'}</span></td></tr>`).join('');
+}
+document.getElementById('f-q').addEventListener('input',renderList);
+
+// ---------- S2 tự đánh giá ----------
+function renderSelf(){
+  document.getElementById('self-body').innerHTML=items.map(i=>i.g?`<tr class="grp"><td colspan="7">${i.g}</td></tr>`:
+   `<tr><td>${i.id}</td><td><b style="font-weight:500">${i.t}</b><div class="src">${i.k}</div></td><td class="num">${pct(i.w)}</td><td class="mono" style="white-space:nowrap">${i.tbs}</td>
+    <td><textarea id="kq-${i.id}" aria-label="Kết quả mục ${i.id}" placeholder="Nhập kết quả thực hiện">${i.kq}</textarea></td>
+    <td><span class="link">${i.f?i.f+' tệp':'+ Đính kèm'}</span></td>
+    <td><select id="sd-${i.id}" aria-label="Tự đánh giá mục ${i.id}"><option value="">Chọn</option>${[5,4,3,2,1].map(v=>`<option${v===i.self?' selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('');
+  rows().forEach(i=>{
+    document.getElementById('sd-'+i.id).onchange=e=>{i.self=e.target.value?+e.target.value:null;selfTotals()};
+    document.getElementById('kq-'+i.id).oninput=e=>{i.kq=e.target.value};
+  });
+  selfTotals();
+}
+function selfTotals(){
+  const t=sum(rows(),'self');
+  document.getElementById('s-w').textContent=pct(rows().reduce((a,i)=>a+i.w,0));
+  document.getElementById('s-t').textContent=fmt(t);
+  document.getElementById('s-r').textContent=rating(t);
+  document.getElementById('s-msg').textContent='';
+}
+document.getElementById('s-send').onclick=()=>{
+  const miss=rows().filter(i=>i.self==null||!i.kq.trim()).map(i=>i.id);
+  const m=document.getElementById('s-msg');
+  if(miss.length){m.textContent='Còn thiếu điểm hoặc kết quả ở mục '+miss.join(', ');m.style.color='';return}
+  m.textContent='Đã gửi. Phiếu chuyển sang Văn phòng tổng hợp.';m.style.color='var(--ok)';
+  const s=document.getElementById('self-status');s.textContent='Chờ tổng hợp';s.className='chip c-info';
+};
+
+// ---------- S3 rà soát ----------
+function renderReview(){
+  document.getElementById('rev-body').innerHTML=items.map(i=>i.g?`<tr class="grp"><td colspan="7">${i.g}</td></tr>`:
+   `<tr id="rv-${i.id}"><td>${i.id}</td><td>${i.t}</td><td class="num">${pct(i.w)}</td><td>${i.kq||'<span class="src">(chưa nhập)</span>'}</td><td class="num">${i.self??'–'}</td>
+    <td><select id="cq-${i.id}" aria-label="CQTT chấm mục ${i.id}">${[5,4,3,2,1].map(v=>`<option${v===i.cq?' selected':''}>${v}</option>`).join('')}</select></td>
+    <td><textarea id="nt-${i.id}" aria-label="Góp ý mục ${i.id}" placeholder="Bắt buộc khi đổi điểm">${i.note}</textarea><div class="err" id="ne-${i.id}"></div></td></tr>`).join('');
+  rows().forEach(i=>{
+    document.getElementById('cq-'+i.id).onchange=e=>{i.cq=+e.target.value;revTotals()};
+    document.getElementById('nt-'+i.id).oninput=e=>{i.note=e.target.value;revTotals()};
+  });
+  revTotals();
+}
+function revTotals(){
+  rows().forEach(i=>{const d=i.self!=null&&i.cq!==i.self;document.getElementById('rv-'+i.id).classList.toggle('diff',d);document.getElementById('ne-'+i.id).textContent=d&&!i.note.trim()?'Nhập lý do đổi điểm':''});
+  document.getElementById('r-self').textContent=fmt(sum(rows(),'self'));
+  const t=sum(rows(),'cq');document.getElementById('r-t').textContent=fmt(t);document.getElementById('r-r').textContent=rating(t);
+  document.getElementById('r-msg').textContent='';
+}
+function revCheck(){const bad=rows().filter(i=>i.self!=null&&i.cq!==i.self&&!i.note.trim());const m=document.getElementById('r-msg');m.style.color='';m.textContent=bad.length?'Thiếu góp ý ở mục '+bad.map(i=>i.id).join(', '):'';return!bad.length}
+document.getElementById('r-back').onclick=()=>{if(!revCheck())return;const m=document.getElementById('r-msg');m.textContent='Đã gửi góp ý. CQĐV có 1 vòng tiếp thu/bảo lưu.';m.style.color='var(--warn)';const s=document.getElementById('r-status');s.textContent='Chờ CQĐV phản hồi';s.className='chip c-warn'};
+document.getElementById('r-ok').onclick=()=>{if(!revCheck())return;const m=document.getElementById('r-msg');m.textContent='Đã chốt điểm, chuyển Hội đồng.';m.style.color='var(--ok)';const s=document.getElementById('r-status');s.textContent='Chờ Hội đồng';s.className='chip c-info'};
+
+// ---------- S4 tổng hợp Ki ----------
+const KI=['A+','A','B','C','D','K'];
+const KIC={'A+':'#1e8a57','A':'#4f9d6e','B':'#2463b8','C':'#a86a0c','D':'#c4202b','K':'#8a8284'};
+const scored=()=>units.filter(u=>u.h!=null);
+function renderKi(){
+  document.getElementById('ki-body').innerHTML=scored().map((u,ix)=>{
+    const r=rating(u.h),e=kiError(r,u.dd,u.nq,u.ki);
+    return`<tr><td>${u.u}</td><td class="num">${fmt(u.s)}</td><td class="num">${fmt(u.c)}</td><td class="num"><input type="text" id="h-${ix}" value="${fmt(u.h)}" size="4" aria-label="Điểm Hội đồng ${u.u}" style="text-align:right;width:60px"></td><td>${r}</td>
+     <td><select id="dd-${ix}" aria-label="Địa điểm">${opts(['Tuân thủ','Không tuân thủ'],u.dd)}</select></td>
+     <td><select id="nq-${ix}" aria-label="Nội quy">${opts(['Tuân thủ',VP,KL],u.nq)}</select></td>
+     <td><select id="ki-${ix}" aria-label="Ki">${opts(KI,u.ki)}</select>${u.ki!==suggestKi(u.h)?`<div class="src">gợi ý ${suggestKi(u.h)}</div>`:''}</td>
+     <td>${completion(r,u.dd,u.nq,u.ki)}</td><td>${e?chip(e,'c-bad'):chip('Hợp lệ','c-ok')}</td></tr>`}).join('');
+  scored().forEach((u,ix)=>{
+    document.getElementById('h-'+ix).onchange=e=>{const v=parseFloat(e.target.value.replace(',','.'));if(v>=1&&v<=5)u.h=Math.round(v*100)/100;renderKi()};
+    document.getElementById('dd-'+ix).onchange=e=>{u.dd=e.target.value;renderKi()};
+    document.getElementById('nq-'+ix).onchange=e=>{u.nq=e.target.value;renderKi()};
+    document.getElementById('ki-'+ix).onchange=e=>{u.ki=e.target.value;renderKi()};
+  });
+  const base=scored().filter(u=>u.ki!=='K').length||1;
+  document.getElementById('dist').innerHTML=KI.filter(k=>k!=='K').map(k=>{const n=scored().filter(u=>u.ki===k).length;return n?`<div style="flex:${n};background:${KIC[k]}">${k} · ${Math.round(n/base*100)}%</div>`:''}).join('');
+  document.getElementById('legend').innerHTML=KI.map(k=>`<span><i style="background:${KIC[k]}"></i>${k}: ${scored().filter(u=>u.ki===k).length}</span>`).join('')+'<span>Tỷ lệ tính trên tổng trừ Ki K (BR-07)</span>';
+  const errs=scored().filter(u=>kiError(rating(u.h),u.dd,u.nq,u.ki)).length;
+  document.getElementById('ki-send').disabled=!!errs;
+  const m=document.getElementById('ki-msg');m.style.color='';m.textContent=errs?errs+' dòng vi phạm quy tắc Ki. Sửa trước khi trình.':'';
+  renderCeo();
+}
+document.getElementById('ki-send').onclick=()=>{const m=document.getElementById('ki-msg');m.textContent='Đã trình TGĐ.';m.style.color='var(--ok)'};
+
+// ---------- S5 TGĐ ----------
+function renderCeo(){
+  const base=scored().filter(u=>u.ki!=='K').length||1;
+  document.getElementById('ceo-mini').innerHTML=`<div>Số chỉ huy<b>${scored().length}</b></div>`+KI.slice(0,5).map(k=>{const n=scored().filter(u=>u.ki===k).length;return`<div>Ki ${k}<b>${n} <span style="font-size:12px;color:var(--muted)">(${Math.round(n/base*100)}%)</span></b></div>`}).join('');
+  document.getElementById('ceo-body').innerHTML=scored().map(u=>`<tr><td>${u.u}</td><td>${u.n}</td><td class="num">${fmt(u.h)}</td><td>${rating(u.h)}</td><td><b>${u.ki}</b></td><td>${u.h!==u.c?chip(fmt(u.c)+' → '+fmt(u.h),'c-warn'):'<span class="src">Không đổi</span>'}</td><td><label class="src"><input type="checkbox" aria-label="Yêu cầu điều chỉnh ${u.u}"> Cần xem lại</label></td></tr>`).join('');
+}
+document.getElementById('c-back').onclick=()=>{const m=document.getElementById('c-msg'),n=document.getElementById('c-note').value.trim();m.style.color='';if(!n){m.textContent='Nhập ý kiến chỉ đạo trước khi trả lại.';return}m.textContent='Đã trả Hội đồng điều chỉnh.';m.style.color='var(--warn)';const s=document.getElementById('c-status');s.textContent='Hội đồng điều chỉnh';s.className='chip c-warn'};
+document.getElementById('c-ok').onclick=()=>{const m=document.getElementById('c-msg');m.textContent='Đã phê duyệt. Kết quả gửi Văn phòng ban hành.';m.style.color='var(--ok)';const s=document.getElementById('c-status');s.textContent='Đã phê duyệt';s.className='chip c-ok'};
+
+// ---------- chuyển màn ----------
+const tabs=[...document.querySelectorAll('.roles button')];
+function show(s){
+  tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.s===s));
+  document.querySelectorAll('.page').forEach(p=>p.hidden=p.dataset.p!==s);
+  if(s==='review')renderReview();
+  try{localStorage.setItem('dgnv-tab',s)}catch(e){}
+}
+tabs.forEach(b=>b.onclick=()=>show(b.dataset.s));
+renderList();renderSelf();renderReview();renderKi();
+let saved=null;try{saved=localStorage.getItem('dgnv-tab')}catch(e){}
+if(saved&&tabs.some(b=>b.dataset.s===saved))show(saved);
+</script>

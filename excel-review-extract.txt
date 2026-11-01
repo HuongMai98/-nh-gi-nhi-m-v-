@@ -1,0 +1,933 @@
+FILE 2025.06.11. BM 01_Phieu giao nhiem vu va danh gia ket qua (2) (1).xlsx
+SHEET 17: Phieu giao va DG NVCV
+SHEET 20: Phieu GNV
+SHEET 22: Phieu Danh gia
+SHEET 23: Tong hop Ki
+SHEET 18: English Version
+SHEET 19: Phieu giao va DG NVCV goc
+xl/worksheets/sheet1.xml
+B1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | M1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2: ĐƠN VỊ… | M2: Độc lập - Tự do - Hạnh phúc
+M3:           
+M4:  Hà Nội, ngày     tháng     năm 
+A6: PHIẾU GIAO VÀ ĐÁNH GIÁ KẾT QUẢ THỰC HIỆN NHIỆM VỤ/CÔNG VIỆC CỦA CBNV 
+B7: Kỳ đánh giá: | C7: Năm | D7: Năm: | E7: 2023
+A8: 1. Thông tin chung:
+A9:  - Họ và tên:                                                                                       | C9: Nguyễn Văn A | G9: Mã nhân viên:  | H9: 091599 | I9: Chức danh công việc:  | K9: Công việc A
+A10: - Cơ quan/Đơn vị: | C10: Đơn vị A1
+A11: - Phòng, ban/trung tâm: | C11: Đơn vị A2
+A12: - Địa điểm làm việc: | C12: Địa điểm A3
+A13: 2. Nội dung giao nhiệm vụ, công việc và đánh giá kết quả thực hiện
+A14: STT | B14: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | C14: Chỉ số đo lường KPI | D14: Phương pháp đo
+(công thức hoặc mô tả cách tính) | E14: Đơn vị đo
+($, số lượng, %, điểm, …) | F14: Tỷ trọng
+(%) | G14: Các mức chỉ tiêu | J14: Ngày bắt đầu | K14: Ngày hoàn thành | L14: Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc
+G15: Tối thiểu
+(T - Threshold) | H15: Mong đợi
+(B- Base) | I15: Thách thức
+(S- Stretch) | L15: Kết quả thực hiện  | M15: CBNV tự đánh giá 
+(Điểm 1-5) | N15: QLTT đánh giá 
+(Điểm 1-5)
+A16: 1
+A17: 2
+A18: 3
+A19: 4
+A20: 5
+F21: 0 FORMULA= | M21: 0 FORMULA= | N21: 0 FORMULA=
+F22: Ʃ = 100% | L22: Tổng điểm | M22: (Ʃ Tỷ trọng * Điểm) | N22:  FORMULA=
+L23: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | N23:  FORMULA=
+A24: 3. Đánh giá yêu cầu về tuân thủ
+A25: Nội dung đánh giá | E25: Đánh giá của QLTT | G25: Ghi chú
+A26: - Tuân thủ địa điểm làm việc được giao: 
+A27: - Tuân thủ nội quy lao động:
+A28: - Tuân thủ văn hóa Viettel
+A29: 4. Nhận xét chung
+A30: Nội dung nhận xét | E30: Ý kiến của QLTT
+A31: - Tình hình thực hiện nhiệm vụ, công việc: 
+A32:       + Những mục tiêu đã hoàn thành tốt, cách làm tốt cần tiếp tục phát huy:
+A33:      + Những mục tiêu cần bắt đầu triển khai:
+A34: - Mức độ phù hợp của hành vi, thái độ với giá trị cốt lõi, văn hóa Viettel:
+A35: - Ghi nhận nỗ lực, đóng góp của CBNV trong kỳ đánh giá:
+A36: - Các nhận xét, ý kiến khác:
+A37: 5. Kế hoạch đào tạo, phát triển CBNV trong kỳ (nếu có)
+A38: STT | B38: Năng lực/Kiến thức/Kỹ năng CBNV cần bổ sung/nâng cao trong kỳ
+(do QLTT đề xuất/khuyến nghị) | C38: Kế hoạch học tập và phát triển
+(Khóa học/Nội dung học tập do CBNV đề xuất) | D38: Ngày hoàn thành
+(do CBNV đề xuất) | E38: CBNV báo cáo kết quả thực hiện | F38: CBNV tự đánh giá kết quả học tập
+(Hoàn thành/Không hoàn thành/Đề xuất) | H38: QLTT nhận xét
+A39: 1
+A40: 2
+A41: 3
+xl/worksheets/sheet2.xml
+G1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | R1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+G2: ĐƠN VỊ… | R2: Độc lập - Tự do - Hạnh phúc
+R3:           
+R4:  Hà Nội, ngày     tháng     năm 
+E5: PHIẾU GIAO NHIỆM VỤ/CÔNG VIỆC
+K6: Kỳ đánh giá: | L6: Năm | M6: Năm: | N6: 2024
+E7: 1. | G7: THÔNG TIN CHUNG
+G8: Họ và tên:   | H8: Nguyễn Văn A | J8: Chức danh:  | K8: Chức danh A
+G9: Mã nhân viên:  | H9: 091599 | J9: Đơn vị: | K9: Đơn vị A
+G10: Địa điểm làm việc: | H10: Địa điểm
+E11: 2. | G11: NỘI DUNG CỤ THỂ
+E12: STT | F12: TT | G12: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | H12: Chỉ số đo lường KPI | I12: Phương pháp đo
+(công thức hoặc mô tả cách tính) | J12: Đơn vị đo
+($, số lượng, %, điểm, …) | K12: Tỷ trọng
+(%) | L12: Các mức chỉ tiêu | O12: Ngày bắt đầu | P12: Ngày hoàn thành | Q12: Chứng minh mục tiêu trọng điểm theo ma trận 9box
+L13: Tối thiểu
+(T - Threshold) | M13: Mong đợi
+(B- Base) | N13: Thách thức
+(S- Stretch) | Q13: Mức độ mới/khó | S13: Phạm vi tác động/
+tính chất trọng yêu | U13: Nhóm mục tiêu trọng điểm đề xuất
+Q14: Vị trí 
+trên ma trận | R14: Lý do | S14: Vị trí 
+trên ma trận | T14: Lý do
+E15: A | G15: Nhóm mục tiêu theo nhiệm vụ trọng tâm, trọng điểm
+E16: 1 | F16: 1 | K16: 0.1 | U16:  FORMULA=Q16&S16
+E17: 2 | F17: 2 | K17: 0.1 | U17:  FORMULA=
+E18: B | G18: Nhóm mục tiêu theo chức năng
+E19: I | G19: Mục tiêu theo chức năng
+E20: 4 | F20: 1 | K20: 0.15
+E21: 5 | F21: 2 | K21: 0.15
+E22: 6 | F22: 3 | K22: 0.15
+E23: II | G23: Chỉ số kiểm soát ngành dọc
+E24: 7 | F24: 1 | K24: 0.15
+E25: 8 | F25: 2 | K25: 0.1
+E26: 9 | F26: 3 | K26: 0.1
+K27: 1 FORMULA=
+H29: NGƯỜI NHẬN NHIỆM VỤ | Q29: THỦ TRƯỞNG GIAO NHIỆM VỤ
+xl/worksheets/sheet3.xml
+G1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | Q1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+G2: ĐƠN VỊ… | Q2: Độc lập - Tự do - Hạnh phúc
+R3:           
+Q4:  Hà Nội, ngày     tháng     năm 
+E5: PHIẾU ĐÁNH GIÁ KẾT QUẢ THỰC HIỆN NHIỆM VỤ/CÔNG VIỆC
+K6: Kỳ đánh giá: | L6: Năm | M6: Năm: | N6: 2024
+E7: 1. | G7: THÔNG TIN CHUNG
+G8: Họ và tên:   | H8: Nguyễn Văn A | J8: Chức danh:  | K8: Chức danh A
+G9: Mã nhân viên:  | H9: 091599 | J9: Đơn vị: | K9: Đơn vị A
+G10: Địa điểm làm việc: | H10: Địa điểm
+E11: 2. | G11: ĐÁNH GIÁ VỀ KẾT QUẢ THỰC HIỆN NHIỆM VỤ, CÔNG VIỆC
+E12: STT | F12: TT | G12: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | H12: Chỉ số đo lường KPI | I12: Phương pháp đo
+(công thức hoặc mô tả cách tính) | J12: Đơn vị đo
+($, số lượng, %, điểm, …) | K12: Tỷ trọng
+(%) | L12: Các mức chỉ tiêu | O12: Ngày bắt đầu | P12: Ngày hoàn thành | Q12: Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc
+L13: Tối thiểu
+(T - Threshold) | M13: Mong đợi
+(B- Base) | N13: Thách thức
+(S- Stretch) | Q13: Kết quả thực hiện  | R13: CBNV tự đánh giá 
+(Điểm 1-5) | S13: QLTT đánh giá 
+(Điểm 1-5)
+E14: A | G14: Nhóm mục tiêu theo nhiệm vụ trọng tâm, trọng điểm
+E15: 1 | F15: 1 | K15: 0.15 | R15: 5 | S15: 5
+E16: 2 | F16: 2 | K16: 0.15 | R16: 5 | S16: 4
+E17: 3 | F17: 3 | K17: 0.1 | R17: 4 | S17: 5
+E18: B | G18: Nhóm mục tiêu theo chức năng
+E19: I | G19: Mục tiêu theo chức năng
+E20: 4 | F20: 1 | K20: 0.1 | R20: 4 | S20: 5
+E21: 5 | F21: 2 | K21: 0.1 | R21: 3 | S21: 5
+E22: 6 | F22: 3 | K22: 0.1 | R22: 3 | S22: 5
+E23: II | G23: Chỉ số kiểm soát ngành dọc
+E24: 7 | F24: 1 | K24: 0.1 | R24: 4 | S24: 5
+E25: 8 | F25: 2 | K25: 0.1 | R25: 3 | S25: 4
+E26: 9 | F26: 3 | K26: 0.1 | R26: 4 | S26: 4
+K27: 1 FORMULA= | Q27: Tổng điểm (Ʃ Tỷ trọng * Điểm) | R27: 4 FORMULA= | S27: 4.65 FORMULA=
+Q28: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ | S28: Vượt xa yêu cầu FORMULA=
+E29: 2. | G29: ĐÁNH GIÁ VỀ KẾT QUẢ THỰC HIỆN NHIỆM VỤ, CÔNG VIỆC
+E30: Nội dung đánh giá | J30: Đánh giá của QLTT
+E31: - Tuân thủ địa điểm làm việc được giao: 
+E32: - Tuân thủ nội quy lao động:
+E33: - Tuân thủ văn hóa Viettel:
+H35: NGƯỜI NHẬN NHIỆM VỤ | Q35: THỦ TRƯỞNG GIAO NHIỆM VỤ
+xl/worksheets/sheet4.xml
+I1: TẬP ĐOÀN CÔNG NGHIỆP- VIỄN THÔNG QUÂN ĐỘI | Q1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+H2:          | I2: VĂN PHÒNG TẬP ĐOÀN | Q2: Độc lập - Tự do - Hạnh phúc
+Q3:    Hà Nội, ngày     tháng  năm 2025
+J4: PHÊ DUYỆT
+J5:  Ngày      tháng     năm 2025
+J6: TỔNG GIÁM ĐỐC
+G8: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI CỦA CHỈ HUY CƠ QUAN, ĐƠN VỊ
+K9: Kỳ đánh giá: | L9: Quý I | M9: Năm: | N9: 2023
+G11: I. | H11: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ, XẾP HẠNG
+I12: Xếp hạng Ki | J12: Tỷ lệ xếp hạng Ki | K12: Số người
+I13: A+ | J13:  FORMULA= | K13: 0 FORMULA=COUNTIF($P$23:$P$29993,$I13)
+I14: A | J14:  FORMULA= | K14: 0 FORMULA=
+I15: B | J15:  FORMULA= | K15: 0 FORMULA=
+I16: C | J16:  FORMULA= | K16: 0 FORMULA=
+I17: D | J17:  FORMULA= | K17: 0 FORMULA=
+I18: K | K18: 0 FORMULA=
+I19: Tổng: | J19: 0 FORMULA= | K19: 0 FORMULA=
+G20: II. | H20: DANH SÁCH CHI TIẾT
+G21: TT | H21: Mã
+nhân viên | I21: Họ và Tên | J21: Chức danh | K21: Đơn vị | L21: Kết quả hoàn thành nhiệm vụ/công việc Quý I/2023 FORMULA= | R21: Ghi chú
+J22: Chức danh | K22: Đơn vị | L22: Điểm đánh giá | M22: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | N22: Tuân thủ địa điểm làm việc | O22: Tuân thủ Nội quy lao động | P22: Xếp hạng Ki | Q22: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+G23: 1 | Q23:  FORMULA= | R23:  FORMULA=
+G24: 2 FORMULA= | Q24:  FORMULA=IF(P24="","",IF(OR(P24="K",M24="Không đánh giá"),"Không đánh giá",IF(P24="D",IF(OR(M24="Không đạt yêu cầu",M24="Gần đạt yêu cầu",N24="Không tuân thủ",O24<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV"))) | R24:  FORMULA=IF(AND(M24="Không đánh giá",P24<>"K"),"Xếp loại Ki phải là K",IF(AND(P24="K",M24<>"Không đánh giá"),"Xếp loại Ki phải khác K",IF(OR(AND(O24="Bị xử lý kỷ luật lao động",P24<>"D"),AND(N24="Không tuân thủ",P24<>"D")),"Xếp loại Ki phải là D",IF(AND(M24="Không đạt yêu cầu",P24<>"D"),"Xếp loại Ki phải là D",IF(OR(AND(O24="Vi phạm nhưng chưa đến mức bị xử lý kỷ luật",P24="A"),AND(O24="Vi phạm nhưng chưa đến mức bị xử lý kỷ luật",P24="A+")),"Mức xếp loại Ki sau khi hạ vượt quá Ki B",IF(AND(M24="Gần đạt yêu cầu",P24<>"D",P24<>"C",P24<>"B"),"Không đạt điều kiện tối thiểu của mức Xếp loại Ki "&P24,IF(AND(M24="Đạt yêu cầu",P24="A+"),"Không đạt điều kiện tối thiểu của mức Xếp loại Ki A+","")))))))
+G25: 3 FORMULA= | Q25:  FORMULA= | R25:  FORMULA=
+G26: 4 FORMULA=G25+1 | Q26:  FORMULA= | R26:  FORMULA=
+G27: 5 FORMULA= | Q27:  FORMULA= | R27:  FORMULA=
+G28: 6 FORMULA= | Q28:  FORMULA= | R28:  FORMULA=
+G29: 7 FORMULA= | Q29:  FORMULA= | R29:  FORMULA=
+G30: 8 FORMULA= | Q30:  FORMULA= | R30:  FORMULA=
+G31: 9 FORMULA= | Q31:  FORMULA= | R31:  FORMULA=
+G32: 10 FORMULA=G31+1
+G33: 11 FORMULA=
+G34: 12 FORMULA=
+G35: 13 FORMULA=
+G36: 14 FORMULA=
+G37: 15 FORMULA= | Q37:  FORMULA= | R37:  FORMULA=
+O40: CHÁNH VĂN PHÒNG
+xl/worksheets/sheet5.xml
+B1: VIETTEL GROUP | M1: SOCIALIST REPUBLIC OF VIET NAM
+B2: BUSINESS UNIT … | M2: Independence - Liberty - Happiness
+M3:           
+M4: Ha Noi, …
+A6: OBJECTIVES ASSIGNMENT AND PERFORMANCE ASSESSMENT
+B7: Assessment Period | C7: Full year | D7: Year: | E7: 2023
+A8: 1. General Information:
+A9: - Full name: | E9: Employee ID: | F9: 091599 | I9: Job Title: | M9: Date … Month … Year  20...
+
+
+
+
+
+Employee
+
+ | N9: Date … Month … Year  20...
+
+
+
+
+
+Direct Manager
+
+
+A10: - Business Unit:
+A11: - Department, Division/Center:
+A12: - Work location:
+A13: 2. Details of Objectives assignment and Performance assessment
+A14: No. | B14: Objectives | C14: KPIs | D14: Measurement Method
+(formula or description of calculation) | E14: Measurement Unit
+($, quantity, %, score, …) | F14: Weight
+(%) | G14: Targets | J14: Starting Date | K14: Completion Date | L14: Performance evaluation
+G15: T - Threshold | H15: B- Base | I15: S- Stretch | L15: Actual results | M15: Employee Self-assessment
+(Score 1-5) | N15: Direct manager assessment (Score 1-5)
+A16: 1
+A17: 2
+A18: 3
+A19: 4
+A20: 5
+F21: 0 FORMULA= | M21: 0 FORMULA= | N21: 0 FORMULA=
+F22: Ʃ = 100% | L22: Overall score | M22: (Ʃ Weight * Score) | N22:  FORMULA=
+L23: Performance rating | N23:  FORMULA=
+A24: 3. Compliance Assessment
+A25: Criteria | E25: Direct manager assessment | G25: Note
+A26:  - Workplace compliance:
+A27: - Labor regulations compliance:
+A28: - Viettel culture compliance:
+A29: 4. Direct manager feedback
+A30: Criteria | E30: Direct manager feedbacks
+A31: - Status of tasks performance:
+A32:       + Well-accomplished goals or good ways of work needed to maintain:
+A33:      + New goals needed to be kicked-off:
+A34: - Conformity of behaviors and attitudes with core values and culture of Viettel:
+A35: - Recognition of employees' efforts and contributions during the evaluation period:
+A36: - Other comments and opinions:
+A37: 5. Employee training and development plan in the next period (if any)
+A38: No. | B38:  Competencies/Knowledge/Skills the employee need to supplement/improve during the next period
+(suggested by direct manager) | C38: Learning and development plan (Courses/Learning content suggested by staff) | D38: Date of Completion
+(proposed by staff) | E38: Learning performance reported by staff | F38: Self-assessment of learning results (Completed/Not completed/Other suggestions) | H38: Direct manager feedbacks
+A39: 1
+A40: 2
+A41: 3
+xl/worksheets/sheet6.xml
+B1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | P1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2: ĐƠN VỊ… | P2: Độc lập - Tự do - Hạnh phúc
+P3:           
+P4:  Hà Nội, ngày     tháng     năm 
+A6: PHIẾU GIAO VÀ ĐÁNH GIÁ KẾT QUẢ THỰC HIỆN NHIỆM VỤ/CÔNG VIỆC CỦA CBNV 
+(Kèm theo Quyết định số:              /QĐ-CNVTQĐ-TCNL ngày    tháng     năm        của Chủ tịch Tập đoàn Công nghiệp-Viễn thông Quân đội)
+B7: Kỳ đánh giá: | C7: 6 THÁNG ĐẦU NĂM | D7: Năm: | E7: 2023
+A8: 1. Thông tin chung:
+A9:  - Họ và tên:                                                                                       | E9: Mã nhân viên:  | F9: 091599 | I9: Chức danh công việc:  | P9: Ngày … tháng … năm 20...
+
+
+
+
+
+CBNV nhận nhiệm vụ
+
+ | Q9: Ngày … tháng … năm 20...
+
+
+
+
+
+Quản lý trực tiếp
+
+
+A10: - Cơ quan/Đơn vị:
+A11: - Phòng, ban/trung tâm:
+A12: - Địa điểm làm việc:
+A13: 2. Nội dung giao nhiệm vụ, công việc và đánh giá kết quả thực hiện
+A14: STT | B14: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | C14: Chỉ số đo lường KPI | D14: Phương pháp đo
+(công thức hoặc mô tả cách tính) | E14: Đơn vị đo
+($, số lượng, %, điểm, …) | F14: Tỷ trọng
+(%) | G14: Các mức chỉ tiêu | J14: Ngày bắt đầu | K14: Ngày hoàn thành | L14: Kế hoạch hành động 
+(xem xét lập thành phụ lục để thuận tiện quản lý và giám sát) | O14: Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc
+G15: Tối thiểu
+(T - Threshold) | H15: Mong đợi
+(B- Base) | I15: Thách thức
+(S- Stretch) | L15: Nội dung kế hoạch | M15: Báo cáo tiến độ | N15: Ý kiến phản hồi của QLTT | O15: Kết quả thực hiện chỉ tiêu | P15: CBNV tự đánh giá 
+(Điểm 1-5) | Q15: QLTT đánh giá 
+(Điểm 1-5)
+A16: 1
+A17: 2
+A18: 3
+A19: 4
+A20: 5
+F21: 0 FORMULA= | P21: 0 FORMULA= | Q21: 0 FORMULA=
+F22: Ʃ = 100% | O22: Tổng điểm | P22: (Ʃ Tỷ trọng * Điểm) | Q22:  FORMULA=
+O23: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | Q23:  FORMULA=
+A24: 3. Đánh giá yêu cầu về tuân thủ
+A25: Nội dung đánh giá | E25: Đánh giá của QLTT | G25: Ghi chú
+A26: - Tuân thủ địa điểm làm việc được giao: 
+A27: - Tuân thủ nội quy lao động:
+A28: - Tuân thủ văn hóa Viettel
+A29: 4. Nhận xét chung
+A30: Nội dung nhận xét | E30: Ý kiến của QLTT
+A31: - Tình hình thực hiện nhiệm vụ, công việc: 
+A32:       + Những mục tiêu đã hoàn thành tốt, cách làm tốt cần tiếp tục phát huy:
+A33:      + Những mục tiêu cần bắt đầu triển khai:
+A34: - Mức độ phù hợp của hành vi, thái độ với giá trị cốt lõi, văn hóa Viettel:
+A35: - Ghi nhận nỗ lực, đóng góp của CBNV trong kỳ đánh giá:
+A36: - Các nhận xét, ý kiến khác:
+A37: 5. Kế hoạch đào tạo, phát triển CBNV trong kỳ (nếu có)
+A38: STT | B38: Năng lực/Kiến thức/Kỹ năng CBNV cần bổ sung/nâng cao trong kỳ
+(do QLTT đề xuất/khuyến nghị) | C38: Kế hoạch học tập và phát triển
+(Khóa học/Nội dung học tập do CBNV đề xuất) | D38: Ngày hoàn thành
+(do CBNV đề xuất) | E38: CBNV báo cáo kết quả thực hiện | F38: CBNV tự đánh giá kết quả học tập
+(Hoàn thành/Không hoàn thành/Đề xuất) | H38: QLTT nhận xét
+A39: 1
+A40: 2
+A41: 3
+FILE Cham diem KPI KCQ Q1.2026 (1).xlsx
+SHEET 67: Q1-KCQ
+SHEET 68: Q2-KCQ
+SHEET 69: Q3_KCQ
+SHEET 72: Tổng hợp KPI
+SHEET 73: Tong hop NVTT Q1
+SHEET 74: ĐX NVTT Q2
+SHEET 80: NVTT nam 2025
+SHEET 79: Sheet7
+SHEET 75: PL DX bổ sung NVTT Q1
+SHEET 76: PL I Ket qua Q1 KCQ
+SHEET 77: PL2 Ket qua Q1 Don vi
+SHEET 70: Q1-Phụ thuộc
+SHEET 71: Q1 doc lap
+SHEET 63: TH Q1 KCQ
+SHEET 62: Tong hop KCQ (2)
+SHEET 22: Khoi DV Phụ thuộc Q4
+SHEET 61: Khoi DV doc lap Q4
+SHEET 56: Q4-CQ
+xl/worksheets/sheet1.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | I1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | I2: Độc lập - Tự do - Hạnh phúc
+I3:           
+I4:    Hà Nội, ngày     tháng    năm 2024
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A7: Kỳ đánh giá: Quý I năm 2024
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0.866666666666667 FORMULA= | D11: 13 FORMULA=COUNTIF($J$22:$J$29989,$B11)
+B12: A | C12: 0.133333333333333 FORMULA= | D12: 2 FORMULA=
+B13: B | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 15 FORMULA=
+A18: II. Danh sách chi tiết
+A19: TT | B19: Mã số | C19: Họ và Tên | D19: Chức danh | E19: Cơ quan | F19: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | H21: Tuân thủ địa điểm làm việc | I21: Tuân thủ Nội quy lao động | J21: Xếp loại Ki | K21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 FORMULA=+A21+1 | B22: 006552 | C22: Nguyễn Hà Thành | D22: Trưởng Ban | E22: Ban TH&TT | F22: 5 | G22: Vượt xa YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | H22: Tuân thủ | I22: Tuân thủ | J22: A+ FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | K22: Hoàn thành NV/CV FORMULA=IF(J22="","",IF(OR(J22="K",G22="Không đánh giá"),"Không đánh giá",IF(J22="D",IF(OR(G22="Không đạt yêu cầu",G22="Gần đạt yêu cầu",H22="Không tuân thủ",I22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA= | B23: 206154 | C23: Lê Bá Tân | D23: Trưởng Ban | E23: Ban Kỹ thuật | F23: 4.9 | G23: Vượt xa YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A+ FORMULA= | K23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA= | B24: 102977 | C24: Vũ Tiến Duy | D24: Trưởng Ban | E24: Ban Hành chính | F24: 4.9 | G24: Vượt xa YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A+ FORMULA= | K24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 011493 | C25: Lưu Mạnh Hà | D25: Trưởng Ban | E25: Ban Đầu tư - Xây dựng | F25: 4.9 | G25: Vượt xa YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A+ FORMULA= | K25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 006038 | C26: Phạm Thị Thu Hương | D26: Trưởng Ban | E26: Ban Đối ngoại | F26: 4.9 | G26: Vượt xa YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A+ FORMULA= | K26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 065449 | C27: Hoàng Long | D27: Trưởng Ban | E27: Ban Công nghệ thông tin | F27: 4.9 | G27: Vượt xa YC FORMULA= | H27: Tuân thủ | I27: Tuân thủ | J27: A+ FORMULA= | K27: Hoàn thành NV/CV FORMULA=
+A28: 8 FORMULA= | B28: 010226 | C28: Bùi Thế Hùng | D28: Trưởng Ban | E28: Ban Thanh tra - Kiểm toán | F28: 4.85 | G28: Vượt xa YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: A+ FORMULA= | K28: Hoàn thành NV/CV FORMULA=
+A29: 7 FORMULA= | B29: 089417 | C29: Nguyễn Hữu Hùng | D29: Chánh Văn phòng | E29: Văn phòng | F29: 4.8 | G29: Vượt xa YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: A+ FORMULA= | K29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 008136 | C30: Đào Thúy Hường | D30: Trưởng Ban | E30: Ban Tài chính Kế toán  | F30: 4.8 | G30: Vượt xa YC FORMULA= | H30: Tuân thủ | I30: Tuân thủ | J30: A+ FORMULA= | K30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA=+A30+1 | B31: 018798 | C31: Nguyễn Mạnh Hải | D31: Trưởng Ban | E31: Ban Công nghiệp CNC | F31: 4.7 | G31: Vượt xa YC FORMULA= | H31: Tuân thủ | I31: Tuân thủ | J31: A+ FORMULA= | K31: Hoàn thành NV/CV FORMULA=
+A32: 11 FORMULA= | B32: 001625 | C32: Nguyễn Thị Hải Lý | D32: Trưởng Ban | E32: Ban Đầu tư tài chính | F32: 4.7 | G32: Vượt xa YC FORMULA= | H32: Tuân thủ | I32: Tuân thủ | J32: A+ FORMULA= | K32: Hoàn thành NV/CV FORMULA=
+A33: 12 FORMULA= | B33: 011315 | C33: Dương Văn Toàn | D33: Chủ nhiệm Chính trị | E33: Cơ quan Chính trị | F33: 4.65 | G33: Vượt xa YC FORMULA= | H33: Tuân thủ | I33: Tuân thủ | J33: A+ FORMULA= | K33: Hoàn thành NV/CV FORMULA=
+A34: 13 FORMULA= | B34: 017885 | C34: Nguyễn Việt Dũng | D34: Trưởng Ban | E34: Ban Chiến lược | F34: 4.5 | G34: Vượt xa YC FORMULA= | H34: Tuân thủ | I34: Tuân thủ | J34: A+ FORMULA= | K34: Hoàn thành NV/CV FORMULA=
+A35: 14 FORMULA= | B35: 158813 | C35: Vũ Thị Mai | D35: Trưởng Ban | E35: Ban Tổ chức Nhân lực | F35: 4.4 | G35: Vượt YC FORMULA= | H35: Tuân thủ | I35: Tuân thủ | J35: A FORMULA= | K35: Hoàn thành NV/CV FORMULA=
+A36: 15 FORMULA= | B36: 057914 | C36: Nguyễn Thị Hoa | D36: Trưởng Ban | E36: Ban Pháp chế | F36: 4.15 | G36: Vượt YC FORMULA= | H36: Tuân thủ | I36: Tuân thủ | J36: A FORMULA= | K36: Hoàn thành NV/CV FORMULA=
+C39: CHÁNH VĂN PHÒNG | F39: PHÓ TỔNG GIÁM ĐỐC | J39: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet10.xml
+A2: PHỤ LỤC I: KẾT QUẢ ĐÁNH GIÁ NHIỆM VỤ QUÝ 1 NĂM 2026 CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A4: TT | B4: Mã số | C4: Họ và Tên | D4: Chức danh | E4: Cơ quan | F4: Kết quả hoàn thành nhiệm vụ/công việc
+D6: Chức danh | E6: Đơn vị | F6: Điểm đánh giá | G6: Xếp loại kết quả thực hiện nhiệm vụ | H6: Tuân thủ địa điểm làm việc | I6: Tuân thủ Nội quy lao động | J6: Xếp loại Ki | K6: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A7: 1 FORMULA= | F7: 4 | G7: Vượt YC FORMULA=IF(F7>=4.5,"Vượt xa YC",IF(F7>=3.5,"Vượt YC",IF(F7>=2.5,"Đạt YC",IF(F7>=2,"Gần đạt YC","Không đạt YC")))) | H7: Tuân thủ | I7: Tuân thủ | J7: A FORMULA= | K7: Hoàn thành NV/CV FORMULA=IF(J7="","",IF(OR(J7="K",G7="Không đánh giá"),"Không đánh giá",IF(J7="D",IF(OR(G7="Không đạt yêu cầu",G7="Gần đạt yêu cầu",H7="Không tuân thủ",I7<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A8: 2 FORMULA= | F8: 4 | G8: Vượt YC FORMULA= | H8: Tuân thủ | I8: Tuân thủ | J8: A FORMULA=IF(F8>=4.5,"A+",IF(F8>=3.5,"A",IF(F8>=2.5,"B",IF(F8>=2,"C","D")))) | K8: Hoàn thành NV/CV FORMULA=
+A9: 3 FORMULA=+A8+1 | F9: 4 | G9: Vượt YC FORMULA= | H9: Tuân thủ | I9: Tuân thủ | J9: A FORMULA= | K9: Hoàn thành NV/CV FORMULA=
+A10: 4 FORMULA= | F10: 4 | G10: Vượt YC FORMULA= | H10: Tuân thủ | I10: Tuân thủ | J10: A FORMULA= | K10: Hoàn thành NV/CV FORMULA=
+A11: 5 FORMULA= | F11: 4 | G11: Vượt YC FORMULA= | H11: Tuân thủ | I11: Tuân thủ | J11: A FORMULA= | K11: Hoàn thành NV/CV FORMULA=
+A12: 6 FORMULA= | F12: 4 | G12: Vượt YC FORMULA= | H12: Tuân thủ | I12: Tuân thủ | J12: A FORMULA= | K12: Hoàn thành NV/CV FORMULA=
+A13: 7 FORMULA= | F13: 4 | G13: Vượt YC FORMULA= | H13: Tuân thủ | I13: Tuân thủ | J13: A FORMULA= | K13: Hoàn thành NV/CV FORMULA=
+A14: 8 FORMULA= | F14: 4 | G14: Vượt YC FORMULA= | H14: Tuân thủ | I14: Tuân thủ | J14: A FORMULA= | K14: Hoàn thành NV/CV FORMULA=
+A15: 9 FORMULA= | F15: 4 | G15: Vượt YC FORMULA= | H15: Tuân thủ | I15: Tuân thủ | J15: A FORMULA= | K15: Hoàn thành NV/CV FORMULA=
+A16: 10 FORMULA= | F16: 4 | G16: Vượt YC FORMULA= | H16: Tuân thủ | I16: Tuân thủ | J16: A FORMULA= | K16: Hoàn thành NV/CV FORMULA=
+A17: 11 FORMULA= | F17: 4 | G17: Vượt YC FORMULA= | H17: Tuân thủ | I17: Tuân thủ | J17: A FORMULA= | K17: Hoàn thành NV/CV FORMULA=
+A18: 12 FORMULA= | F18: 4 | G18: Vượt YC FORMULA= | H18: Tuân thủ | I18: Tuân thủ | J18: A FORMULA= | K18: Hoàn thành NV/CV FORMULA=
+A19: 13 FORMULA= | F19: 4 | G19: Vượt YC FORMULA= | H19: Tuân thủ | I19: Tuân thủ | J19: A FORMULA= | K19: Hoàn thành NV/CV FORMULA=
+A20: 14 FORMULA= | F20: 4 | G20: Vượt YC FORMULA= | H20: Tuân thủ | I20: Tuân thủ | J20: A FORMULA= | K20: Hoàn thành NV/CV FORMULA=
+A21: 15 FORMULA= | F21: 4 | G21: Vượt YC FORMULA= | H21: Tuân thủ | I21: Tuân thủ | J21: A FORMULA= | K21: Hoàn thành NV/CV FORMULA=
+A23: CHÁNH VĂN PHÒNG | D23: BAN TCNL | E23:        BAN CHIẾN LƯỢC | G23: PHÓ TỔNG GIÁM ĐỐC | J23: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet11.xml
+A2: PHỤ LỤC II: KẾT QUẢ ĐÁNH NHIỆM VỤ QUÝ 1 NĂM 2026 CỦA CHỈ HUY ĐƠN VỊ
+A3: I. Tổng hợp kết quả đánh giá, xếp loại
+B4: Xếp loại Ki | C4: Tỷ lệ xếp loại Ki | D4: Số người
+B5: A+ | C5:  FORMULA= | D5: 0 FORMULA=COUNTIF($J$3:$J$30027,$B5)
+B6: A | C6:  FORMULA= | D6: 27 FORMULA=
+B7: B | C7:  FORMULA= | D7: 0 FORMULA=
+B8: C | C8:  FORMULA= | D8: 0 FORMULA=
+B9: D | C9:  FORMULA= | D9: 0 FORMULA=
+B10: K | D10: 0 FORMULA=
+B11: Tổng: | C11: 0 FORMULA= | D11: 27 FORMULA=
+A14: TT | B14: Mã nhân viên | C14: Họ và Tên | D14: Chức danh | E14: Đơn vị | F14: Kết quả hoàn thành nhiệm vụ/công việc
+D15: Chức danh | E15: Đơn vị | F15: Điểm đánh giá | G15: Xếp loại kết quả thực hiện nhiệm vụ | H15: Tuân thủ địa điểm làm việc | I15: Tuân thủ Nội quy lao động | J15: Xếp loại Ki | K15: Xếp loại mức độ hoàn thành nhiệm vụ
+A16: 1 | F16: 4 | G16: Vượt YC FORMULA=IF(F16>=4.5,"Vượt xa YC",IF(F16>=3.5,"Vượt YC",IF(F16>=2.5,"Đạt YC",IF(F16>=2,"Gần đạt YC","Không đạt YC")))) | H16: Tuân thủ | I16: Tuân thủ | J16: A FORMULA=IF(F16>=4.5,"A+",IF(F16>=3.5,"A",IF(F16>=2.5,"B",IF(F16>=2,"C","D")))) | K16: Hoàn thành NV/CV FORMULA=IF(J16="","",IF(OR(J16="K",G16="Không đánh giá"),"Không đánh giá",IF(J16="D",IF(OR(G16="Không đạt yêu cầu",G16="Gần đạt yêu cầu",H16="Không tuân thủ",I16<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A17: 2 FORMULA= | F17: 4 | G17: Vượt YC FORMULA= | H17: Tuân thủ | I17: Tuân thủ | J17: A FORMULA= | K17: Hoàn thành NV/CV FORMULA=
+A18: 3 FORMULA=+A17+1 | F18: 4 | G18: Vượt YC FORMULA= | H18: Tuân thủ | I18: Tuân thủ | J18: A FORMULA= | K18: Hoàn thành NV/CV FORMULA=
+A19: 4 FORMULA= | F19: 4 | G19: Vượt YC FORMULA= | H19: Tuân thủ | I19: Tuân thủ | J19: A FORMULA= | K19: Hoàn thành NV/CV FORMULA=
+A20: 5 FORMULA= | F20: 4 | G20: Vượt YC FORMULA= | H20: Tuân thủ | I20: Tuân thủ | J20: A FORMULA= | K20: Hoàn thành NV/CV FORMULA=
+A21: 6 FORMULA= | F21: 4 | G21: Vượt YC FORMULA= | H21: Tuân thủ | I21: Tuân thủ | J21: A FORMULA= | K21: Hoàn thành NV/CV FORMULA=
+A22: 7 FORMULA= | F22: 4 | G22: Vượt YC FORMULA= | H22: Tuân thủ | I22: Tuân thủ | J22: A FORMULA= | K22: Hoàn thành NV/CV FORMULA=
+A23: 8 FORMULA= | F23: 4 | G23: Vượt YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A FORMULA= | K23: Hoàn thành NV/CV FORMULA=
+A24: 9 FORMULA= | F24: 4 | G24: Vượt YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A FORMULA= | K24: Hoàn thành NV/CV FORMULA=
+A25: 10 FORMULA= | F25: 4 | G25: Vượt YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A FORMULA= | K25: Hoàn thành NV/CV FORMULA=
+A26: 11 FORMULA= | F26: 4 | G26: Vượt YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A FORMULA= | K26: Hoàn thành NV/CV FORMULA=
+A27: 12 FORMULA= | F27: 4 | G27: Vượt YC FORMULA= | H27: Tuân thủ | I27: Tuân thủ | J27: A FORMULA= | K27: Hoàn thành NV/CV FORMULA=
+A28: 13 FORMULA= | F28: 4 | G28: Vượt YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: A FORMULA= | K28: Hoàn thành NV/CV FORMULA=
+A29: 14 FORMULA= | F29: 4 | G29: Vượt YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: A FORMULA= | K29: Hoàn thành NV/CV FORMULA=
+A30: 15 FORMULA= | F30: 4 | G30: Vượt YC FORMULA= | H30: Tuân thủ | I30: Tuân thủ | J30: A FORMULA= | K30: Hoàn thành NV/CV FORMULA=
+A31: 16 FORMULA= | F31: 4 | G31: Vượt YC FORMULA= | H31: Tuân thủ | I31: Tuân thủ | J31: A FORMULA= | K31: Hoàn thành NV/CV FORMULA=
+A32: 17 FORMULA= | F32: 4 | G32: Vượt YC FORMULA= | H32: Tuân thủ | I32: Tuân thủ | J32: A FORMULA= | K32: Hoàn thành NV/CV FORMULA=
+A33: 18 FORMULA= | F33: 4 | G33: Vượt YC FORMULA= | H33: Tuân thủ | I33: Tuân thủ | J33: A FORMULA= | K33: Hoàn thành NV/CV FORMULA=
+A34: 19 FORMULA= | F34: 4 | G34: Vượt YC FORMULA= | H34: Tuân thủ | I34: Tuân thủ | J34: A FORMULA= | K34: Hoàn thành NV/CV FORMULA=
+A35: 20 FORMULA= | F35: 4 | G35: Vượt YC FORMULA= | H35: Tuân thủ | I35: Tuân thủ | J35: A FORMULA= | K35: Hoàn thành NV/CV FORMULA=
+A36: 21 FORMULA= | F36: 4 | G36: Vượt YC FORMULA= | H36: Tuân thủ | I36: Tuân thủ | J36: A FORMULA= | K36: Hoàn thành NV/CV FORMULA=
+A37: 22 FORMULA= | F37: 4 | G37: Vượt YC FORMULA= | H37: Tuân thủ | I37: Tuân thủ | J37: A FORMULA= | K37: Hoàn thành NV/CV FORMULA=
+A38: 23 FORMULA= | F38: 4 | G38: Vượt YC FORMULA= | H38: Tuân thủ | I38: Tuân thủ | J38: A FORMULA= | K38: Hoàn thành NV/CV FORMULA=
+A39: 24 FORMULA= | F39: 4 | G39: Vượt YC FORMULA= | H39: Tuân thủ | I39: Tuân thủ | J39: A FORMULA= | K39: Hoàn thành NV/CV FORMULA=
+A40: 25 FORMULA= | F40: 4 | G40: Vượt YC FORMULA= | H40: Tuân thủ | I40: Tuân thủ | J40: A FORMULA= | K40: Hoàn thành NV/CV FORMULA=
+A41: 26 FORMULA= | F41: 4 | G41: Vượt YC FORMULA= | H41: Tuân thủ | I41: Tuân thủ | J41: A FORMULA= | K41: Hoàn thành NV/CV FORMULA=
+A42: 27 FORMULA= | F42: 4 | G42: Vượt YC FORMULA= | H42: Tuân thủ | I42: Tuân thủ | J42: A FORMULA= | K42: Hoàn thành NV/CV FORMULA=
+A43: 28 FORMULA=
+A44: 29 FORMULA=
+A45: 30 FORMULA=
+A46: 31 FORMULA=
+A47: 32 FORMULA=
+A48: 33 FORMULA=
+A49: 34 FORMULA=
+A50: 35 FORMULA=
+A51: 36 FORMULA=
+A52: 37 FORMULA=
+A53: 38 FORMULA=
+A54: 39 FORMULA=
+A55: 40 FORMULA= | F55: #N/A FORMULA= | K55:  FORMULA=IF(J55="","",IF(OR(J55="K",G55="Không đánh giá"),"Không đánh giá",IF(J55="D",IF(OR(G55="Không đạt yêu cầu",G55="Gần đạt yêu cầu",H55="Không tuân thủ",I55<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A56: 41 FORMULA=
+A58: CHÁNH VĂN PHÒNG | D58:   BAN TCNL | E58:                  BAN CHIẾN LƯỢC | F58: PHÓ TỔNG GIÁM ĐỐC | J58: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet12.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | J1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | J2: Độc lập - Tự do - Hạnh phúc
+J3:           
+J4:    Hà Nội, ngày         tháng         năm 2025
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY ĐƠN VỊ (PHỤ THUỘC)
+A7: Kỳ đánh giá: Quý I năm 2025
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0.363636363636364 FORMULA= | D11: 4 FORMULA=COUNTIF($K$22:$K$30006,$B11)
+B12: A | C12: 0.636363636363636 FORMULA= | D12: 7 FORMULA=
+B13: B | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 11 FORMULA=
+A19: II. Danh sách chi tiết
+A20: TT | B20: Mã nhân viên | C20: Họ và Tên | D20: Chức danh | E20: Đơn vị | F20: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Check | H21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | I21: Tuân thủ địa điểm làm việc | J21: Tuân thủ Nội quy lao động | K21: Xếp loại Ki | L21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 | B22: 063787 | C22: Nguyễn Mạnh Hổ | D22: Tổng Giám đốc | E22: TCT Giải pháp doanh nghiệp Viettel | F22: 4.62666666666667 FORMULA= | G22: 4.6 | H22: Vượt xa YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | I22: Tuân thủ | J22: Tuân thủ | K22: A+ FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | L22: Hoàn thành NV/CV FORMULA=IF(K22="","",IF(OR(K22="K",H22="Không đánh giá"),"Không đánh giá",IF(K22="D",IF(OR(H22="Không đạt yêu cầu",H22="Gần đạt yêu cầu",I22="Không tuân thủ",J22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA=+A22+1 | B23: 003971 | C23: Vũ Tuấn Anh | D23: Viện trưởng | E23: Viện Hàng không vũ trụ Viettel | F23: 4.625 FORMULA= | G23: 4.55 | H23: Vượt xa YC FORMULA= | I23: Tuân thủ | J23: Tuân thủ | K23: A+ FORMULA= | L23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA= | B24: 007642 | C24: Lê Xuân Hùng | D24: Giám đốc | E24: Trung tâm Dịch vụ Dùng chung | F24: 4.5415 FORMULA= | H24: Vượt xa YC FORMULA= | I24: Tuân thủ | J24: Tuân thủ | K24: A+ FORMULA= | L24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 086797 | C25: Nguyễn Văn Tuấn | D25: Giám đốc | E25: Trung tâm Công nghệ thông tin Viettel | F25: 4.5 FORMULA= | H25: Vượt xa YC FORMULA= | I25: Tuân thủ | J25: Tuân thủ | K25: A+ FORMULA= | L25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 011493 | C26: Lưu Mạnh Hà | D26: Tổng Giám đốc | E26: Tổng Công ty Mạng lưới Viettel | F26: 4.45 FORMULA= | G26: 4.41 | H26: Vượt YC FORMULA= | I26: Tuân thủ | J26: Tuân thủ | K26: A FORMULA= | L26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 042971 | C27: Hoàng Trung Thành | D27: Tổng Giám đốc | E27: Tổng Công ty Viễn thông Viettel | F27: 4.202 FORMULA= | G27: 4.11 | H27: Vượt YC FORMULA= | I27: Tuân thủ | J27: Tuân thủ | K27: A FORMULA= | L27: Hoàn thành NV/CV FORMULA=
+A28: 7 FORMULA= | B28: 106799 | C28: Nguyễn Mạnh Quý | D28: Giám đốc | E28: TT Dịch vụ dữ liệu & Trí tuệ nhân tạo Viettel | F28: 4.075 FORMULA= | G28: 3.58 | H28: Vượt YC FORMULA= | I28: Tuân thủ | J28: Tuân thủ | K28: A FORMULA= | L28: Hoàn thành NV/CV FORMULA=
+A29: 8 FORMULA= | B29: 063766 | C29: Nguyễn Vũ Hà | D29: Tổng Giám đốc | E29: TCT Công nghiệp Công nghệ cao Viettel | F29: 4.07266666666667 FORMULA= | G29: 4.33 | H29: Vượt YC FORMULA= | I29: Tuân thủ | J29: Tuân thủ | K29: A FORMULA= | L29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 102977 | C30: Vũ Tiến Duy | D30: Giám đốc | E30: Công ty Quản lý tài sản Viettel | F30: 4.0595 FORMULA= | G30: 3.94 | H30: Vượt YC FORMULA= | I30: Tuân thủ | J30: Tuân thủ | K30: A FORMULA= | L30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA= | B31: 067049 | C31: Lê Văn Đại | D31: Tổng Giám đốc | E31: Tổng Công ty Dịch vụ số Viettel | F31: 3.9975 FORMULA= | G31: 3.31 | H31: Vượt YC FORMULA= | I31: Tuân thủ | J31: Tuân thủ | K31: A FORMULA= | L31: Hoàn thành NV/CV FORMULA=
+A32: 11 FORMULA= | B32: 016077 | C32: Bùi Quang Tuyến | D32: Giám đốc | E32: Học viện Viettel | F32: 3.78 FORMULA= | G32: 4.12 | H32: Vượt YC FORMULA= | I32: Tuân thủ | J32: Tuân thủ | K32: A FORMULA= | L32: Hoàn thành NV/CV FORMULA=
+F35: #N/A | L35:  FORMULA=IF(K35="","",IF(OR(K35="K",H35="Không đánh giá"),"Không đánh giá",IF(K35="D",IF(OR(H35="Không đạt yêu cầu",H35="Gần đạt yêu cầu",I35="Không tuân thủ",J35<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+C37: CHÁNH VĂN PHÒNG | E37: PHÓ TỔNG GIÁM ĐỐC | K37: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet13.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | J1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | J2: Độc lập - Tự do - Hạnh phúc
+J3:           
+J4:    Hà Nội, ngày         tháng         năm 2025
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY ĐƠN VỊ (ĐỘC LẬP)
+A7: Kỳ đánh giá: Quý I năm 2025
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0 FORMULA= | D11: 0 FORMULA=COUNTIF($K$22:$K$30007,$B11)
+B12: A | C12: 0.928571428571429 FORMULA= | D12: 13 FORMULA=
+B13: B | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: C | C14: 0.0714285714285714 FORMULA= | D14: 1 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 14 FORMULA=
+A19: II. Danh sách chi tiết
+A20: TT | B20: Mã nhân viên | C20: Họ và Tên | D20: Chức danh | E20: Đơn vị | F20: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Check | H21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | I21: Tuân thủ địa điểm làm việc | J21: Tuân thủ Nội quy lao động | K21: Xếp loại Ki | L21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 | B22: 003450 | C22: Phạm Văn Hùng | D22: Giám đốc | E22: Công ty TM&XNK Viettel | F22: 4.45416666666667 FORMULA= | G22: 4.55 | H22: Vượt YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | I22: Tuân thủ | J22: Tuân thủ | K22: A FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | L22: Hoàn thành NV/CV FORMULA=IF(K22="","",IF(OR(K22="K",H22="Không đánh giá"),"Không đánh giá",IF(K22="D",IF(OR(H22="Không đạt yêu cầu",H22="Gần đạt yêu cầu",I22="Không tuân thủ",J22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA= | B23: 018583 | C23: Nguyễn Tiến Dũng | D23: Giám đốc | E23: Công ty Dịch vụ Khách hàng Viettel | F23: 4.35 FORMULA= | H23: Vượt YC FORMULA= | I23: Tuân thủ | J23: Tuân thủ | K23: A FORMULA= | L23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA=+A23+1 | B24: 057914 | C24: Nguyễn Thị Hoa | D24: Tổng Giám đốc | E24: TCT CP Đầu tư quốc tế Viettel | F24: 4.2265 FORMULA= | G24: 4.3 | H24: Vượt YC FORMULA= | I24: Tuân thủ | J24: Tuân thủ | K24: A FORMULA= | L24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 186394 | C25: Nguyễn Thế Nghĩa | D25: Tổng Giám đốc | E25: Tổng Công ty Sản xuất thiết bị Viettel | F25: 4.20125 FORMULA= | G25: 4.1 | H25: Vượt YC FORMULA= | I25: Tuân thủ | J25: Tuân thủ | K25: A FORMULA= | L25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 198734 | C26: Bùi Trình | D26: Giám đốc | E26: Công ty Đầu tư Công nghệ Viettel | F26: 4.14666666666667 FORMULA= | G26: 3.52 | H26: Vượt YC FORMULA= | I26: Tuân thủ | J26: Tuân thủ | K26: A FORMULA= | L26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 020617 | C27: Nguyễn Cảnh Hòa | D27: Tổng Giám đốc | E27: Công ty CP Giao thông số Việt Nam | F27: 4.14 FORMULA= | G27: 4.35 | H27: Vượt YC FORMULA= | I27: Tuân thủ | J27: Tuân thủ | K27: A FORMULA= | L27: Hoàn thành NV/CV FORMULA=
+A28: 7 FORMULA= | B28: 085840 | C28: Nguyễn Sơn Hải | D28: Giám đốc | E28: Công ty An ninh mạng Viettel | F28: 4.12 FORMULA= | G28: 4.36 | H28: Vượt YC FORMULA= | I28: Tuân thủ | J28: Tuân thủ | K28: A FORMULA= | L28: Hoàn thành NV/CV FORMULA=
+A29: 8 FORMULA= | B29: 009162 | C29: Nguyễn Đăng Hùng | D29: Giám đốc | E29: Công ty CP Tư vấn & Dịch vụ Viettel | F29: 4 FORMULA= | G29: 3.31 | H29: Vượt YC FORMULA= | I29: Tuân thủ | J29: Tuân thủ | K29: A FORMULA= | L29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 061748 | C30: Đỗ Mạnh Dũng | D30: Giám đốc | E30: Công ty TNHH MTV Thể thao Viettel | F30: 3.84 FORMULA= | G30: 3.69 | H30: Vượt YC FORMULA= | I30: Tuân thủ | J30: Tuân thủ | K30: A FORMULA= | L30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA= | B31: 014618 | C31: Phạm Đình Trường  | D31: Tổng Giám đốc | E31: Tổng Công ty CP Công trình Viettel | F31: 3.74535714285714 FORMULA= | G31: 3.63 | H31: Vượt YC FORMULA= | I31: Tuân thủ | J31: Tuân thủ | K31: A FORMULA= | L31: Hoàn thành NV/CV FORMULA=
+A32: 11 FORMULA= | B32: 206154 | C32: Lê Bá Tân | D32: Giám đốc | E32: Công ty TNHH Viettel - CHT | F32: 3.7 FORMULA= | G32: 3.54 | H32: Vượt YC FORMULA= | I32: Tuân thủ | J32: Tuân thủ | K32: A FORMULA= | L32: Hoàn thành NV/CV FORMULA=
+A33: 12 FORMULA= | B33: 011582 | C33: Phùng Văn Cường | D33: Tổng Giám đốc | E33: TCT CP Bưu Chính Viettel | F33: 3.67 FORMULA= | G33: 4.26 | H33: Vượt YC FORMULA= | I33: Tuân thủ | J33: Tuân thủ | K33: A FORMULA= | L33: Hoàn thành NV/CV FORMULA=
+A34: 13 FORMULA= | B34: 045243 | C34: Cao Phương Liên | D34: Giám đốc | E34: Công ty Truyền thông Viettel | F34: 3.635 FORMULA= | G34: 3.83 | H34: Vượt YC FORMULA= | I34: Tuân thủ | J34: Tuân thủ | K34: A FORMULA= | L34: Hoàn thành NV/CV FORMULA=
+A35: 14 FORMULA= | B35: 005623 | C35: Nguyễn Thái Hưng | D35: Tổng Giám đốc | E35: Công ty Cổ phần Xi măng Cẩm Phả | F35: 2.45916666666667 FORMULA= | G35: 1.94 | H35: Gần đạt YC FORMULA= | I35: Tuân thủ | J35: Tuân thủ | K35: C FORMULA= | L35: Hoàn thành NV/CV FORMULA=
+C38: CHÁNH VĂN PHÒNG | E38: PHÓ TỔNG GIÁM ĐỐC | K38: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet14.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | K1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | K2: Độc lập - Tự do - Hạnh phúc
+K3:           
+K4:    Hà Nội, ngày     tháng    năm 2024
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A7: Kỳ đánh giá: Quý I năm 2025
+A8: 1 | C8: 1 | D8: 2 | E8: 3 | F8: 4 | G8: 6 | H8: 14 | I8: 15 | J8: 16 | K8: 17 | L8: 14 | M8: 18 | N8: 19
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0.5 FORMULA= | D11: 8 FORMULA=COUNTIF($M$22:$M$29990,$B11)
+B12: A | C12: 0.5 FORMULA= | D12: 8 FORMULA=
+B13: B | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 16 FORMULA=
+A18: II. Danh sách chi tiết
+A19: TT | B19: Mã số | C19: Họ và Tên | D19: Chức danh | E19: Cơ quan | F19: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Điểm đánh giá | H21: Chủ tịch Xếp loại Ki | I21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | J21: Tuân thủ địa điểm làm việc | K21: Tuân thủ Nội quy lao động | L21: Xếp loại Ki | M21: Xếp loại Ki | N21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc | O21: Khen thưởng Quý 1
+A22: 1 FORMULA=+A21+1 | B22: 006038 | C22: Phạm Thị Thu Hương | D22: Trưởng Ban | E22: Ban Đối ngoại | F22: 4.95 | G22: 4.95 | H22: A+ | I22: Vượt xa YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | J22: Tuân thủ | K22: Tuân thủ | L22: A+ | M22: A+ FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | N22: Hoàn thành NV/CV FORMULA=IF(M22="","",IF(OR(M22="K",I22="Không đánh giá"),"Không đánh giá",IF(M22="D",IF(OR(I22="Không đạt yêu cầu",I22="Gần đạt yêu cầu",J22="Không tuân thủ",K22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV"))) | O22: X
+A23: 2 FORMULA= | B23: 005574 | C23: Hà Quang Huy | D23: Trưởng Ban | E23: Ban Đầu tư - Xây dựng | F23: 4.9 | G23: 4.9 | H23: A+ | I23: Vượt xa YC FORMULA= | J23: Tuân thủ | K23: Tuân thủ | L23: A+ | M23: A+ FORMULA= | N23: Hoàn thành NV/CV FORMULA= | O23: X
+A24: 3 FORMULA= | B24: 008136 | C24: Đào Thúy Hường | D24: Trưởng Ban | E24: Ban Tài chính Kế toán  | F24: 4.9 | G24: 4.9 | H24: A+ | I24: Vượt xa YC FORMULA= | J24: Tuân thủ | K24: Tuân thủ | L24: A+ | M24: A+ FORMULA= | N24: Hoàn thành NV/CV FORMULA= | O24: X
+A25: 4 FORMULA= | B25: 158813 | C25: Vũ Thị Mai | D25: Trưởng Ban | E25: Ban Tổ chức Nhân lực | F25: 4.9 | G25: 4.9 | H25: A+ | I25: Vượt xa YC FORMULA= | J25: Tuân thủ | K25: Tuân thủ | L25: A+ | M25: A+ FORMULA= | N25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 065449 | C26: Hoàng Long | D26: Trưởng Ban | E26: Ban Công nghệ thông tin | F26: 4.9 | G26: 4.9 | H26: A+ | I26: Vượt xa YC FORMULA= | J26: Tuân thủ | K26: Tuân thủ | L26: A+ | M26: A+ FORMULA= | N26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 011315 | C27: Dương Văn Toàn | D27: Chủ nhiệm Chính trị | E27: Cơ quan Chính trị | F27: 4.9 | G27: 4.9 | H27: A+ | I27: Vượt xa YC FORMULA= | J27: Tuân thủ | K27: Tuân thủ | L27: A+ | M27: A+ FORMULA= | N27: Hoàn thành NV/CV FORMULA= | O27: X
+A28: 7 FORMULA= | B28: 125943  | C28: Phan Thị Loan | D28: Trưởng Ban | E28: Ban Pháp chế | F28: 4.85 | G28: 4.85 | H28: A+ | I28: Vượt xa YC FORMULA= | J28: Tuân thủ | K28: Tuân thủ | L28: A+ | M28: A+ FORMULA= | N28: Hoàn thành NV/CV FORMULA= | O28: X
+A29: 8 FORMULA= | B29: 009148 | C29: Hoàng Văn Ngọc | D29: Trưởng Ban | E29: Ban Chiến lược | F29: 4.7 | G29: 4.7 | H29: A+ | I29: Vượt xa YC FORMULA= | J29: Tuân thủ | K29: Tuân thủ | L29: A+ | M29: A+ FORMULA= | N29: Hoàn thành NV/CV FORMULA= | O29: X
+A30: 9 FORMULA= | B30: 011489 | C30: Võ Thanh Hải | D30: Trưởng Ban | E30: Ban TH&TT | F30: 4.49 | G30: 4.9 | H30: A | I30: Vượt YC FORMULA= | J30: Tuân thủ | K30: Tuân thủ | L30: A | M30: A FORMULA= | N30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA= | B31: 010226 | C31: Bùi Thế Hùng | D31: Chánh Văn phòng | E31: Văn phòng | F31: 4.49 | G31: 4.9 | H31: A | I31: Vượt YC FORMULA= | J31: Tuân thủ | K31: Tuân thủ | L31: A | M31: A FORMULA= | N31: Hoàn thành NV/CV FORMULA= | O31: X
+A32: 11 FORMULA= | B32: 011323 | C32: Hà Minh Tuấn | D32: Trưởng Ban | E32: Ban Kỹ thuật | F32: 4.49 | G32: 4.85 | H32: A | I32: Vượt YC FORMULA= | J32: Tuân thủ | K32: Tuân thủ | L32: A | M32: A FORMULA= | N32: Hoàn thành NV/CV FORMULA=
+A33: 12 FORMULA= | B33: 018798 | C33: Nguyễn Mạnh Hải | D33: Trưởng Ban | E33: Ban Công nghiệp CNC | F33: 4.49 | G33: 4.8 | H33: A | I33: Vượt YC FORMULA= | J33: Tuân thủ | K33: Tuân thủ | L33: A | M33: A FORMULA= | N33: Hoàn thành NV/CV FORMULA=
+A34: 13 FORMULA= | B34:  010114 | C34: Nguyễn Văn Bắc | D34: Trưởng Ban | E34: Ban Thanh tra - Kiểm toán | F34: 4.49 | G34: 4.8 | H34: A | I34: Vượt YC FORMULA= | J34: Tuân thủ | K34: Tuân thủ | L34: A | M34: A FORMULA= | N34: Hoàn thành NV/CV FORMULA=
+A35: 14 FORMULA= | B35: 093077 | C35: Nguyễn Cương Hoàng | D35: Trưởng Ban | E35: Ban Bán dẫn | F35: 4.49 | G35: 4.8 | H35: A | I35: Vượt YC FORMULA= | J35: Tuân thủ | K35: Tuân thủ | L35: A | M35: A FORMULA= | N35: Hoàn thành NV/CV FORMULA=
+A36: 15 FORMULA= | B36: 001625 | C36: Nguyễn Thị Hải Lý | D36: Trưởng Ban | E36: Ban Đầu tư tài chính | F36: 4.49 | G36: 4.8 | H36: A | I36: Vượt YC FORMULA= | J36: Tuân thủ | K36: Tuân thủ | L36: A | M36: A FORMULA= | N36: Hoàn thành NV/CV FORMULA=
+A37: 16 FORMULA= | B37: 017817 | C37: Đỗ Đức Thắng | D37: Trưởng Ban | E37: Ban Hành chính | F37: 4.49 | G37: 4.7 | H37: A | I37: Vượt YC FORMULA= | J37: Tuân thủ | K37: Tuân thủ | L37: A | M37: A FORMULA= | N37: Hoàn thành NV/CV FORMULA= | O37: X
+C40: CHÁNH VĂN PHÒNG | F40: PHÓ TỔNG GIÁM ĐỐC | L40: TỔNG GIÁM ĐỐC | M40: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet15.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | I1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM | O1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | I2: Độc lập - Tự do - Hạnh phúc | O2: Độc lập - Tự do - Hạnh phúc
+I3:            | O3:           
+I4:    Hà Nội, ngày     tháng    năm 2023 | O4:    Hà Nội, ngày     tháng    năm 2023
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A7: Kỳ đánh giá: Quý III năm 2023
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+C10: Xếp loại Ki | D10: Tỷ lệ xếp loại Ki | E10: Số người
+C11: A+ | D11: 0.533333333333333 FORMULA= | E11: 8 FORMULA=
+C12: A | D12: 0.466666666666667 FORMULA= | E12: 7 FORMULA=
+C13: B | D13: 0 FORMULA= | E13: 0 FORMULA=
+C14: C | D14: 0 FORMULA= | E14: 0 FORMULA=
+C15: D | D15: 0 FORMULA= | E15: 0 FORMULA=
+C16: K | E16: 0 FORMULA=
+C17: Tổng: | D17: 1 FORMULA= | E17: 15 FORMULA=
+A18: II. Danh sách chi tiết
+A19: TT | B19: Mã số | C19: Họ và Tên | D19: Chức danh | E19: Cơ quan | F19: Cá nhân tự đánh giá | L19: BTGĐ đánh giá (Các Trợ lý xin ý kiến trực tiếp) | S19: Ghi chú
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | H21: Tuân thủ địa điểm làm việc | I21: Tuân thủ Nội quy lao động | J21: Ki | K21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc | L21: Điểm đánh giá | M21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | N21: Tuân thủ địa điểm làm việc | O21: Tuân thủ Nội quy lao động | P21: Ki | R21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: I | C22: Cơ quan do Chủ tịch quản lý
+A23: 1 | B23: 008136 | C23: Đào Thúy Hường | D23: Trưởng Ban | E23: Ban Tài chính Kế toán  | F23: 4.85 | G23: Vượt xa YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A+ FORMULA= | K23: Hoàn thành NV/CV FORMULA= | L23: 4.85 | M23: Vượt xa YC FORMULA= | N23: Tuân thủ | O23: Tuân thủ | P23: A+ | R23: Hoàn thành NV/CV FORMULA= | S23: VP đề xuất 2 Ban này A+ do được khen thưởng tại Hội nghị Sơ kết Q3
+A24: 2 FORMULA= | B24: 011493 | C24: Lưu Mạnh Hà | D24: Trưởng Ban | E24: Ban Đầu tư - Xây dựng | F24: 4.8 | G24: Vượt xa YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A+ FORMULA= | K24: Hoàn thành NV/CV FORMULA= | L24: 4.8 | M24: Vượt xa YC FORMULA= | N24: Tuân thủ | O24: Tuân thủ | P24: A+ | R24: Hoàn thành NV/CV FORMULA=
+A25: 3 FORMULA=+A24+1 | B25: 001625 | C25: Nguyễn Thị Hải Lý | D25: Trưởng Ban | E25: Ban Đầu tư tài chính | F25: 4.8 | G25: Vượt xa YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A+ FORMULA= | K25: Hoàn thành NV/CV FORMULA= | L25: 4.4 | M25: Vượt YC FORMULA= | N25: Tuân thủ | O25: Tuân thủ | P25: A | R25: Hoàn thành NV/CV FORMULA=
+A26: 4 FORMULA= | B26: 158813 | C26: Vũ Thị Mai | D26: Trưởng Ban | E26: Ban Tổ chức Nhân lực | F26: 4.8 | G26: Vượt xa YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A+ FORMULA= | K26: Hoàn thành NV/CV FORMULA= | L26: 4.4 | M26: Vượt YC FORMULA= | N26: Tuân thủ | O26: Tuân thủ | P26: A | R26: Hoàn thành NV/CV FORMULA=
+A27: II | C27: Cơ quan do PTGĐ Nam quản lý
+A28: 1 | B28: 011315 | C28: Dương Văn Toàn | D28: Chủ nhiệm Chính trị | E28: Cơ quan Chính trị | F28: 4.8 | G28: Vượt xa YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: A+ FORMULA= | K28: Hoàn thành NV/CV FORMULA= | L28: 4.8 | M28: Vượt xa YC FORMULA= | N28: Tuân thủ | O28: Tuân thủ | P28: A+ | R28: Hoàn thành NV/CV FORMULA=
+A29: 2 | B29: 186394 | C29: Phạm Thị Thu Hương | D29: Trưởng Ban | E29: Ban Đối ngoại | F29: 4.25 | G29: Vượt YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: A FORMULA= | K29: Hoàn thành NV/CV FORMULA= | L29: 4.25 | M29: Vượt YC FORMULA= | N29: Tuân thủ | O29: Tuân thủ | P29: A | R29: Hoàn thành NV/CV FORMULA=
+A30: III | C30: Cơ quan do PTGĐ Chiến quản lý
+A31: 1 | B31: 018798 | C31: Nguyễn Mạnh Hải | D31: Trưởng Ban | E31: Ban Công nghiệp CNC | F31: 4.8 | G31: Vượt xa YC FORMULA= | H31: Tuân thủ | I31: Tuân thủ | J31: A+ FORMULA= | K31: Hoàn thành NV/CV FORMULA= | L31: 4.8 | M31: Vượt xa YC FORMULA= | N31: Tuân thủ | O31: Tuân thủ | P31: A+ | R31: Hoàn thành NV/CV FORMULA= | S31: Được khen thưởng tại Hội nghị Sơ kết Q3
+A32: IV | C32: Cơ quan do PTGĐ Phương quản lý
+A33: 1 | B33: 089417 | C33: Nguyễn Hữu Hùng | D33: Chánh Văn phòng | E33: Văn phòng | F33: 4.75 | G33: Vượt xa YC FORMULA= | H33: Tuân thủ | I33: Tuân thủ | J33: A+ FORMULA= | K33: Hoàn thành NV/CV FORMULA= | L33: 4.75 | M33: Vượt xa YC FORMULA= | N33: Tuân thủ | O33: Tuân thủ | P33: A+ | R33: Hoàn thành NV/CV FORMULA=
+A34: 2 FORMULA= | B34: 017885 | C34: Nguyễn Việt Dũng | D34: Trưởng Ban | E34: Ban Chiến lược | F34: 4.72 | G34: Vượt xa YC FORMULA= | H34: Tuân thủ | I34: Tuân thủ | J34: A+ FORMULA= | K34: Hoàn thành NV/CV FORMULA= | L34: 4.72 FORMULA= | M34: Vượt xa YC FORMULA= | N34: Tuân thủ | O34: Tuân thủ | P34: A+ | R34: Hoàn thành NV/CV FORMULA=
+A35: 3 FORMULA=+A34+1 | B35: 006552 | C35: Nguyễn Hà Thành | D35: Trưởng Ban | E35: Ban TH&TT | F35: 5 | G35: Vượt xa YC FORMULA= | H35: Tuân thủ | I35: Tuân thủ | J35: A+ FORMULA= | K35: Hoàn thành NV/CV FORMULA= | L35: 4.4 | M35: Vượt YC FORMULA= | N35: Tuân thủ | O35: Tuân thủ | P35: A | R35: Hoàn thành NV/CV FORMULA=
+A36: 4 FORMULA= | B36: 010226 | C36: Bùi Thế Hùng | D36: Trưởng Ban | E36: Ban TTKT | F36: 4.55 | G36: Vượt xa YC FORMULA= | H36: Tuân thủ | I36: Tuân thủ | J36: A+ FORMULA= | K36: Hoàn thành NV/CV FORMULA= | L36: 4.49 | M36: Vượt YC FORMULA= | N36: Tuân thủ | O36: Tuân thủ | P36: A | R36: Hoàn thành NV/CV FORMULA=
+A37: V | C37: Cơ quan do PTGĐ Vũ quản lý
+A38: 1 | B38: 206154 | C38: Lê Bá Tân | D38: Trưởng Ban | E38: Ban Kỹ thuật | F38: 4.7 | G38: Vượt xa YC FORMULA= | H38: Tuân thủ | I38: Tuân thủ | J38: A+ FORMULA= | K38: Hoàn thành NV/CV FORMULA= | L38: 4.7 | M38: Vượt xa YC FORMULA= | N38: Tuân thủ | O38: Tuân thủ | P38: A+ | R38: Hoàn thành NV/CV FORMULA= | S38: Được khen thưởng tại Hội nghị Sơ kết Q3
+A39: 2 FORMULA= | B39: 057914 | C39: Nguyễn Thị Hoa | D39: Trưởng Ban | E39: Ban Pháp chế | F39: 4.6 | G39: Vượt xa YC FORMULA= | H39: Tuân thủ | I39: Tuân thủ | J39: A+ FORMULA= | K39: Hoàn thành NV/CV FORMULA= | L39: 4.6 | M39: Vượt xa YC FORMULA= | N39: Tuân thủ | O39: Tuân thủ | P39: A+ | R39: Hoàn thành NV/CV FORMULA=
+A40: 3 | B40: 065449 | C40: Hoàng Long | D40: Trưởng Ban | E40: Ban CNTT | F40: 4.85 | G40: Vượt xa YC FORMULA= | H40: Tuân thủ | I40: Tuân thủ | J40: A+ FORMULA= | K40: Hoàn thành NV/CV FORMULA= | L40: 4.45 | M40: Vượt YC FORMULA= | N40: Tuân thủ | O40: Tuân thủ | P40: A | R40: Hoàn thành NV/CV FORMULA=
+A41: 4 | B41: 102977 | C41: Vũ Tiến Duy | D41: Trưởng Ban | E41: Ban Hành chính | F41: 4.6 | G41: Vượt xa YC FORMULA= | H41: Tuân thủ | I41: Tuân thủ | J41: A+ FORMULA= | K41: Hoàn thành NV/CV FORMULA= | L41: 4.45 | M41: Vượt YC FORMULA= | N41: Tuân thủ | O41: Tuân thủ | P41: A | R41: Hoàn thành NV/CV FORMULA=
+xl/worksheets/sheet16.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | I1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | I2: Độc lập - Tự do - Hạnh phúc
+I3:           
+I4:    Hà Nội, ngày     tháng    năm 2023
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY ĐƠN VỊ (PHỤ THUỘC)
+A7: Kỳ đánh giá: Quý III năm 2023
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0.0833333333333333 FORMULA= | D11: 1 FORMULA=COUNTIF($J$22:$J$30005,$B11)
+B12: A | C12: 0.75 FORMULA= | D12: 9 FORMULA=
+B13: B | C13: 0.166666666666667 FORMULA= | D13: 2 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 12 FORMULA=
+A19: II. Danh sách chi tiết
+A20: TT | B20: Mã nhân viên | C20: Họ và Tên | D20: Chức danh | E20: Đơn vị | F20: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | H21: Tuân thủ địa điểm làm việc | I21: Tuân thủ Nội quy lao động | J21: Xếp loại Ki | K21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 | B22: 066134 | C22: Nguyễn Đạt | D22: Tổng Giám đốc | E22: Tổng Công ty Mạng lưới Viettel | F22: 4.528 | G22: Vượt xa YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | H22: Tuân thủ | I22: Tuân thủ | J22: A+ FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | K22: Hoàn thành NV/CV FORMULA=IF(J22="","",IF(OR(J22="K",G22="Không đánh giá"),"Không đánh giá",IF(J22="D",IF(OR(G22="Không đạt yêu cầu",G22="Gần đạt yêu cầu",H22="Không tuân thủ",I22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA= | B23: 063787 | C23: Nguyễn Mạnh Hổ | D23: Tổng Giám đốc | E23: Tổng Công ty Giải pháp doanh nghiệp Viettel | F23: 4.43833333333333 | G23: Vượt YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A FORMULA= | K23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA=+A23+1 | B24: 003971 | C24: Vũ Tuấn Anh | D24: Viện trưởng | E24: Viện Hàng không vũ trụ Viettel | F24: 4.19 | G24: Vượt YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A FORMULA= | K24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 063766 | C25: Nguyễn Vũ Hà | D25: Tổng Giám đốc | E25: TCT Công nghiệp Công nghệ cao Viettel | F25: 4.0975 | G25: Vượt YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A FORMULA= | K25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 067049 | C26: Lê Văn Đại | D26: Tổng Giám đốc | E26: Tổng Công ty Dịch vụ số Viettel | F26: 3.955 | G26: Vượt YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A FORMULA= | K26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 016077 | C27: Bùi Quang Tuyến | D27: Giám đốc | E27: Học viện Viettel | F27: 3.9 | G27: Vượt YC FORMULA= | H27: Tuân thủ | I27: Tuân thủ | J27: A FORMULA= | K27: Hoàn thành NV/CV FORMULA=
+A28: 7 FORMULA= | B28: 085840 | C28: Nguyễn Sơn Hải | D28: Giám đốc | E28: Công ty An ninh mạng Viettel | F28: 3.875 | G28: Vượt YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: A FORMULA= | K28: Hoàn thành NV/CV FORMULA=
+A29: 8 FORMULA= | B29: 011489 | C29: Võ Thanh Hải | D29: Giám đốc | E29: Công ty Truyền thông Viettel | F29: 3.84 | G29: Vượt YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: A FORMULA= | K29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 106799 | C30: Nguyễn Mạnh Quý | D30: Giám đốc | E30: Trung tâm Không gian mạng Viettel | F30: 3.69166666666667 | G30: Vượt YC FORMULA= | H30: Tuân thủ | I30: Tuân thủ | J30: A FORMULA= | K30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA= | B31: 014650 | C31: Cao Anh Sơn | D31: Tổng Giám đốc | E31: Tổng Công ty Viễn thông Viettel | F31: 3.5175 | G31: Vượt YC FORMULA= | H31: Tuân thủ | I31: Tuân thủ | J31: A FORMULA= | K31: Hoàn thành NV/CV FORMULA=
+A32: 11 FORMULA= | B32: 061748 | C32: Đỗ Mạnh Dũng | D32: Giám đốc | E32: Trung tâm Thể thao Viettel | F32: 3.35 | G32: Đạt YC FORMULA= | H32: Tuân thủ | I32: Tuân thủ | J32: B FORMULA= | K32: Hoàn thành NV/CV FORMULA=
+A33: 12 FORMULA= | B33: 005574 | C33: Hà Quang Huy | D33: Giám đốc | E33: Công ty Quản lý tài sản Viettel | F33: 3.123945 | G33: Đạt YC FORMULA= | H33: Tuân thủ | I33: Tuân thủ | J33: B FORMULA= | K33: Hoàn thành NV/CV FORMULA=
+F34: #N/A | K34:  FORMULA=IF(J34="","",IF(OR(J34="K",G34="Không đánh giá"),"Không đánh giá",IF(J34="D",IF(OR(G34="Không đạt yêu cầu",G34="Gần đạt yêu cầu",H34="Không tuân thủ",I34<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+C36: CHÁNH VĂN PHÒNG | E36: PHÓ TỔNG GIÁM ĐỐC | J36: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet17.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | I1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | I2: Độc lập - Tự do - Hạnh phúc
+I3:           
+I4:    Hà Nội, ngày     tháng    năm 2023
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY ĐƠN VỊ (ĐỘC LẬP)
+A7: Kỳ đánh giá: Quý III năm 2023
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 0 FORMULA= | D11: 0 FORMULA=COUNTIF($J$22:$J$30002,$B11)
+B12: A | C12: 0.666666666666667 FORMULA= | D12: 6 FORMULA=
+B13: B | C13: 0.333333333333333 FORMULA= | D13: 3 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 9 FORMULA=
+A19: II. Danh sách chi tiết
+A20: TT | B20: Mã nhân viên | C20: Họ và Tên | D20: Chức danh | E20: Đơn vị | F20: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | H21: Tuân thủ địa điểm làm việc | I21: Tuân thủ Nội quy lao động | J21: Xếp loại Ki | K21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 | B22: 003450 | C22: Phạm Văn Hùng | D22: Giám đốc | E22: Công ty TM&XNK Viettel | F22: 4.29 | G22: Vượt YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | H22: Tuân thủ | I22: Tuân thủ | J22: A FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | K22: Hoàn thành NV/CV FORMULA=IF(J22="","",IF(OR(J22="K",G22="Không đánh giá"),"Không đánh giá",IF(J22="D",IF(OR(G22="Không đạt yêu cầu",G22="Gần đạt yêu cầu",H22="Không tuân thủ",I22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA=+A22+1 | B23: 011582 | C23: Phùng Văn Cường | D23: Tổng Giám đốc | E23: TCT CP Đầu tư quốc tế Viettel | F23: 4.26166666666667 | G23: Vượt YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A FORMULA= | K23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA= | B24: 198734 | C24: Nguyễn Cảnh Hòa | D24: Giám đốc | E24: Công ty Cổ phần Giao thông số | F24: 4.15 | G24: Vượt YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A FORMULA= | K24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 009162 | C25: Nguyễn Đăng Hùng | D25: Giám đốc | E25: Công ty CP Tư vấn & Dịch vụ Viettel | F25: 3.68083333333333 | G25: Vượt YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A FORMULA= | K25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 014618 | C26: Phạm Đình Trường  | D26: Tổng Giám đốc | E26: Tổng Công ty CP Công trình Viettel | F26: 3.63 | G26: Vượt YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A FORMULA= | K26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 042971 | C27: Hoàng Trung Thành | D27: Tổng Giám đốc | E27: TCT CP Bưu Chính Viettel | F27: 3.57 | G27: Vượt YC FORMULA= | H27: Tuân thủ | I27: Tuân thủ | J27: A FORMULA= | K27: Hoàn thành NV/CV FORMULA=
+A28: 7 FORMULA= | B28: 009148 | C28: Hoàng Văn Ngọc | D28: Giám đốc | E28: Công ty TNHH Viettel - CHT | F28: 3.16 | G28: Đạt YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: B FORMULA= | K28: Hoàn thành NV/CV FORMULA=
+A29: 8 FORMULA= | B29: 186394 | C29: Nguyễn Thế Nghĩa | D29: Tổng Giám đốc | E29: Tổng Công ty Sản xuất thiết bị Viettel | F29: 2.93825 | G29: Đạt YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: B FORMULA= | K29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 008644 | C30: Trần Quang Hưng | D30: Giám đốc | E30: Công ty Cổ phần Xi măng Cẩm Phả | F30: 2.91 | G30: Đạt YC FORMULA= | H30: Tuân thủ | I30: Tuân thủ | J30: B FORMULA= | K30: Hoàn thành NV/CV FORMULA=
+C33: CHÁNH VĂN PHÒNG | E33: PHÓ TỔNG GIÁM ĐỐC | J33: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet18.xml
+A2: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A3: Kỳ đánh giá: Quý 4 năm 2022
+A5: TT | B5: TT | C5: Mã số | D5: Họ và Tên | E5: Chức danh | F5: Cơ quan | G5: Kết quả hoàn thành nhiệm vụ/công việc
+E7: Chức danh | F7: Đơn vị | G7: Cơ quan tự chấm | H7: Chốt | J7: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | K7: Tuân thủ địa điểm làm việc | L7: Tuân thủ Nội quy lao động | M7: Xếp loại Ki
+A8: 9 | B8: 1 | C8: 039711 | D8: Lê Minh Dược | E8: Trưởng Ban | F8: Ban Thanh tra - Kiểm toán | G8: #REF! FORMULA= | H8: #REF! FORMULA= | I8: #REF! FORMULA=H8 | J8: #REF! FORMULA=IF(I8>=4.5,"Vượt xa YC",IF(I8>=3.5,"Vượt YC",IF(I8>=2.5,"Đạt YC",IF(I8>=2,"Gần đạt YC","Không đạt YC")))) | K8: Tuân thủ | L8: Tuân thủ | M8: #REF! FORMULA=IF(I8>=4.5,"A+",IF(I8>=3.5,"A",IF(I8>=2.5,"B",IF(I8>=2,"C","D"))))
+A9: 1 | B9: 2 | C9: 008136 | D9: Đào Thúy Hường | E9: Trưởng Ban | F9: Ban Tài chính Kế toán  | G9: #REF! FORMULA= | H9: #REF! FORMULA= | I9: #REF! FORMULA= | J9: #REF! FORMULA= | K9: Tuân thủ | L9: Tuân thủ | M9: #REF! FORMULA=
+A10: 7 | B10: 3 | C10: 017885 | D10: Nguyễn Việt Dũng | E10: Trưởng Ban | F10: Ban Chiến lược | G10: #REF! FORMULA= | H10: #REF! FORMULA= | I10: #REF! FORMULA= | J10: #REF! FORMULA= | K10: Tuân thủ | L10: Tuân thủ | M10: #REF! FORMULA=
+A11: 2 | B11: 4 | C11: 089417 | D11: Nguyễn Hữu Hùng | E11: Chánh Văn phòng | F11: Văn phòng | G11: #REF! FORMULA= | H11: #REF! FORMULA= | I11: #REF! FORMULA= | J11: #REF! FORMULA= | K11: Tuân thủ | L11: Tuân thủ | M11: #REF! FORMULA=
+A12: 8 | B12: 5 | C12: 011315 | D12: Dương Văn Toàn | E12: Chủ nhiệm Chính trị | F12: Cơ quan Chính trị | G12: #REF! FORMULA= | H12: #REF! FORMULA= | I12: #REF! FORMULA= | J12: #REF! FORMULA= | K12: Tuân thủ | L12: Tuân thủ | M12: #REF! FORMULA=
+A13: 3 | B13: 6 | C13: 065449 | D13: Hoàng Long | E13: Trưởng Ban | F13: Ban Công nghệ thông tin | G13: #REF! FORMULA= | H13: #REF! FORMULA= | I13: #REF! FORMULA= | J13: #REF! FORMULA= | K13: Tuân thủ | L13: Tuân thủ | M13: #REF! FORMULA=
+A14: 6 | B14: 7 | C14: 006552 | D14: Nguyễn Hà Thành | E14: Trưởng Ban | F14: Ban Truyền thông | G14: #REF! FORMULA= | H14: #REF! FORMULA= | I14: #REF! FORMULA= | J14: #REF! FORMULA= | K14: Tuân thủ | L14: Tuân thủ | M14: #REF! FORMULA=
+A15: 10 | B15: 8 | C15: 022617 | D15: Nghiêm Phương Nhi | E15: Trưởng Ban | F15: Ban Đầu tư tài chính | G15: #REF! FORMULA= | H15: #REF! FORMULA= | I15: #REF! FORMULA= | J15: #REF! FORMULA= | K15: Tuân thủ | L15: Tuân thủ | M15: #REF! FORMULA=
+A16: 11 | B16: 9 | C16: 158813 | D16: Vũ Thị Mai | E16: Trưởng Ban | F16: Ban Tổ chức Nhân lực | G16: #REF! FORMULA= | H16: #REF! FORMULA= | I16: #REF! FORMULA= | J16: #REF! FORMULA= | K16: Tuân thủ | L16: Tuân thủ | M16: #REF! FORMULA=
+A17: 5 | B17: 10 | C17: 011493 | D17: Lưu Mạnh Hà | E17: Trưởng Ban | F17: Ban Đầu tư - Xây dựng | G17: #REF! FORMULA= | H17: #REF! FORMULA= | I17: #REF! FORMULA= | J17: #REF! FORMULA= | K17: Tuân thủ | L17: Tuân thủ | M17: #REF! FORMULA=
+A18: 14 | B18: 11 | C18: 186394 | D18: Phạm Thị Thu Hương | E18: Q.Trưởng Ban | F18: Ban Đối ngoại | G18: #REF! FORMULA= | H18: #REF! FORMULA= | I18: #REF! FORMULA= | J18: #REF! FORMULA= | K18: Tuân thủ | L18: Tuân thủ | M18: #REF! FORMULA=
+A19: 12 | B19: 12 | C19: 044716 | D19: Nguyễn Chí Dũng | E19: Trưởng Ban | F19: Ban Hành chính | G19: #REF! FORMULA= | H19: #REF! FORMULA= | I19: #REF! FORMULA= | J19: #REF! FORMULA= | K19: Tuân thủ | L19: Tuân thủ | M19: #REF! FORMULA=
+A20: 13 | B20: 13 | C20: 018798 | D20: Nguyễn Mạnh Hải | E20: Trưởng Ban | F20: Ban Nghiên cứu sản xuất | G20: #REF! FORMULA= | H20: #REF! FORMULA= | I20: #REF! FORMULA= | J20: #REF! FORMULA= | K20: Tuân thủ | L20: Tuân thủ | M20: #REF! FORMULA=
+A21: 4 | B21: 14 | C21: 002519 | D21: Nguyễn Đức Quang | E21: Trưởng Ban | F21: Ban Pháp chế | G21: #REF! FORMULA= | H21: #REF! FORMULA= | I21: #REF! FORMULA= | J21: #REF! FORMULA= | K21: Tuân thủ | L21: Tuân thủ | M21: #REF! FORMULA=
+B22: 15 | C22: 206154 | D22: Lê Bá Tân | E22: Q.Trưởng Ban | F22: Ban Kỹ thuật | G22: #REF! FORMULA= | H22: #REF! FORMULA= | I22: #REF! FORMULA= | J22: #REF! FORMULA= | K22: Tuân thủ | L22: Tuân thủ | M22: #REF! FORMULA=
+xl/worksheets/sheet2.xml
+D1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | I1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | I2: Độc lập - Tự do - Hạnh phúc
+I3:           
+I4:    Hà Nội, ngày     tháng    năm 2024
+A6: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A7: Kỳ đánh giá: Quý II năm 2024
+A9: I. Tổng hợp kết quả đánh giá, xếp loại
+B10: Xếp loại Ki | C10: Tỷ lệ xếp loại Ki | D10: Số người
+B11: A+ | C11: 1 FORMULA= | D11: 16 FORMULA=COUNTIF($J$22:$J$29990,$B11)
+B12: A | C12: 0 FORMULA= | D12: 0 FORMULA=
+B13: B | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: C | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: D | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: K | D16: 0 FORMULA=
+B17: Tổng: | C17: 1 FORMULA= | D17: 16 FORMULA=
+A18: II. Danh sách chi tiết
+A19: TT | B19: Mã số | C19: Họ và Tên | D19: Chức danh | E19: Cơ quan | F19: Kết quả hoàn thành nhiệm vụ/công việc
+D21: Chức danh | E21: Đơn vị | F21: Điểm đánh giá | G21: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | H21: Tuân thủ địa điểm làm việc | I21: Tuân thủ Nội quy lao động | J21: Xếp loại Ki | K21: Xếp loại mức độ hoàn thành nhiệm vụ/công việc
+A22: 1 FORMULA=+A21+1 | B22: 010226 | C22: Bùi Thế Hùng | D22: Trưởng Ban | E22: Ban Thanh tra - Kiểm toán | F22: 4.9 | G22: Vượt xa YC FORMULA=IF(F22>=4.5,"Vượt xa YC",IF(F22>=3.5,"Vượt YC",IF(F22>=2.5,"Đạt YC",IF(F22>=2,"Gần đạt YC","Không đạt YC")))) | H22: Tuân thủ | I22: Tuân thủ | J22: A+ FORMULA=IF(F22>=4.5,"A+",IF(F22>=3.5,"A",IF(F22>=2.5,"B",IF(F22>=2,"C","D")))) | K22: Hoàn thành NV/CV FORMULA=IF(J22="","",IF(OR(J22="K",G22="Không đánh giá"),"Không đánh giá",IF(J22="D",IF(OR(G22="Không đạt yêu cầu",G22="Gần đạt yêu cầu",H22="Không tuân thủ",I22<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV")))
+A23: 2 FORMULA= | B23: 018798 | C23: Nguyễn Mạnh Hải | D23: Trưởng Ban | E23: Ban Công nghiệp CNC | F23: 4.9 | G23: Vượt xa YC FORMULA= | H23: Tuân thủ | I23: Tuân thủ | J23: A+ FORMULA= | K23: Hoàn thành NV/CV FORMULA=
+A24: 3 FORMULA= | B24: 001625 | C24: Nguyễn Thị Hải Lý | D24: Trưởng Ban | E24: Ban Đầu tư tài chính | F24: 4.9 | G24: Vượt xa YC FORMULA= | H24: Tuân thủ | I24: Tuân thủ | J24: A+ FORMULA= | K24: Hoàn thành NV/CV FORMULA=
+A25: 4 FORMULA= | B25: 006038 | C25: Phạm Thị Thu Hương | D25: Trưởng Ban | E25: Ban Đối ngoại | F25: 4.9 | G25: Vượt xa YC FORMULA= | H25: Tuân thủ | I25: Tuân thủ | J25: A+ FORMULA= | K25: Hoàn thành NV/CV FORMULA=
+A26: 5 FORMULA= | B26: 158813 | C26: Vũ Thị Mai | D26: Trưởng Ban | E26: Ban Tổ chức Nhân lực | F26: 4.9 | G26: Vượt xa YC FORMULA= | H26: Tuân thủ | I26: Tuân thủ | J26: A+ FORMULA= | K26: Hoàn thành NV/CV FORMULA=
+A27: 6 FORMULA= | B27: 011315 | C27: Dương Văn Toàn | D27: Chủ nhiệm Chính trị | E27: Cơ quan Chính trị | F27: 4.85 | G27: Vượt xa YC FORMULA= | H27: Tuân thủ | I27: Tuân thủ | J27: A+ FORMULA= | K27: Hoàn thành NV/CV FORMULA=
+A28: 7 FORMULA= | B28: 089417 | C28: Nguyễn Hữu Hùng | D28: Chánh Văn phòng | E28: Văn phòng | F28: 4.85 | G28: Vượt xa YC FORMULA= | H28: Tuân thủ | I28: Tuân thủ | J28: A+ FORMULA= | K28: Hoàn thành NV/CV FORMULA=
+A29: 8 FORMULA= | B29: 206154 | C29: Lê Bá Tân | D29: Trưởng Ban | E29: Ban Kỹ thuật | F29: 4.85 | G29: Vượt xa YC FORMULA= | H29: Tuân thủ | I29: Tuân thủ | J29: A+ FORMULA= | K29: Hoàn thành NV/CV FORMULA=
+A30: 9 FORMULA= | B30: 011493 | C30: Lưu Mạnh Hà | D30: Trưởng Ban | E30: Ban Đầu tư - Xây dựng | F30: 4.85 | G30: Vượt xa YC FORMULA= | H30: Tuân thủ | I30: Tuân thủ | J30: A+ FORMULA= | K30: Hoàn thành NV/CV FORMULA=
+A31: 10 FORMULA= | B31: 008136 | C31: Đào Thúy Hường | D31: Trưởng Ban | E31: Ban Tài chính Kế toán  | F31: 4.8 | G31: Vượt xa YC FORMULA= | H31: Tuân thủ | I31: Tuân thủ | J31: A+ FORMULA= | K31: Hoàn thành NV/CV FORMULA=
+A32: 11 FORMULA= | B32: 065449 | C32: Hoàng Long | D32: Trưởng Ban | E32: Ban Công nghệ thông tin | F32: 4.8 | G32: Vượt xa YC FORMULA= | H32: Tuân thủ | I32: Tuân thủ | J32: A+ FORMULA= | K32: Hoàn thành NV/CV FORMULA=
+A33: 12 FORMULA= | B33: 006552 | C33: Nguyễn Hà Thành | D33: Trưởng Ban | E33: Ban TH&TT | F33: 4.8 | G33: Vượt xa YC FORMULA= | H33: Tuân thủ | I33: Tuân thủ | J33: A+ FORMULA= | K33: Hoàn thành NV/CV FORMULA=
+A34: 13 FORMULA= | B34: 102977 | C34: Vũ Tiến Duy | D34: Trưởng Ban | E34: Ban Hành chính | F34: 4.8 | G34: Vượt xa YC FORMULA= | H34: Tuân thủ | I34: Tuân thủ | J34: A+ FORMULA= | K34: Hoàn thành NV/CV FORMULA=
+A35: 14 FORMULA= | B35: 017885 | C35: Nguyễn Việt Dũng | D35: Trưởng Ban | E35: Ban Chiến lược | F35: 4.7 | G35: Vượt xa YC FORMULA= | H35: Tuân thủ | I35: Tuân thủ | J35: A+ FORMULA= | K35: Hoàn thành NV/CV FORMULA=
+A36: 15 FORMULA= | B36: 093077 | C36: Nguyễn Cương Hoàng | D36: Trưởng Ban | E36: Ban Công nghệ Bán dẫn | F36: 4.6 | G36: Vượt xa YC FORMULA= | H36: Tuân thủ | I36: Tuân thủ | J36: A+ FORMULA= | K36: Hoàn thành NV/CV FORMULA=
+A37: 16 FORMULA= | B37: 057914 | C37: Nguyễn Thị Hoa | D37: Trưởng Ban | E37: Ban Pháp chế | F37: 4.6 | G37: Vượt xa YC FORMULA= | H37: Tuân thủ | I37: Tuân thủ | J37: A+ FORMULA= | K37: Hoàn thành NV/CV FORMULA=
+C40: CHÁNH VĂN PHÒNG | F40: PHÓ TỔNG GIÁM ĐỐC | J40: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet3.xml
+D2: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | J2: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B3:          | J3: Độc lập - Tự do - Hạnh phúc
+J4:           
+J5:    Hà Nội, ngày         tháng         năm 2024
+A7: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ MỨC ĐỘ HOÀN THÀNH NHIỆM VỤ CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A8: Kỳ đánh giá: Quý III năm 2024
+A10: I. Tổng hợp kết quả đánh giá, xếp loại
+B11: Xếp loại Ki | C11: Tỷ lệ xếp loại Ki | D11: Số người
+B12: A+ | C12: 1 FORMULA= | D12: 15 FORMULA=COUNTIF($K$24:$K$29991,$B12)
+B13: A | C13: 0 FORMULA= | D13: 0 FORMULA=
+B14: B | C14: 0 FORMULA= | D14: 0 FORMULA=
+B15: C | C15: 0 FORMULA= | D15: 0 FORMULA=
+B16: D | C16: 0 FORMULA= | D16: 0 FORMULA=
+B17: K | D17: 0 FORMULA=
+B18: Tổng: | C18: 1 FORMULA= | D18: 15 FORMULA=
+A19: II. Danh sách chi tiết
+A20: TT | B20: Mã số | C20: Họ và Tên | D20: Chức danh | E20: Cơ quan | F20: Kết quả hoàn thành nhiệm vụ/công việc | N20:  Điểm sau khi xin ý kiến các PTGĐ | P20: BTGĐ đánh giá | R20: Nội dung rà soát, góp ý của cơ quan thường trực và phản hồi | T20: Nhiệm vụ trong quý do BTGĐ giao
+D22: Chức danh | E22: Đơn vị | F22: Điểm cá nhân tự đánh giá | G22: Điểm cơ quan thường trực rà soát | H22: Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc | I22: Tuân thủ địa điểm làm việc | J22: Tuân thủ Nội quy lao động | K22: Xếp loại Ki | L22: Xếp loại mức độ hoàn thành nhiệm vụ/công việc | P22: Điểm | Q22: Xếp loại | R22: Nội dung góp ý | S22: Ý kiến phản hồi của cơ quan (tiếp thu hay bảo lưu) | T22: Tổng số nhiệm vụ | U22: Số nhiệm vụ hoàn thành đúng hạn | V22: Tỷ lệ việc đúng hạn
+A23: 1 | B23: 011315 | C23: Dương Văn Toàn | D23: Chủ nhiệm Chính trị | E23: Cơ quan Chính trị | F23: 4.9 | G23: 4.9 | H23: Vượt xa YC FORMULA=IF(F23>=4.5,"Vượt xa YC",IF(F23>=3.5,"Vượt YC",IF(F23>=2.5,"Đạt YC",IF(F23>=2,"Gần đạt YC","Không đạt YC")))) | I23: Tuân thủ | J23: Tuân thủ | K23: A+ FORMULA=IF(F23>=4.5,"A+",IF(F23>=3.5,"A",IF(F23>=2.5,"B",IF(F23>=2,"C","D")))) | L23: Hoàn thành NV/CV FORMULA=IF(K23="","",IF(OR(K23="K",H23="Không đánh giá"),"Không đánh giá",IF(K23="D",IF(OR(H23="Không đạt yêu cầu",H23="Gần đạt yêu cầu",I23="Không tuân thủ",J23<>"Tuân thủ"),"Không hoàn thành NV/CV","Hoàn thành NV/CV"),"Hoàn thành NV/CV"))) | M23: TGĐ | P23: 4.9 | Q23: A+ | R23: - Đề nghị xem lại điểm NV "Chuẩn bị sơ kết CTĐ, CTCT toàn quân và tổ chức sơ kết CTĐ, CTCT cấp Tập đoàn" thời gian tổ chức 28/8 sau ngày đăng ký thách thức 25/8 nên không thể đạt 5đ;
+- Xem lại NV đầu tiên của Q4: CQCT có chủ trì tổ chức sự kiện nào thì đưa vào, có sự kiện đã dừng triển khai rồi;
+- Bổ sung các nhiệm vụ tồn lâu: Rà soát quy chế thi đua khen thưởng với các trường hợp nhận được giải thưởng từ các tổ chwucs bên ngoài; Ban hành nghị quyets chuyên đề về hợp tác và KD quốc tế;
+- Bổ sung NV xây dựng khung năng lực ngành dọc.
+ | S23: Đã tiếp thu, điều chỉnh | T23: 61 | U23: 34 | V23: 0.557377049180328 FORMULA=+U23/T23
+A24: 2 FORMULA= | B24: 102977 | C24: Vũ Tiến Duy | D24: Trưởng Ban | E24: Ban Hành chính | F24: 4.9 | G24: 4.9 | H24: Vượt xa YC FORMULA= | I24: Tuân thủ | J24: Tuân thủ | K24: A+ FORMULA= | L24: Hoàn thành NV/CV FORMULA= | M24: PTGĐ Vũ | P24: 4.9 | Q24: A+ | R24: Đề nghị bổ sung, làm rõ 1 số kết quả chứng minh mức độ hoàn thành mức "thách thức" và lý do thay đổi cách làm đối với KPI "hỗ trợ 01 Thị trường nước ngoài về công tác Hành chính" (từ hỗ trợ trực tiếp sang online) | S24: Đã tiếp thu, bổ sung làm rõ | T24: 20 | U24: 20 | V24: 1 FORMULA=
+A25: 3 FORMULA=+A24+1 | B25: 057914 | C25: Nguyễn Thị Hoa | D25: Trưởng Ban | E25: Ban Pháp chế | F25: 4.9 | G25: 4.8 | H25: Vượt xa YC FORMULA= | I25: Tuân thủ | J25: Tuân thủ | K25: A+ FORMULA= | L25: Hoàn thành NV/CV FORMULA= | M25: PTGĐ Vũ | P25: 4.9 | Q25: A+ | R25: Đề nghị điều chỉnh điểm của nhiệm vụ "Rà soát việc tuân thủ pháp luật nhằm phát hiện các tồn tại pháp lý; cảnh báo; đề xuất các giải pháp khắc phục tại Công ty thị trường Movitel" đúng với mức độ hoàn thành "mong đợi" | S25: Đã tiếp thu, điều chỉnh | T25: 42 | U25: 40 | V25: 0.952380952380952 FORMULA=
+A26: 4 FORMULA= | B26: 006038 | C26: Phạm Thị Thu Hương | D26: Trưởng Ban | E26: Ban Đối ngoại | F26: 4.78 | G26: 4.78 | H26: Vượt xa YC FORMULA= | I26: Tuân thủ | J26: Tuân thủ | K26: A+ FORMULA= | L26: Hoàn thành NV/CV FORMULA= | M26: TGĐ | P26: 4.9 | Q26: A+ | R26: - Không thấy rõ kết quả như mục tiêu đăng ký của NV "Tổ chức các hoạt động tiếp xúc cấp cao cho BTGĐ Tập đoàn"
+- Cần đánh số thứ tự để đối chiếu với mục tiêu NV và. Nội dung bị chồng lấn với kết quả của nhiệm vụ khác tại NV "Tổ chức đón tiếp các đoàn khách trong nước và quốc tế đến thăm, làm việc và/hoặc ký kết thỏa thuận hợp tác, chúc mừng Tập đoàn; tổ chức đoàn BTGĐ đi làm việc và/hoặc ký kết TTHT tại trụ sở của đối tác"
+- Chưa đánh giá điểm NV "Xây dựng và ban hành Quy trình liên quan hoạt động đối ngoại và hợp tác quốc tế"
+- Đối với Q4: Đề nghị B.ĐN Nghiên cứu đặt mục tiêu chất lượng, không đặt số lượng để cuối mỗi Quý lại ngồi ĐẾM! ĐỒNG THỜI KHÔNG DÙNG 1 KẾT QUẢ BÁO CÁO CHO NHIỀU NHIỆM VỤ.
+- Bổ sung NV xây dựng khung năng lực ngành dọc. | S26: Đã tiếp thu, điều chỉnh | T26: 30 | U26: 16 | V26: 0.533333333333333 FORMULA=
+A27: 5 FORMULA= | B27: 018798 | C27: Nguyễn Mạnh Hải | D27: Trưởng Ban | E27: Ban Công nghiệp CNC | F27: 5 | G27: 4.85 | H27: Vượt xa YC FORMULA= | I27: Tuân thủ | J27: Tuân thủ | K27: A+ FORMULA= | L27: Hoàn thành NV/CV FORMULA= | M27: PTGĐ Chiến | N27: A+ | P27: 4.85 | Q27: A+ | R27: Trừ điểm phần nhiệm vụ 2 phần II (nhóm mục tiêu theo chức năng): Ban hoàn thành 03 nhiệm vụ hỗ trợ theo KPI , tuy nhiêm có 01 nhiệm vụ theo kết luận hoàn thành chậm (Liên quan đến đôn đốc hướng dẫn các đơn vị trong khối hoàn thành thiết kế đề xuất CSHT, Chủ tịch Tập đoàn đã nhắc nhở trực tiếp) --> VP đề nghị điều chỉnh từ 5 xuống 4 điểm --> Hoàn thành trên mức  mong đợi | S27: B.CNCNC tiếp thu | T27: 95 | U27: 88 | V27: 0.926315789473684 FORMULA=
+A28: 6 FORMULA= | B28: 089417 | C28: Nguyễn Hữu Hùng | D28: Chánh Văn phòng | E28: Văn phòng | F28: 4.85 | G28: 4.85 | H28: Vượt xa YC FORMULA= | I28: Tuân thủ | J28: Tuân thủ | K28: A+ FORMULA= | L28: Hoàn thành NV/CV FORMULA= | M28: PTGĐ Phương | O28: A+ | P28: 4.85 | Q28: A+ | R28: Nhất trí với đánh giá của VP | T28: 32 | U28: 32 | V28: 1 FORMULA=
+A29: 7 FORMULA= | B29: 006552 | C29: Nguyễn Hà Thành | D29: Trưởng Ban | E29: Ban TH&TT | F29: 5 | G29: 4.8 | H29: Vượt xa YC FORMULA= | I29: Tuân thủ | J29: Tuân thủ | K29: A+ FORMULA= | L29: Hoàn thành NV/CV FORMULA= | M29: PTGĐ Phương | O29: A+ (4,85) | P29: 4.85 | Q29: A+ | R29: Văn phòng rà soát thấy ngày 02/10 mới trình BTGĐ phê duyệt. Tuy nhiên, Ban THTT bảo vệ quan điểm thông qua là xin ý kiến trực tiếp  | S29: Ban THTT bảo vệ quan điểm thông qua là xin ý kiến trực tiếp  | T29: 30 | U29: 29 | V29: 0.966666666666667 FORMULA=
+A30: 8 FORMULA= | B30: 011493 | C30: Lưu Mạnh Hà | D30: Trưởng Ban | E30: Ban Đầu tư - Xây dựng | F30: 4.83 | G30: 4.83 | H30: Vượt xa YC FORMULA= | I30: Tuân thủ | J30: Tuân thủ | K30: A+ FORMULA= | L30: Hoàn thành NV/CV FORMULA= | M30: TGĐ | P30: 4.83 | Q30: A | R30: Không đồng ý với nội dung đánh giá nhiệm vụ thanh lý tài sản đạt mức mong đợi --> Đề nghị điều chỉnh về mức tối thiểu | S30: Cơ quan tiếp thu và đã điều chỉnh. Tuy nhiên, BĐTXD đã báo cáo và được TGĐ đồng ý chấm KPI này 4 điểm | T30: 18 | U30: 16 | V30: 0.888888888888889 FORMULA=
+A31: 9 FORMULA= | B31: 008136 | C31: Đào Thúy Hường | D31: Trưởng Ban | E31: Ban Tài chính Kế toán  | F31: 4.8 | G31: 4.8 | H31: Vượt xa YC FORMULA= | I31: Tuân thủ | J31: Tuân thủ | K31: A+ FORMULA= | L31: Hoàn thành NV/CV FORMULA= | M31: TGĐ | P31: 4.8 | Q31: A | R31: Nhất trí với đánh giá của Ban TCKT | T31: 35 | U31: 30 | V31: 0.857142857142857 FORMULA=
+A32: 10 FORMULA= | B32: 065449 | C32: Hoàng Long | D32: Trưởng Ban | E32: Ban Công nghệ thông tin | F32: 4.8 | G32: 4.8 | H32: Vượt xa YC FORMULA= | I32: Tuân thủ | J32: Tuân thủ | K32: A+ FORMULA= | L32: Hoàn thành NV/CV FORMULA= | M32: PTGĐ Vũ | P32: 4.8 | Q32: A | R32: 1. Đối với phiếu đánh giá kết quả thực hiện quý 3: 
+- Đề nghị đơn vị gửi toàn bộ các văn bản đã trình ký phê duyệt làm sở cứ cho việc đánh giá chấm điểm.
+- Đầu việc: "Triển khai phiên bản VMLP SaaS lũy kế cho 5 đơn vị trong Tập đoàn, đảm bảo tỉ lệ tự động hóa việc xây dựng, phát triển các use-case PTDL". trong phần báo cáo kết quả mới nêu đã triển khai cho VTZ trong quý 3, đề nghị bổ sung lũy kế được bao nhiêu đơn vị, nêu tên cụ thể.
+- Đầu việc: "Đảm bảo các dự án tuân thủ quy trình PTPM, DS/AI"; yêu cầu bổ sung thêm kết quả việc: "Bổ sung tiêu chí đánh giá chất lượng sản phẩm và đánh giá mức độ tuân thủ phát triển phần mềm (đảm bảo cac tiêu chí chất lượng) theo báo cáo TGĐ TĐ phê duyệt"
+2. Đối với phiếu giao nhiệm vụ quý 4: 
+- Tại đầu việc "Đảm bảo các dự án tuân thủ quy trình PTPM, DS/AI" => Đề nghị Ban CNTT bổ sung thêm nội dung: Báo cáo BTGĐ TĐ kết quả đánh giá thiết kế của các nền tảng, phần mềm CNTT lớn trong Tập đoàn. Việc này duy trì thực hiện hàng quý.
+- Nội dung việc: "Hoàn thành cắt chuyển hệ thống vMail 4.0" có trong phiếu giao nhiệm vụ năm 2024 nhưng chuyển TT CNTT | S32: 1. Đối với phiếu đánh giá kết quả thực hiện quý 3: Đã bổ sung đầy đủ thông tin yêu cầu
+2. Đối với PGNV quý 4:
+Theo chỉ thị 7909/CT-CNVTQĐ ngày 11/07/2024 về việc rà soát tính năng sản phẩm, nền tảng CNTT lớn trong Tập đoàn, các đơn vị đã gửi báo cáo về Ban TGĐ Tập đoàn trong đó xác định có 9 sản phẩm, nền tảng thuộc nhóm đặc biệt quan trọng. Hiện BCNTT đã chủ trì Tổ chuyên gia CNTT Tập đoàn đã đánh giá đủ 9/9 sản phẩm, nền tảng:
+- Quý 2/2024 đánh giá 2 sản phẩm, nền tảng (BCCS, OSS) theo báo cáo 7524/TTr-CNTT ngày 03/07/2024
+- Quý 3/2024 đánh giá 7 sản phẩm, nền tảng (TV360, My Viettel, Nocpro, Hệ thống thi tốt nghiệp THPT, Voffice, Viettel Money, ePass) theo báo cáo 11582/TTr-CNTT ngày 30/09/2024
+Hiện tại 100% các sản phẩm, nền tảng CNTT đặc biệt quan trọng đã được đánh giá.
+Các sản phẩm, nền tảng CNTT còn lại thuộc phạm vi đánh giá của đơn vị (Theo quy trình phát triển phần mềm QT.CNVTQĐ.CNTT.9.5.1), BCNTT sẽ thực hiện kiểm soát việc đánh giá của đơn vị trong hoạt động kiểm soát tuân thủ Quy trình PTPM hàng quý | T32: 75 | U32: 73 | V32: 0.973333333333333 FORMULA=
+A33: 11 FORMULA= | B33: 017885 | C33: Nguyễn Việt Dũng | D33: Trưởng Ban | E33: Ban Chiến lược | F33: 4.75 | G33: 4.65 | H33: Vượt xa YC FORMULA= | I33: Tuân thủ | J33: Tuân thủ | K33: A+ FORMULA= | L33: Hoàn thành NV/CV FORMULA= | M33: PTGĐ Phương | O33: A (4,75) | P33: 4.75 | Q33: A | R33: Chưa trình Chủ tịch phê duyệt đề án của VCS và VTM | S33: 1. Đề án VCS và VTM có vướng mắc về vấn đề định giá tài sản (Ban ĐTTC và Ban TCKT chủ trì hướng dẫn nội dung này). Cơ quan và đơn vị đã báo cáo và được Ban TGĐ TĐ điều chỉnh thời hạn phê duyệt đề án đến ngày 10/10/2024.
+2. Ngoài nội dung trên, Ban CL đã hoàn thành nhiều nội dung quan trọng ngoài nhiệm vụ đã đăng ký liên quan đến tái cơ cấu TĐ. | T33: 36 | U33: 34 | V33: 0.944444444444444 FORMULA=
+A34: 12 FORMULA= | B34: 010226 | C34: Bùi Thế Hùng | D34: Trưởng Ban | E34: Ban Thanh tra - Kiểm toán | F34: 4.7 | G34: 4.7 | H34: Vượt xa YC FORMULA= | I34: Tuân thủ | J34: Tuân thủ | K34: A+ FORMULA= | L34: Hoàn thành NV/CV FORMULA= | M34: PTGĐ Phương | P34: 4.7 | Q34: A | R34: Nhất trí với đánh giá | T34: 27 | U34: 27 | V34: 1 FORMULA=
+A35: 13 FORMULA= | B35: 158813 | C35: Vũ Thị Mai | D35: Trưởng Ban | E35: Ban Tổ chức Nhân lực | F35: 4.9 | G35: 4.9 | H35: Vượt xa YC FORMULA= | I35: Tuân thủ | J35: Tuân thủ | K35: A+ FORMULA= | L35: Hoàn thành NV/CV FORMULA= | M35: TGĐ | P35: 4.7 | Q35: A | R35: Nhất trí với đánh giá | T35: 21 | U35: 20 | V35: 0.952380952380952 FORMULA=
+A36: 14 FORMULA= | B36: 093077 | C36: Nguyễn Cương Hoàng | D36: Trưởng Ban | E36: Ban Công nghệ Bán dẫn | F36: 5 | G36: 4.85 | H36: Vượt xa YC FORMULA= | I36: Tuân thủ | J36: Tuân thủ | K36: A+ FORMULA= | L36: Hoàn thành NV/CV FORMULA= | M36: PTGĐ Chiến | N36: A | P36: 4.7 | Q36: A | R36: Trừ điểm phần nhiệm vụ 2 phần I (nhóm nhiệm vụ chiến lược): Hoàn thành xây dựng đầu bài tư vấn, báo cáo BTGĐ Tập đoàn và mới hoàn thành xây dựng bộ hồ sơ nhiệm vụ và thẩm định hội đồng KHCN (Chưa phê duyệt BTGĐ TĐ) --> Hoàn thành mức mong đợi  | S36: B.CNBD Tiếp thu | T36: 10 | U36: 9 | V36: 0.9 FORMULA=
+A37: 15 FORMULA= | B37: 206154 | C37: Lê Bá Tân | D37: Trưởng Ban | E37: Ban Kỹ thuật | F37: 4.9 | G37: 4.6 | H37: Vượt xa YC FORMULA= | I37: Tuân thủ | J37: Tuân thủ | K37: A+ FORMULA= | L37: Hoàn thành NV/CV FORMULA= | M37: PTGĐ Vũ | P37: 4.6 | Q37: A | R37: 1. Đối với phiếu đánh giá kết quả thực hiện quý 3: 
+Đề nghị điều chỉnh điểm 2 KPI "Rà soát, cập nhật Guideline QHTK, dự phòng ƯCTT kết nối Quốc tế" và "Ban hành bộ tiêu chuẩn thiết kế mạng 5G; tiêu chuẩn đo lường chất lượng mạng 5G; bộ chỉ tiêu KPI giám sát chất lượng mạng 5G" đúng với mức độ hoàn thành "mong đợi"
+2. Đối với phiếu giao nhiệm vụ quý 4: 
+- Nhóm việc theo chức năng nhiệm vụ: hiện tại đang có 2 đầu việc tỷ trọng 5% là: "Ban hành các văn bản về công tác quản lý, chính sách các hoạt động bền vững (PCCC, Môi trường, ATVSLĐ, SKYT, Định mức, ,...) cho Tập đoàn" và "'Kiểm tra đánh giá các hoạt động bền vững (PCCC, Môi trường, ATVSLĐ, TC-ĐL-CL,...) các đơn vị trong Tập đoàn" => Đề nghị gộp chung thành 1 đầu việc tỷ trọng 10% | S37: Đồng ý | T37: 72 | U37: 66 | V37: 0.916666666666667 FORMULA=
+A38: 16 FORMULA= | B38: 001625 | C38: Nguyễn Thị Hải Lý | D38: Trưởng Ban | E38: Ban Đầu tư tài chính | F38: 4.5 | G38: 4.5 | H38: Vượt xa YC FORMULA= | I38: Tuân thủ | J38: Tuân thủ | K38: A+ FORMULA= | L38: Hoàn thành NV/CV FORMULA= | M38: TGĐ | P38: 4.5 | Q38: A | R38: Đề nghị làm rõ kết quả của nhiệm vụ Tiêu chí đánh giá các Tập đoàn Nhà nước (đặc biệt các Tập đoàn có hoạt động đầu tư ra nước ngoài)" | S38: Đã tiếp thu, bổ sung | T38: 23 | U38: 22 | V38: 0.956521739130435 FORMULA=
+C41: CHÁNH VĂN PHÒNG | F41: PHÓ TỔNG GIÁM ĐỐC | K41: TỔNG GIÁM ĐỐC
+xl/worksheets/sheet4.xml
+A1: TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN
+A2: Kỳ đánh giá: Quý I năm 2026
+A4: I. Tổng hợp kết quả đánh giá, xếp loại
+B5: Xếp loại Ki | C5: Tỷ lệ xếp loại Ki
+B6: A+ | C6:  FORMULA=
+B7: A | C7:  FORMULA=
+B8: B | C8:  FORMULA=
+B9: C | C9:  FORMULA=
+B10: D | C10:  FORMULA=
+B11: K
+B12: Tổng: | C12: 0 FORMULA=
+A13: II. Danh sách chi tiết
+A14: TT | B14: Mã số | C14: Họ và Tên | D14: Cơ quan | E14: Điểm CQ tự đánh giá | H14: Thường trực đánh giá | K14: Lý do | L14: Đề xuất xếp hạng Ki | M14: Trợ lý | N14: Ghi chú
+D15: Đơn vị | E15: NV trọng yếu
+(20%) | F15: NV chức năng
+(80%) | G15: Tổng | H15: NV trọng yếu
+(20%) | I15: NV chức năng
+(80%) | J15: Tổng
+A16: 1 FORMULA= | C16: Nguyễn Văn A | D16: Ban CNTT | E16: 1 | F16: 3.9 | G16: 4.9 FORMULA= | H16: 0 | I16: 3.9 | J16: 3.9 FORMULA= | L16: A | M16: Quyendv | N16: Xem lại NVTT
+A17: 2 FORMULA= | M17: phamducnguyen | N17: x | O17: 1
+A18: 3 FORMULA=+A17+1 | M18: Chauna | N18: x | O18: 1
+A19: 4 FORMULA= | M19: Chauna | N19: x | O19: 1
+A20: 5 FORMULA= | M20: Anhcn4 | N20: x
+A21: 6 FORMULA= | M21: Quyendv | N21: x
+A22: 7 FORMULA= | M22: Anhcn4 | N22: x | O22: 1
+A23: 8 FORMULA= | N23: x | O23: 1
+A24: 9 FORMULA= | M24: Thanhnv34 | N24: Chưa chấm KPI, mới có NVTT | O24: 1
+A25: 10 FORMULA= | M25: Thanhnv34 | N25: x | O25: 1
+A26: 11 FORMULA= | M26: Anhcn4 | N26: x | O26: 1
+A27: 12 FORMULA= | M27: Thanhnv34 | N27: x | O27: 1
+A28: 13 FORMULA= | M28: phamducnguyen | N28: x | O28: 1
+A29: 14 FORMULA= | M29: Minhhd4 | N29: x | O29: 1
+A30: 15 FORMULA= | M30: Quyendv | N30: x
+C33: CHÁNH VĂN PHÒNG
+xl/worksheets/sheet5.xml
+A1: STT | B1: Đơn vị | C1: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | D1: Chỉ số đo lường KPI | E1: Phương pháp đo
+(công thức hoặc mô tả cách tính) | F1: Đơn vị đo
+($, số lượng, %, điểm, …) | G1: Tỷ trọng
+(%) | H1: Các mức chỉ tiêu | K1: Ngày bắt đầu | L1: Ngày hoàn thành | M1: Chứng minh mục tiêu trọng điểm theo ma trận 9box | R1: Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc | U1: KQ thẩm định | V1: Ghi chú
+H2: Tối thiểu
+(T - Threshold) | I2: Mong đợi
+(B- Base) | J2: Thách thức
+(S- Stretch) | M2: Mức độ mới/khó | O2: Phạm vi tác động/
+tính chất trọng yêu | Q2: Nhóm mục tiêu trọng điểm đề xuất | R2: Kết quả thực hiện  | S2: Đơn vị tự đánh giá 
+ | T2: VP đánh giá 
+
+M3: Vị trí 
+trên ma trận | N3: Lý do | O3: Vị trí 
+trên ma trận | P3: Lý do
+A4: 1 | B4: B.CNTT | C4: ABC | D4: ABC | E4: ABC | F4: ABC | G4: 0.1 | H4: 31/03/2026 | I4: 25/03/2026 | J4: 20/03/2026 | K4: 01/01/2026 | L4: 31/03/2026 | M4: 3 | N4: ABC | O4: C | P4: Nhiệm vụ quan trọng | Q4: 3C | R4: ABC | S4: 5 | T4: 5 | U4: ABC
+A5: 2
+A6: 3
+A7: 4
+A8: 5
+A9: 6
+A10: 7
+A11: 8
+A12: 1
+A13: 1
+A14: 1
+A15: 2
+A16: 3
+A17: 1
+A18: 1
+A19: 2
+A22: 1
+A38: 7
+xl/worksheets/sheet6.xml
+A1: STT | B1: Đơn vị | C1: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | D1: Chỉ số đo lường KPI | E1: Phương pháp đo
+(công thức hoặc mô tả cách tính) | F1: Đơn vị đo
+($, số lượng, %, điểm, …) | G1: Tỷ trọng
+(%) | H1: Các mức chỉ tiêu | K1: Ngày bắt đầu | L1: Ngày hoàn thành | M1: Chứng minh mục tiêu trọng điểm theo ma trận 9box | R1: Đánh giá của Thường trực  | W1: Ghi chú
+H2: Tối thiểu
+(T - Threshold) | I2: Mong đợi
+(B- Base) | J2: Thách thức
+(S- Stretch) | M2: Mức độ mới/khó | O2: Phạm vi tác động/
+tính chất trọng yêu | Q2: Nhóm mục tiêu trọng điểm đề xuất | R2: Mức độ mới/khó | T2: Phạm vi tác động/
+tính chất trọng yêu | V2: Nhóm mục tiêu trọng điểm đề xuất
+M3: Vị trí 
+trên ma trận | N3: Lý do | O3: Vị trí 
+trên ma trận | P3: Lý do | R3: Vị trí 
+trên ma trận | S3: Lý do | T3: Vị trí 
+trên ma trận | U3: Lý do
+A4: 1
+A5: 2
+A6: 3
+A7: 4
+A8: 5
+A9: 6
+A10: 6
+A11: 7
+A12: 8
+A13: 9
+A14: 10
+A15: 11
+A16: 12
+A17: 13
+A18: 14
+A19: 15
+A20: 1
+A21: 1
+A22: 1
+A23: 1
+A24: 1
+A25: 1
+A26: 1
+A27: 1
+A28: 1
+A29: 1
+A30: 1
+xl/worksheets/sheet7.xml
+A1: STT | B1: Đơn vị | C1: Mục tiêu nhiệm vụ/công việc
+(Kết quả mong đợi đối với nhiệm vụ/công việc) | D1: Chỉ số đo lường KPI | E1: Phương pháp đo
+(công thức hoặc mô tả cách tính) | F1: Đơn vị đo
+($, số lượng, %, điểm, …) | G1: Tỷ trọng
+(%) | H1: Các mức chỉ tiêu | K1: Ngày bắt đầu | L1: Ngày hoàn thành | M1: Chứng minh mục tiêu trọng điểm theo ma trận 9box | R1: Đánh giá của Thường trực  | W1: Ghi chú
+H2: Tối thiểu
+(T - Threshold) | I2: Mong đợi
+(B- Base) | J2: Thách thức
+(S- Stretch) | M2: Mức độ mới/khó | O2: Phạm vi tác động/
+tính chất trọng yêu | Q2: Nhóm mục tiêu trọng điểm đề xuất | R2: Mức độ mới/khó | T2: Phạm vi tác động/
+tính chất trọng yêu | V2: Nhóm mục tiêu trọng điểm đề xuất
+M3: Vị trí 
+trên ma trận | N3: Lý do | O3: Vị trí 
+trên ma trận | P3: Lý do | R3: Vị trí 
+trên ma trận | S3: Lý do | T3: Vị trí 
+trên ma trận | U3: Lý do
+A4: 1
+A5: 2
+A6: 3
+A7: 4
+A8: 5
+A9: 6
+A10: 7
+A11: 8
+A12: 9
+xl/worksheets/sheet8.xml
+A1: STT | B1: KCQ | C1: Viết tắt | D1: Ghi chú | E1: Số NVTT Q1 | F1: Số NVTT Q2
+A2: 1 | B2: Ban CNTT | C2: B.CNTT | E2: 1 FORMULA= | F2: 0 FORMULA= | G2: x
+A3: 2 | B3: Ban Chiến lược | C3: B.CL | E3: 0 FORMULA= | F3: 0 FORMULA= | G3: x
+A4: 3 | B4: Ban Công nghiệp CNC | C4: B.CNCNC | E4: 0 FORMULA= | F4: 0 FORMULA= | G4: x
+A5: 4 | B5: Cơ quan Chính trị | C5: CQCTr | E5: 0 FORMULA= | F5: 0 FORMULA= | G5: x
+A6: 5 | B6: Ban Đầu tư tài chính | C6: B.ĐTTC | E6: 0 FORMULA= | F6: 0 FORMULA= | G6: x
+A7: 6 | B7: Ban ĐTXD | C7: B.ĐTXD | E7: 0 FORMULA= | F7: 0 FORMULA= | G7: x
+A8: 7 | B8: Ban Tổ chức Nhân lực | C8: B.TCNL | E8: 0 FORMULA= | F8: 0 FORMULA= | G8: x
+A9: 8 | B9: Văn phòng | C9: VP | E9: 0 FORMULA= | F9: 0 FORMULA=
+A10: 9 | B10: Ban Pháp chế | C10: B.PC | E10: 0 FORMULA= | F10: 0 FORMULA= | G10: x
+A11: 10 | B11: Kiểm soát nội bộ | C11: B.KSNB | E11: 0 FORMULA= | F11: 0 FORMULA= | G11: x
+A12: 11 | B12: Ban Tài chính Kế toán  | C12: B.TCKT | E12: 0 FORMULA= | F12: 0 FORMULA= | G12: x
+A13: 12 | B13: Ban Đối ngoại | C13: B.ĐN | E13: 0 FORMULA= | F13: 0 FORMULA= | G13: Ko đăng ký
+A14: 13 | B14: Ban TH&TT | C14: B.TH&TT | E14: 0 FORMULA= | F14: 0 FORMULA= | G14: Ko đăng ký
+A15: 14 | B15: Ban Hành chính | C15: B.HC | E15: 0 FORMULA= | F15: 0 FORMULA= | G15: x
+A16: 15 | B16: Ban Kỹ thuật | C16: B.KT | E16: 0 FORMULA= | F16: 0 FORMULA= | G16: x
+B17: tổng | E17: 1 FORMULA= | F17: 0 FORMULA=
+xl/worksheets/sheet9.xml
+B1: TẬP ĐOÀN CÔNG NGHIỆP - VIỄN THÔNG QUÂN ĐỘI | G1: CỘNG  HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+B2:          | G2: Độc lập - Tự do - Hạnh phúc
+G3:           
+G4:    Hà Nội, ngày         tháng         năm 2026
+A6: ĐỀ XUẤT BỔ SUNG NHIỆM VỤ TRỌNG TÂM QUÝ 1.2026
+A8: STT | B8: Đơn vị | C8: Nhiệm vụ/công việc | D8: Chỉ số đo lường | E8: Lý do đề xuất | F8: Đánh giá của Hội đồng thường trực | G8: Kết quả thực hiện
+A9: 1
+A10: 2
+C13: CHÁNH VĂN PHÒNG | E13: PHÓ TỔNG GIÁM ĐỐC | G13: TỔNG GIÁM ĐỐC
