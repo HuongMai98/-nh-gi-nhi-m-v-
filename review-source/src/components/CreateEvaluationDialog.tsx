@@ -112,7 +112,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             <h2 className="mb-4 text-sm font-semibold">1. Thông tin chung</h2>
             <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
               <div className="rounded-lg border bg-muted/30 p-4">
-                <label className="space-y-1.5 text-sm">Người thực hiện <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass} value={performerId} onChange={(event) => {
+                <label className="space-y-1.5 text-sm">Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass} value={performerId} onChange={(event) => {
                 setPerformerId(event.target.value);
                 setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
               }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
