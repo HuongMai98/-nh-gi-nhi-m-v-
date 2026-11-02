@@ -31,7 +31,14 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/danh-gia/$id")({
   validateSearch: (search: Record<string, unknown>): { mode?: "edit" } => search["mode"] === "edit" ? { mode: "edit" } : {},
   loader: ({ params }) => getEvaluation(params.id) ?? null,
-  head: () => ({ meta: [{ title: "Phiếu đánh giá — vOffice" }] }),
+  head: () => ({ meta: [
+    { title: "Phiếu đánh giá — vOffice" },
+    { name: "description", content: "Chi tiết kết quả nhiệm vụ, điểm đánh giá và lịch sử xử lý phiếu trên vOffice." },
+    { property: "og:title", content: "Phiếu đánh giá — vOffice" },
+    { property: "og:description", content: "Chi tiết kết quả nhiệm vụ, điểm đánh giá và lịch sử xử lý phiếu trên vOffice." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Detail,
 });
 function Detail() {

@@ -1,4 +1,6 @@
 # Evaluation workflow
+- [x] Correct office totals to not-yet-evaluated/required and verify employee-list navigation.
+- [x] Add and verify office-role submitted/required evaluation totals.
 - [x] Remove the independent manager review stage and role.
 - [x] Office aggregation and scoped batch forwarding only; CQTT acceptance/reservation.
 - [x] CQTT scores aggregate KPI; council inherits total and edits Tong hop Ki only.

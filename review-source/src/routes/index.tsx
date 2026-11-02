@@ -2,7 +2,7 @@ import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
 import { cqttStatus, type CqttStatus } from "@/lib/cqtt-filter";
-import { officeAggregationStatus, type OfficeStatus } from "@/lib/office-filter";
+import { officeAggregationStatus, officeSubmissionSummary, type OfficeStatus } from "@/lib/office-filter";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -99,6 +99,7 @@ function Index() {
   const [kiFilter, setKiFilter] = useState("");
   const advancedCount = Number(!!unitFilter) + Number(!!kiFilter);
   const [q, setQ] = useState("");
+  const officeSummary = officeSubmissionSummary(evaluations, period, block, unitFilter);
   const rows = useMemo(
     () =>
       evaluations.filter(
@@ -286,6 +287,16 @@ function Index() {
               ))}
             </div>
           </div>
+
+          {previewRole === "office" && (
+            <div aria-label="Tiến độ đánh giá" className="mb-4 flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b pb-3 text-sm">
+              <span className="text-muted-foreground">Tổng chưa đánh giá / Tổng cần đánh giá:</span>
+              <Button variant="link" asChild className="h-auto p-0 text-lg font-semibold tabular-nums underline underline-offset-4">
+                <Link to="/nhan-vien-chua-danh-gia" search={{ period, block, unit: unitFilter }} aria-label={`Xem ${officeSummary.unassessed} nhân viên chưa đánh giá`}>{officeSummary.unassessed}</Link>
+              </Button>
+              <span className="text-lg font-semibold tabular-nums">/ {officeSummary.total}</span>
+            </div>
+          )}
 
           {(activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi Hội đồng.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || e.councilReviewed || !["council"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại tab Tổng hợp đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => setView("kpi")}>Mở Tổng hợp đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm

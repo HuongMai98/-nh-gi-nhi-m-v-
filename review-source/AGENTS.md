@@ -21,3 +21,4 @@
 - Preserve independent self, CQTT and council scores and immutable history snapshots. Enforce editable fields and actions by preview role and workflow stage in evaluation.ts. Preview roles are not real authentication.
 
 - Office batch sending includes only office-stage records in the selected period/block. Preserve pending metadata drafts across filtering, validate the whole batch before updating React state, and leave other stages untouched.
+- Derive office unassessed/required totals and the dedicated unassessed employee route from the full EvaluationProvider state using office-filter, scoped by period, block and performing unit independently of list search and processing-status filters; unassessed means still at self stage, and navigation carries the same scope in search parameters.

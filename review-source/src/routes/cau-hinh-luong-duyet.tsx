@@ -44,7 +44,14 @@ export const Route = createFileRoute("/cau-hinh-luong-duyet")({
     ...(typeof search["id"] === "string" ? { id: search["id"] } : {}),
     ...(typeof search["from"] === "string" ? { from: search["from"] } : {}),
   }),
-  head: () => ({ meta: [{ title: "Cấu hình luồng duyệt — vOffice" }] }),
+  head: () => ({ meta: [
+    { title: "Cấu hình luồng duyệt — vOffice" },
+    { name: "description", content: "Quản lý phiên bản, vai trò và các bước duyệt đánh giá nhiệm vụ trên vOffice." },
+    { property: "og:title", content: "Cấu hình luồng duyệt — vOffice" },
+    { property: "og:description", content: "Quản lý phiên bản, vai trò và các bước duyệt đánh giá nhiệm vụ trên vOffice." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: WorkflowSettingsPage,
 });
 
