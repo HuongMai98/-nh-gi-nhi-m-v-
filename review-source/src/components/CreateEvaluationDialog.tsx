@@ -31,8 +31,10 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [evaluationDate, setEvaluationDate] = useState(existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   const [deadline, setDeadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? "");
   const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.employeeId === existing.employeeId && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
-  const submitIntent = useRef<"draft" | "send" | "accept">("draft");
+  const submitIntent = useRef<"draft" | "send" | "accept" | "send_cqtt">("draft");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [acceptedResponse, setAcceptedResponse] = useState(existing?.response === "Tiếp thu");
   const setCriteria = (change: FormCriterion[] | ((current: FormCriterion[]) => FormCriterion[])) => {
     const next = typeof change === "function" ? change(criteria) : change;
     if (next.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) > 0.8 + 1e-8) {
@@ -63,12 +65,16 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     const send = intent === "send";
     submitIntent.current = "draft";
     if (responding) {
-      const accept = intent === "accept";
       const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, ...c }) => c);
-      const issue = accept
-        ? updateEvaluation(existing!.id, { criteria: updatedCriteria, response: "Tiếp thu", responseNote: responseNote.trim() }, "respond")
-        : updateEvaluation(existing!.id, { criteria: updatedCriteria, responseNote });
+      const accepted = { criteria: updatedCriteria, response: "Tiếp thu" as const, responseNote: responseNote.trim() };
+      // Tiếp thu: chỉ lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
+      const issue = intent === "accept"
+        ? updateEvaluation(existing!.id, accepted)
+        : intent === "send_cqtt"
+          ? updateEvaluation(existing!.id, accepted, "respond")
+          : updateEvaluation(existing!.id, { criteria: updatedCriteria, responseNote });
       if (issue) { setError(issue); return; }
+      if (intent === "accept") { setAcceptedResponse(true); setNotice("Đã tiếp thu. Bấm Gửi CQTT để gửi CQTT rà soát, chấm điểm lại."); return; }
       onCreated({ ...existing!, criteria: updatedCriteria });
       onOpenChange(false);
       return;
@@ -140,15 +146,18 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             </div>
             <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => setResponseNote(e.target.value)} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <li><span className="font-medium text-foreground">Tiếp thu & gửi CQTT:</span> lưu toàn bộ dữ liệu đã cập nhật ở bảng trên và gửi CQTT rà soát, chấm điểm lại.</li>
+              <li><span className="font-medium text-foreground">Tiếp thu:</span> lưu toàn bộ dữ liệu đã cập nhật ở bảng trên, phiếu vẫn chờ phản hồi.</li>
+              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Tiếp thu, gửi CQTT rà soát, chấm điểm lại.</li>
               <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
             </ul>
           </section>}
           {error && <p role="alert" className="text-sm text-primary">{error}</p>}
+          {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
         </div>
         <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button>{responding ? <>
           <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
-          <Button type="submit" onClick={() => { submitIntent.current = "accept"; }} value="accept">Tiếp thu & gửi CQTT</Button>
+          <Button type="submit" onClick={() => { submitIntent.current = "accept"; }} value="accept" variant="outline">Tiếp thu</Button>
+          <Button type="submit" disabled={!acceptedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>
         </> : <Button type="submit" onClick={() => { submitIntent.current = "send"; }} value="send">Gửi đánh giá</Button>}</div>
       </form>
     </DialogContent>
