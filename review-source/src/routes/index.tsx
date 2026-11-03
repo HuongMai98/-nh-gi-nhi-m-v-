@@ -290,15 +290,43 @@ function Index() {
             </div>
           </div>
 
-          {previewRole === "office" && (
-            <div aria-label="Tiến độ đánh giá" className="mb-4 flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b pb-3 text-sm">
-              <span className="text-muted-foreground">Tổng chưa đánh giá / Tổng cần đánh giá:</span>
-              <Button variant="link" asChild className="h-auto p-0 text-lg font-semibold tabular-nums underline underline-offset-4">
-                <Link to="/nhan-vien-chua-danh-gia" search={{ period, block, unit: unitFilter }} aria-label={`Xem ${officeSummary.unassessed} nhân viên chưa đánh giá`}>{officeSummary.unassessed}</Link>
-              </Button>
-              <span className="text-lg font-semibold tabular-nums">/ {officeSummary.total}</span>
-            </div>
-          )}
+          {previewRole === "office" && (() => {
+            const { unassessed, total } = officeSummary;
+            const assessed = total - unassessed;
+            const percent = total ? Math.round((assessed / total) * 100) : 0;
+            return (
+              <section aria-label="Tiến độ đánh giá" className="mb-4 rounded-lg border bg-card p-4">
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-sm font-semibold">Tiến độ đánh giá {period}</h2>
+                  <span className="text-sm text-muted-foreground">Đã hoàn thành <span className="font-semibold text-foreground tabular-nums">{percent}%</span></span>
+                </div>
+                <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Tỷ lệ đã đánh giá" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+                  <div className="h-full rounded-full bg-success" style={{ width: `${percent}%` }} />
+                </div>
+                <dl className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-md bg-muted/50 px-4 py-3">
+                    <dt className="text-xs text-muted-foreground">Cần đánh giá</dt>
+                    <dd className="text-2xl font-semibold tabular-nums">{total}</dd>
+                  </div>
+                  <div className="rounded-md bg-muted/50 px-4 py-3">
+                    <dt className="text-xs text-muted-foreground">Đã đánh giá</dt>
+                    <dd className="text-2xl font-semibold tabular-nums text-success">{assessed}</dd>
+                  </div>
+                  <div className="rounded-md border border-primary/30 bg-primary/5 px-4 py-3">
+                    <dt className="text-xs text-muted-foreground">Chưa đánh giá</dt>
+                    <dd className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-2xl font-semibold tabular-nums text-primary">{unassessed}</span>
+                      {unassessed > 0 && (
+                        <Link to="/nhan-vien-chua-danh-gia" search={{ period, block, unit: unitFilter }} aria-label={`Xem ${unassessed} nhân viên chưa đánh giá`} className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                          Xem danh sách →
+                        </Link>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            );
+          })()}
 
           {(activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi Hội đồng.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || e.councilReviewed || !["council"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại tab Tổng hợp đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => setView("kpi")}>Mở Tổng hợp đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
