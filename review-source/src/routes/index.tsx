@@ -290,7 +290,7 @@ function Index() {
             </div>
           </div>
 
-          {previewRole === "office" && (() => {
+          {previewRole === "office" && !(activeView === "ki" && !rows.some(hasKiData)) && (() => {
             const { unassessed, total } = officeSummary;
             const assessed = total - unassessed;
             const percent = total ? Math.round((assessed / total) * 100) : 0;

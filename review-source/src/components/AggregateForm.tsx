@@ -1,5 +1,5 @@
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
-import { Check, Download, Save, Send, Undo2 } from "lucide-react";
+import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AssessmentSummary } from "@/components/AssessmentSummary";
@@ -8,6 +8,7 @@ import { useEvaluations } from "@/components/evaluation-context";
 import {
   cqttTotal,
   councilAutoKi,
+  councilCopyFromCqtt,
   councilKiDraft,
   KI_SCORE_RANGES,
   groupScore,
@@ -93,6 +94,8 @@ export function AggregateForm({
         ? "Tổng hợp KPI — BM01"
         : "Phụ lục Kết quả";
   const isKpi = mode === "kpi";
+  // TGĐ không xem Điểm CQTT.
+  const hideCqtt = previewRole === "ceo";
   const summaryRecords = evaluations.map((e) => ({ ...e, ...councilDrafts[e.id], ...(mode === "ki" ? { councilReviewed: true } : {}) }));
   const counts = KI.map((ki) => ({
     ki,
@@ -125,12 +128,12 @@ export function AggregateForm({
             "Họ tên",
             "Chức danh",
             "Đơn vị",
-            "Điểm CQTT",
+            ...(hideCqtt ? [] : ["Điểm CQTT"]),
             "Điểm đánh giá",
             "Xếp loại",
             "Địa điểm làm việc",
             "Nội quy",
-            "Ki",
+            "Xếp hạng Ki",
             "Mức độ hoàn thành",
           ],
       ...evaluations.map((e, index) => {
@@ -158,7 +161,7 @@ export function AggregateForm({
               e.owner,
               e.jobTitle,
               e.unit,
-              cqttTotal(e),
+              ...(hideCqtt ? [] : [cqttTotal(e)]),
               result.score,
               result.rating,
               e.locationCompliance,
@@ -247,6 +250,13 @@ export function AggregateForm({
         </div>
       </section>}
       </div>
+      {mode === "ki" && previewRole === "council" && (
+        <div aria-label="Thống kê phiếu" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          {([["Cơ quan", evaluations.filter((e) => e.block === "Khối Cơ quan").length], ["Đơn vị", evaluations.filter((e) => e.block === "Khối Đơn vị").length], ["Tổng", evaluations.length]] as const).map(([label, count]) => <span key={label} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b>phiếu</span>)}
+          <span className="text-border">|</span>
+          <span>Hội đồng đã chấm <b className="tabular-nums text-foreground">{evaluations.filter((e) => e.councilReviewed).length}/{evaluations.length}</b></span>
+        </div>
+      )}
       <div className={mode === "ki" ? "relative isolate max-h-[calc(100dvh-8rem)] overflow-auto rounded-lg border" : "overflow-x-auto rounded-lg border"}>
         <table className={"w-full text-left text-sm " + (mode === "ki" ? "min-w-[880px]" : "min-w-[1100px]")}>
           <thead className={mode === "ki" ? "sticky top-0 z-20 bg-muted" : "bg-muted"}>
@@ -265,12 +275,12 @@ export function AggregateForm({
                   ]
                 : [
                     "Cá nhân",
-                    "Điểm CQTT",
+                    ...(hideCqtt ? [] : ["Điểm CQTT"]),
                     "Điểm đánh giá",
                     "Xếp loại",
                     "Tuân thủ địa điểm",
                     "Tuân thủ nội quy",
-                    "Ki",
+                    "Xếp hạng Ki",
                     "Hoàn thành / Kiểm tra",
                     "Thao tác",
                   ]
@@ -408,8 +418,30 @@ function AggregateRow({
         </>
       ) : (
         <>
-          <td className={cell}>{number(cqttTotal(e))}</td>
-          <td className={cell}>{numeric("councilScore", "Điểm đánh giá")}</td>
+          {previewRole !== "ceo" && <td className={cell}>{number(cqttTotal(e))}</td>}
+          <td className={cell}>
+            <div className="flex items-center gap-1">
+              {numeric("councilScore", "Điểm đánh giá")}
+              {editable && previewRole !== "ceo" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  title="Sao chép Điểm CQTT"
+                  aria-label={`Sao chép điểm CQTT ${e.id}`}
+                  disabled={cqttTotal(e) === null}
+                  onClick={() => {
+                    setKiDriven(false);
+                    setError("");
+                    change(councilCopyFromCqtt(e));
+                  }}
+                >
+                  <Copy />
+                </Button>
+              )}
+            </div>
+          </td>
           <td className={cell + " min-w-24"}>{result.rating}</td>
           <td className={cell}>
             {choose("locationCompliance", ["Tuân thủ", "Không tuân thủ"], "Tuân thủ địa điểm")}
@@ -419,7 +451,7 @@ function AggregateRow({
           <td className={cell}>
             <div>{result.completion}</div>
             {["council", "council_adjust", "ceo"].includes(e.step) && (
-              <p className="mt-1 text-xs text-primary">{kiError(current)}</p>
+              <p className="mt-1 text-xs text-primary">{current.ki || Object.keys(draft).length ? kiError(current) : ""}</p>
             )}
           </td>
         </>
@@ -437,7 +469,8 @@ function AggregateRow({
                 const range = KI_SCORE_RANGES[current.ki];
                 if (current.councilScore === undefined || current.councilScore < range.min || current.councilScore > range.max) { setError(`Điểm Ki ${current.ki} phải trong khoảng ${range.min}–${range.max}.`); return; }
               }
-              const issue = updateEvaluation(e.id, draft);
+              // Lưu cả khi giữ nguyên giá trị điền sẵn: Hội đồng bấm Lưu là đã chấm (giống Lưu tất cả).
+              const issue = updateEvaluation(e.id, previewRole === "council" ? { ...draft, ki: current.ki } : draft);
               setError(issue ?? "Đã lưu");
             }}
           >

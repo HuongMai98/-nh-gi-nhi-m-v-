@@ -898,6 +898,22 @@ export function councilAutoKi(e: Evaluation): Ki {
   const ki = rating(e.councilScore).ki;
   return e.laborCompliance === "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" && ["A+", "A"].includes(ki) ? "B" : ki;
 }
+/**
+ * Hội đồng sao chép kết quả CQTT: Điểm đánh giá = Điểm CQTT, Ki = Ki CQTT đề xuất (nếu có, không thì theo điểm),
+ * và điền Tuân thủ địa điểm / nội quy sao cho khớp Ki đó (Ki D: bị xử lý kỷ luật; Ki thấp hơn mức điểm: vi phạm nội quy).
+ */
+export function councilCopyFromCqtt(e: Evaluation): Draft {
+  const score = cqttTotal(e);
+  if (score === null) return {};
+  const byScore = rating(score).ki;
+  const ki = e.proposedKi && e.proposedKi !== "K" ? e.proposedKi : byScore;
+  const order: Ki[] = ["D", "C", "B", "A", "A+"];
+  const laborCompliance =
+    ki === "D" && score >= 2 ? "Bị xử lý kỷ luật lao động"
+      : order.indexOf(ki) < order.indexOf(byScore) ? "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật"
+        : "Tuân thủ";
+  return { councilScore: score, ki, locationCompliance: "Tuân thủ", laborCompliance };
+}
 export function councilKiDraft(ki: Ki): Draft {
   return { ki, councilScore: ki === "K" ? undefined : KI_SCORE_RANGES[ki].min };
 }

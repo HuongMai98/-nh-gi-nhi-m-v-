@@ -15,4 +15,6 @@ it("only creates council summary after the council explicitly requests it", () =
   fireEvent.click(screen.getByText("Tạo tổng hợp"));
   expect(record().councilSummaryCreated).toBe(true);
   expect(record().councilReviewed).toBeUndefined();
+  // Các ô Hội đồng cần chấm để trống.
+  for (const key of ["councilScore", "ki", "locationCompliance", "laborCompliance"]) expect(record()[key]).toBeUndefined();
 });

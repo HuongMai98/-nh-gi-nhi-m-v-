@@ -37,9 +37,10 @@ export function AssessmentSummary({
   const [editAllVersion, setEditAllVersion] = useState(0);
   const [batchFeedback, setBatchFeedback] = useState("");
   const pending = (batchCandidates ?? []).filter((e) => e.step === "office");
-  const countRows = pending.length ? pending : evaluations;
-  const agencyCount = new Set(countRows.filter((e) => e.block === "Khối Cơ quan").map((e) => e.unit)).size;
-  const unitCount = new Set(countRows.filter((e) => e.block === "Khối Đơn vị").map((e) => e.unit)).size;
+  // Văn phòng đếm phiếu chờ tổng hợp; CQTT/Hội đồng đếm phiếu đang hiển thị trong bảng.
+  const countRows = previewRole === "office" && pending.length ? pending : evaluations;
+  const agencyCount = countRows.filter((e) => e.block === "Khối Cơ quan").length;
+  const unitCount = countRows.filter((e) => e.block === "Khối Đơn vị").length;
   const canBatchSend = previewRole === "office" && batchCandidates !== undefined;
   const sendBatch = (batch: Evaluation[]) => {
     const ids = batch.map((e) => e.id);
@@ -99,7 +100,7 @@ export function AssessmentSummary({
               <span className="rounded-md bg-muted px-2 py-1 font-medium">
                 {periods.length === 1 ? periods[0] : "Các kỳ đánh giá"}
               </span>
-              {canBatchSend ? <span className="inline-flex flex-wrap items-center gap-1.5">{[["Cơ quan", agencyCount], ["Đơn vị", unitCount], ["Phiếu", countRows.length]].map(([label, count]) => <span key={label} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-muted-foreground">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b></span>)}</span> : <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>}
+              {canBatchSend || previewRole === "cqtt" || previewRole === "council" ? <span className="inline-flex flex-wrap items-center gap-1.5">{[["Cơ quan", agencyCount, "Số phiếu Khối Cơ quan"], ["Đơn vị", unitCount, "Số phiếu Khối Đơn vị"], ["Tổng", countRows.length, "Tổng số phiếu"]].map(([label, count, hint]) => <span key={label} title={String(hint)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-muted-foreground">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b>phiếu</span>)}</span> : <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>}
               <span className="text-border">|</span>
               <span className="text-muted-foreground">
                 CQTT đã chấm{" "}
