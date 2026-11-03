@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
-import { cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
+import { allocateCouncilScores, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
 import { CURRENT_USER, USERS, sameUnitPerformers, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
@@ -31,10 +31,12 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [evaluationDate, setEvaluationDate] = useState(existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   const [deadline, setDeadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? "");
   const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.employeeId === existing.employeeId && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
-  const submitIntent = useRef<"draft" | "send" | "accept" | "send_cqtt">("draft");
+  const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  // Luồng phản hồi CQTT: Tiếp thu (điền điểm CQTT) → Lưu cập nhật → Gửi CQTT.
   const [acceptedResponse, setAcceptedResponse] = useState(existing?.response === "Tiếp thu");
+  const [savedResponse, setSavedResponse] = useState(existing?.response === "Tiếp thu");
   const setCriteria = (change: FormCriterion[] | ((current: FormCriterion[]) => FormCriterion[])) => {
     const next = typeof change === "function" ? change(criteria) : change;
     if (next.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) > 0.8 + 1e-8) {
@@ -43,7 +45,19 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     }
     setError("");
     setCriteriaState(next);
+    setSavedResponse(false);
   };
+  function acceptCqtt() {
+    let allocated: Criterion[];
+    try { allocated = allocateCouncilScores(criteria, cqttScore ?? undefined); }
+    catch (e) { setError(e instanceof Error ? e.message : "Không phân bổ được điểm CQTT."); return; }
+    // Điểm tự đánh giá là số nguyên 1–5 nên làm tròn điểm CQTT phân bổ.
+    setCriteriaState(criteria.map((c, i) => ({ ...c, self: Math.min(5, Math.max(1, Math.round((allocated[i]?.council ?? c.self) * 100) / 100)) })));
+    setError("");
+    setAcceptedResponse(true);
+    setSavedResponse(false);
+    setNotice("Đã điền điểm CQTT đánh giá (phân bổ) vào cột tự đánh giá. Bấm Lưu cập nhật để lưu.");
+  }
   const weight = Math.round(criteria.reduce((sum, item) => sum + item.weight, 0) * 10000) / 100;
 
   function reserve() {
@@ -67,14 +81,12 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     if (responding) {
       const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, ...c }) => c);
       const accepted = { criteria: updatedCriteria, response: "Tiếp thu" as const, responseNote: responseNote.trim() };
-      // Tiếp thu: chỉ lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
-      const issue = intent === "accept"
-        ? updateEvaluation(existing!.id, accepted)
-        : intent === "send_cqtt"
-          ? updateEvaluation(existing!.id, accepted, "respond")
-          : updateEvaluation(existing!.id, { criteria: updatedCriteria, responseNote });
+      // Lưu cập nhật: lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
+      const issue = intent === "send_cqtt"
+        ? updateEvaluation(existing!.id, accepted, "respond")
+        : updateEvaluation(existing!.id, acceptedResponse ? accepted : { criteria: updatedCriteria, responseNote });
       if (issue) { setError(issue); return; }
-      if (intent === "accept") { setAcceptedResponse(true); setNotice("Đã tiếp thu. Bấm Gửi CQTT để gửi CQTT rà soát, chấm điểm lại."); return; }
+      if (intent !== "send_cqtt") { setSavedResponse(true); setNotice("Đã lưu cập nhật. Bấm Gửi CQTT để gửi CQTT rà soát, chấm điểm lại."); return; }
       onCreated({ ...existing!, criteria: updatedCriteria });
       onOpenChange(false);
       return;
@@ -144,20 +156,21 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
               <div><span className="font-medium">CQTT yêu cầu:</span> {existing!.note || "—"}</div>
               <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
             </div>
-            <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => setResponseNote(e.target.value)} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
+            <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <li><span className="font-medium text-foreground">Tiếp thu:</span> lưu toàn bộ dữ liệu đã cập nhật ở bảng trên, phiếu vẫn chờ phản hồi.</li>
-              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Tiếp thu, gửi CQTT rà soát, chấm điểm lại.</li>
+              <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm CQTT đánh giá (phân bổ) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
+              <li><span className="font-medium text-foreground">Lưu cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
+              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Lưu cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
               <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
             </ul>
           </section>}
           {error && <p role="alert" className="text-sm text-primary">{error}</p>}
           {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
         </div>
-        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button>{responding ? <>
+        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button>{responding ? <>
           <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
-          <Button type="submit" onClick={() => { submitIntent.current = "accept"; }} value="accept" variant="outline">Tiếp thu</Button>
-          <Button type="submit" disabled={!acceptedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>
+          <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
+          <Button type="submit" disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>
         </> : <Button type="submit" onClick={() => { submitIntent.current = "send"; }} value="send">Gửi đánh giá</Button>}</div>
       </form>
     </DialogContent>

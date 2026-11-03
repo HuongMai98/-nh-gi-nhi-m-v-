@@ -220,8 +220,10 @@ export const cqttTotal = (e: Evaluation) =>
   e.cqttKey === undefined || e.cqttFunction === undefined
     ? null
     : Math.round((e.cqttKey + e.cqttFunction) * 100) / 100;
-export const scoresComplete = (items: Criterion[]) =>
-  items.length > 0 && items.every((c) => Number.isInteger(c.self) && c.self >= 1 && c.self <= 5);
+// decimals: bước phản hồi nhận điểm CQTT phân bổ (số lẻ) điền ngược vào cột tự đánh giá.
+export const scoresComplete = (items: Criterion[], decimals = false) =>
+  items.length > 0 &&
+  items.every((c) => (decimals ? Number.isFinite(c.self) : Number.isInteger(c.self)) && c.self >= 1 && c.self <= 5);
 export function rating(score: number) {
   if (score >= 4.5) return { ki: "A+" as Ki, label: "Vượt xa yêu cầu" };
   if (score >= 3.5) return { ki: "A" as Ki, label: "Vượt yêu cầu" };
@@ -390,7 +392,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
   if (patch.criteria && e.step === "response") {
     // Tiếp thu: cá nhân được cập nhật lại toàn bộ dữ liệu đã chấm (nhiệm vụ, tỷ trọng, kết quả, điểm).
     if (!patch.criteria.length) throw new Error("Phiếu phải có ít nhất một nhiệm vụ.");
-    if (patch.criteria.some((c) => !Number.isInteger(c.self) || c.self < 0 || c.self > 5))
+    if (patch.criteria.some((c) => !Number.isFinite(c.self) || c.self < 0 || c.self > 5))
       throw new Error("Điểm tự đánh giá từ 1–5.");
     next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined }));
   } else if (patch.criteria) {
@@ -556,7 +558,7 @@ export function transition(
     } else if (next.response === "Tiếp thu") {
       // Tiếp thu: cá nhân cập nhật lại dữ liệu và gửi CQTT rà soát, chấm điểm lại.
       if (
-        !scoresComplete(next.criteria) ||
+        !scoresComplete(next.criteria, true) ||
         Math.abs(next.criteria.reduce((s, c) => s + c.weight, 0) - 1) > 0.00001 ||
         next.criteria.some((c) => !c.result.trim())
       )

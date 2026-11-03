@@ -64,7 +64,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
           {(["t", "b", "s"] as const).map((key) => <td key={key} className="p-2 text-center"><Input readOnly aria-label={`Chỉ tiêu ${key.toUpperCase()} ${index + 1}`} className="w-20" value={item.target[key]} /></td>)}
           <td className="whitespace-nowrap p-3">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
-          <td className="p-2"><Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24" type="number" min="1" max="5" step="1" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /></td>
+          <td className="p-2"><Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24" type="number" min="1" max="5" step={showCqtt ? "0.01" : "1"} value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /></td>
           {showCqtt && <td className="p-3 text-center font-medium text-amber-700" aria-label={`Điểm CQTT phân bổ ${index + 1}`} title="Tham chiếu, không chỉnh sửa">{cqttAllocated?.[index]?.toFixed(2) ?? "—"}</td>}
           <td className="p-2"><Button type="button" variant="ghost" size="icon" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><Trash2 /></Button></td>
         </tr>)}
