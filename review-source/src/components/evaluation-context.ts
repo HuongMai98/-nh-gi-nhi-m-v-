@@ -11,6 +11,8 @@ type EvaluationState = {
   previewRole: PreviewRole;
   setPreviewRole: (role: PreviewRole) => void;
   processCqttBatch: (ids: string[], drafts: Record<string, Draft>, request: boolean | "council") => string | null;
+  /** CQTT tổng hợp điểm Thường trực đánh giá từ chi tiết đánh giá từng công việc. */
+  summarizeCqtt: (ids: string[]) => string | null;
   sendOfficeBatch: (ids: string[], drafts?: Record<string, Draft>) => string | null;
   updateEvaluation: (id: string, patch: Draft, action?: Action) => string | null;
   /** Cấu hình đang áp dụng hôm nay của từng khối. */

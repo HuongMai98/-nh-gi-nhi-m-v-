@@ -7,6 +7,7 @@ import {
   processCqttBatch,
   forwardOfficeBatch,
   saveDraft,
+  summarizeCqtt,
   transition,
   type PreviewRole,
   type Draft,
@@ -197,6 +198,14 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         processCqttBatch: (ids, drafts, request) => {
           try { setEvaluations(processCqttBatch(evaluations, previewRole, ids, drafts, request, new Date().toLocaleString("vi-VN"))); return null; }
           catch (error) { return error instanceof Error ? error.message : "Không thể xử lý danh sách."; }
+        },
+        summarizeCqtt: (ids) => {
+          try {
+            const at = new Date().toLocaleString("vi-VN");
+            const next = evaluations.map((e) => (ids.includes(e.id) ? summarizeCqtt(e, previewRole, at) : e));
+            setEvaluations(next);
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể tổng hợp."; }
         },
         addEvaluation: (e) => setEvaluations((current) => [e, ...current]),
         workflows,

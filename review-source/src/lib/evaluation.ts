@@ -114,6 +114,8 @@ export type Criterion = {
   result: string;
   self: number;
   council?: number | undefined;
+  /** QLTT (CQTT) đánh giá từng công việc, thang 1–5. */
+  cqtt?: number | undefined;
 };
 export type HistoryEntry = {
   actorName?: string;
@@ -145,6 +147,8 @@ export type Evaluation = {
   officeBatchId?: string;
   cqttKey?: number | undefined;
   cqttFunction?: number | undefined;
+  /** CQTT đã tổng hợp điểm nhóm từ chi tiết đánh giá từng công việc. */
+  cqttSummarized?: boolean | undefined;
   cqttAdjustmentPercent?: number | undefined;
   proposedKi?: Ki | undefined;
   reviewAssistant?: string;
@@ -216,6 +220,25 @@ export const totalScore = (items: Criterion[]) =>
   Math.round(items.reduce((n, c) => n + c.weight * c.self, 0) * 100) / 100;
 export const groupScore = (e: Evaluation, key: boolean) =>
   totalScore(e.criteria.filter((c) => (c.group === "A") === key));
+/** Điểm nhóm CQTT tính từ điểm chấm từng công việc; null khi chưa chấm đủ. */
+export const cqttScoredCount = (items: Criterion[]) => items.filter((c) => c.cqtt !== undefined).length;
+export function cqttGroupsFromTasks(items: Criterion[]): { cqttKey: number; cqttFunction: number } | null {
+  if (!items.length || cqttScoredCount(items) !== items.length) return null;
+  const sum = (key: boolean) =>
+    Math.round(items.filter((c) => (c.group === "A") === key).reduce((n, c) => n + c.weight * c.cqtt!, 0) * 100) / 100;
+  return { cqttKey: sum(true), cqttFunction: sum(false) };
+}
+export const cqttTaskTotal = (items: Criterion[]) =>
+  Math.round(items.reduce((n, c) => n + c.weight * (c.cqtt ?? 0), 0) * 100) / 100;
+/**
+ * Điểm "CQTT đánh giá (phân bổ)" cho từng công việc: lấy trực tiếp điểm CQTT đã chấm từng công việc;
+ * hồ sơ cũ chỉ có điểm nhóm thì phân bổ theo tỷ lệ điểm tự đánh giá.
+ */
+export function cqttTaskScores(criteria: Criterion[], total: number | null): (number | null)[] | null {
+  if (criteria.length && criteria.every((c) => c.cqtt !== undefined)) return criteria.map((c) => c.cqtt!);
+  if (total === null) return null;
+  try { return allocateCouncilScores(criteria, total).map((c) => c.council ?? null); } catch { return null; }
+}
 export const cqttTotal = (e: Evaluation) =>
   e.cqttKey === undefined || e.cqttFunction === undefined
     ? null
@@ -358,6 +381,20 @@ function record(
     ],
   };
 }
+/** CQTT tổng hợp: điểm nhóm Thường trực đánh giá lấy từ chi tiết đánh giá từng công việc. */
+export const cqttTasksComplete = (e: Evaluation) => cqttGroupsFromTasks(e.criteria) !== null;
+/** Có thể tổng hợp: đủ điểm từng công việc, hoặc hồ sơ cũ đã có điểm nhóm CQTT. */
+export const cqttSummarizable = (e: Evaluation) => cqttTasksComplete(e) || cqttTotal(e) !== null;
+/** Tab Tổng hợp đánh giá của CQTT chỉ có dữ liệu sau khi bấm Tổng hợp đánh giá. */
+export const cqttInSummary = (e: Evaluation) => !["cqtt", "cqtt_report"].includes(e.step) || !!e.cqttSummarized;
+export function summarizeCqtt(e: Evaluation, role: PreviewRole, at: string): Evaluation {
+  if (role !== "cqtt" || !["cqtt", "cqtt_report"].includes(e.step)) throw new Error("Chỉ CQTT tổng hợp hồ sơ đang rà soát.");
+  const fromTasks = cqttGroupsFromTasks(e.criteria);
+  const groups = fromTasks ?? (cqttTotal(e) !== null ? { cqttKey: e.cqttKey!, cqttFunction: e.cqttFunction! } : null);
+  if (!groups) throw new Error(`${e.id}: chưa đánh giá đủ từng công việc.`);
+  const next = { ...e, ...groups, cqttSummarized: true };
+  return record(e, next, role, "Tổng hợp đánh giá", "Tổng hợp từ chi tiết đánh giá từng công việc", at);
+}
 export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: string): Evaluation {
   const { returnStage: _returnStage, ...patch } = draft;
   if (
@@ -372,7 +409,9 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       : selfEditable(e, role)
         ? ["criteria"]
         : role === "cqtt" && e.step === "cqtt"
-          ? ["cqttKey", "cqttFunction", "cqttAdjustmentPercent", "note", "proposedKi", "reviewAssistant", "reviewRemark"]
+          ? ["criteria", "cqttKey", "cqttFunction", "cqttAdjustmentPercent", "note", "proposedKi", "reviewAssistant", "reviewRemark", "locationCompliance", "laborCompliance", "cultureCompliance"]
+          : role === "cqtt" && e.step === "cqtt_report"
+            ? ["note"]
           : role === "council"
             ? [
                 "councilScore",
@@ -382,8 +421,10 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
                 "cultureCompliance",
                 "note",
               ]
-            : role === "ceo" && e.step === "ceo" && branches(e.block).ceoDirectAdjust
-              ? ["councilScore", "ki", "locationCompliance", "laborCompliance", "cultureCompliance"]
+            : role === "ceo" && e.step === "ceo"
+              ? branches(e.block).ceoDirectAdjust
+                ? ["councilScore", "ki", "locationCompliance", "laborCompliance", "cultureCompliance"]
+                : ["locationCompliance", "laborCompliance", "cultureCompliance"]
             : role === "performer" && e.step === "response"
               ? ["response", "responseNote", "criteria"]
               : [];
@@ -395,6 +436,18 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     if (patch.criteria.some((c) => !Number.isFinite(c.self) || c.self < 0 || c.self > 5))
       throw new Error("Điểm tự đánh giá từ 1–5.");
     next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined }));
+  } else if (patch.criteria && role === "cqtt") {
+    // CQTT đánh giá từng công việc (cột QLTT đánh giá): chỉ ghi điểm CQTT, không sửa dữ liệu cá nhân.
+    if (patch.criteria.length !== e.criteria.length)
+      throw new Error("Không được thay đổi mục tiêu gốc.");
+    next.criteria = e.criteria.map((c, i) => {
+      const incoming = patch.criteria![i]!;
+      if (incoming.cqtt !== undefined && (!Number.isFinite(incoming.cqtt) || incoming.cqtt < 1 || incoming.cqtt > 5))
+        throw new Error("Điểm QLTT đánh giá từng công việc phải từ 1 đến 5.");
+      return { ...c, cqtt: incoming.cqtt };
+    });
+    // Sửa điểm chi tiết sau khi đã tổng hợp thì cần tổng hợp lại.
+    if (next.criteria.some((c, i) => c.cqtt !== e.criteria[i]!.cqtt)) next.cqttSummarized = false;
   } else if (patch.criteria) {
     if (patch.criteria.length !== e.criteria.length)
       throw new Error("Không được thay đổi mục tiêu gốc.");
@@ -407,6 +460,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
   }
   const { criteria: ignored, ...fields } = patch;
   next = { ...next, ...fields };
+  // Điểm nhóm CQTT chỉ cập nhật khi CQTT bấm Tổng hợp đánh giá (summarizeCqtt) hoặc chuyển bước.
   for (const key of ["cqttKey", "cqttFunction", "councilScore"] as const) {
     const value = next[key];
     if (
@@ -438,13 +492,14 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     const issue = kiError(next);
     if (issue) throw new Error(issue);
     next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
-    next.ceoAdjusted = true;
+    if (next.councilScore !== e.councilScore || next.ki !== e.ki) next.ceoAdjusted = true;
   }
   if (role === "ceo") {
     const changes = [
       next.councilScore !== e.councilScore && `Điểm ${e.councilScore?.toFixed(2) ?? "—"} → ${next.councilScore?.toFixed(2) ?? "—"}`,
       next.ki !== e.ki && `Ki ${e.ki ?? "—"} → ${next.ki ?? "—"}`,
     ].filter(Boolean).join("; ");
+    if (!changes) return record(e, next, role, "TGĐ đánh giá tuân thủ", "", at);
     return record(e, next, role, "TGĐ điều chỉnh trực tiếp", changes, at);
   }
   return record(e, next, role, "Lưu nháp", patch.note ?? patch.responseNote ?? "", at);
@@ -527,9 +582,12 @@ export function transition(
     if (action === "send") next = advance(e, { kind: "fixed", key: "office" });
     else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
     else throw new Error("Thao tác không hợp lệ.");
-  } else if (e.step === "cqtt") {
+  } else if (e.step === "cqtt" || (e.step === "cqtt_report" && action === "request")) {
+    // Gửi điều chỉnh được thực hiện ở màn Tổng hợp đánh giá, kể cả phiếu đã Hoàn tất đánh giá.
     if (!["request", "finish"].includes(action)) throw new Error("Thao tác không hợp lệ.");
-    if (cqttTotal(e) === null) throw new Error("Nhập đủ điểm CQTT trước khi chuyển bước.");
+    // Hoàn tất đánh giá: đủ điểm từng công việc (tổng hợp sau) hoặc đã có điểm nhóm CQTT.
+    if (cqttTotal(e) === null && !(action === "finish" && cqttTasksComplete(e)))
+      throw new Error("Nhập đủ điểm QLTT đánh giá (1-5) cho tất cả công việc trước khi chuyển bước.");
     const cqttTarget = resolveReturn(e.block, "cqtt", patch.returnStage);
     if (action === "request" && !cqttTarget)
       throw new Error("Luồng duyệt của khối không cho phép CQTT trả về.");
@@ -575,7 +633,8 @@ export function transition(
     );
   } else if (e.step === "cqtt_report" && action === "send") {
     const score = cqttTotal(e);
-    if (score === null || score < 1 || score > 5) throw new Error("Điểm CQTT phải từ 1–5.");
+    if (score === null) throw new Error("Chưa tổng hợp đánh giá CQTT.");
+    if (score < 1 || score > 5) throw new Error("Điểm CQTT phải từ 1–5.");
     next = advance(e, { kind: "fixed", key: "cqtt" });
   } else if (["council", "council_adjust"].includes(e.step) && action === "return") {
     return returnTo(e, role, "council", patch.returnStage, reason, at);
@@ -605,6 +664,9 @@ export function transition(
   else if (e.step === "sign" && action === "sign")
     next = { ...e, step: "done", submittedForSignatureAt: at };
   else throw new Error("Thao tác không hợp lệ ở trạng thái hiện tại.");
+  // CQTT gửi điều chỉnh: lịch sử ghi đích danh cá nhân đánh giá nhận yêu cầu.
+  if (action === "request" && next.step === "response")
+    return record(e, next, role, "Gửi điều chỉnh cho CQĐV/CQ", `Gửi đến: ${e.owner}${e.employeeId ? ` (${e.employeeId})` : ""} · ${e.unit} — Lý do: ${reason}`, at);
   return record(e, next, role, action, patch.responseNote ?? reason, at);
 }
 export function forwardOfficeBatch(
@@ -882,10 +944,10 @@ export function processCqttBatch(evaluations: Evaluation[], role: PreviewRole, i
   const updates = new Map<string, Evaluation>();
   for (const id of ids) {
     const e = evaluations.find((item) => item.id === id);
-    if (!e || (e.step !== "cqtt" && !(request === "council" && e.step === "cqtt_report"))) throw new Error("Danh sách đã thay đổi, hồ sơ chưa đủ điều kiện CQTT xử lý.");
+    if (!e || (e.step !== "cqtt" && !(request !== false && e.step === "cqtt_report"))) throw new Error("Danh sách đã thay đổi, hồ sơ chưa đủ điều kiện CQTT xử lý.");
     try {
       const saved = e.step === "cqtt_report" ? e : saveDraft(e, role, drafts[id] ?? {}, at);
-      const next = request === "council" ? transition(saved.step === "cqtt" ? transition(saved, role, "finish", {}, at) : saved, role, "send", {}, at) : request ? transition(saved, role, "request", drafts[id]?.returnStage ? { returnStage: drafts[id]!.returnStage } : {}, at) : saved;
+      const next = request === "council" ? transition(saved.step === "cqtt" ? transition(saved, role, "finish", {}, at) : saved, role, "send", {}, at) : request ? transition(saved, role, "request", { ...(drafts[id]?.returnStage ? { returnStage: drafts[id]!.returnStage } : {}), ...(drafts[id]?.note ? { note: drafts[id]!.note } : {}) }, at) : saved;
       updates.set(id, next);
     } catch (error) { throw new Error(e.owner + ": " + (error instanceof Error ? error.message : "Dữ liệu không hợp lệ")); }
   }

@@ -40,7 +40,7 @@ describe("workflow forms", () => {
     fireEvent.click(screen.getByRole("button", { name: "Trình TGĐ" }));
     expect(record().step).toBe("ceo");
     expect(record().councilScore).toBe(4.8);
-    fireEvent.click(screen.getByRole("tab", { name: "Cá nhân đánh giá" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getAllByText("4.80")).toHaveLength(2);
     expect(screen.getByText("QLTT đánh giá (tự phân bổ)")).toBeInTheDocument();
     expect(screen.getAllByLabelText(/^Điểm phân bổ mục tiêu/)).toHaveLength(8);
@@ -73,10 +73,10 @@ it("view mode locks evaluation fields and exposes the explicit edit action", () 
   const onEdit = vi.fn();
   const e = { ...EVALUATIONS[3]!, step: "self" as const };
   render(<EvaluationProvider><EvaluationDetail ev={e} readOnly onEdit={onEdit} /></EvaluationProvider>);
-  expect(screen.queryByRole("button", { name: "Lưu nháp" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Lưu" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Gửi đánh giá" })).toBeInTheDocument();
   expect(screen.getByLabelText("Kết quả thực hiện mục tiêu 1")).toHaveAttribute("readonly");
-  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa đánh giá" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa" }));
   expect(onEdit).toHaveBeenCalledOnce();
 });
 

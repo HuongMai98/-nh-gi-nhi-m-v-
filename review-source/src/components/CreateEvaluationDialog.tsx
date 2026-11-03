@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
-import { allocateCouncilScores, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
+import { allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
 import { CURRENT_USER, USERS, sameUnitPerformers, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
@@ -18,7 +18,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const { evaluations, addEvaluation, replaceSelfEvaluation, updateEvaluation } = useEvaluations();
   // Phiếu CQTT gửi điều chỉnh về: cập nhật tại đây, gửi phản hồi CQTT ở màn chi tiết.
   const responding = existing?.step === "response";
-  const cqttScore = responding ? cqttTotal(existing!) : null;
+  const cqttScore = responding ? (cqttTotal(existing!) ?? (existing!.criteria.every((c) => c.cqtt !== undefined) ? cqttTaskTotal(existing!.criteria) : null)) : null;
   const [responseNote, setResponseNote] = useState(existing?.responseNote ?? "");
   const unit = existing?.unit ?? CURRENT_USER.unit;
   const block = existing?.block ?? CURRENT_USER.block;
@@ -49,14 +49,14 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   };
   function acceptCqtt() {
     let allocated: Criterion[];
-    try { allocated = allocateCouncilScores(criteria, cqttScore ?? undefined); }
+    try { allocated = criteria.length && criteria.every((c) => c.cqtt !== undefined) ? criteria.map((c) => ({ ...c, council: c.cqtt })) : allocateCouncilScores(criteria, cqttScore ?? undefined); }
     catch (e) { setError(e instanceof Error ? e.message : "Không phân bổ được điểm CQTT."); return; }
     // Điểm tự đánh giá là số nguyên 1–5 nên làm tròn điểm CQTT phân bổ.
     setCriteriaState(criteria.map((c, i) => ({ ...c, self: Math.min(5, Math.max(1, Math.round((allocated[i]?.council ?? c.self) * 100) / 100)) })));
     setError("");
     setAcceptedResponse(true);
     setSavedResponse(false);
-    setNotice("Đã điền điểm CQTT đánh giá (phân bổ) vào cột tự đánh giá. Bấm Lưu cập nhật để lưu.");
+    setNotice("Đã điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá. Bấm Lưu cập nhật để lưu.");
   }
   const weight = Math.round(criteria.reduce((sum, item) => sum + item.weight, 0) * 10000) / 100;
 
@@ -158,7 +158,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             </div>
             <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm CQTT đánh giá (phân bổ) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
+              <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
               <li><span className="font-medium text-foreground">Lưu cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
               <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Lưu cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
               <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>

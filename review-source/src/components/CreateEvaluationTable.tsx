@@ -2,7 +2,7 @@ import { Fragment, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { allocateCouncilScores, totalScore, type Criterion } from "@/lib/evaluation";
+import { cqttTaskScores, totalScore, type Criterion } from "@/lib/evaluation";
 import type { SourceTask } from "@/lib/source-tasks";
 
 export type FormCriterion = Criterion & { sourceTaskId?: string | undefined };
@@ -17,10 +17,8 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
 }) {
   const [weightError, setWeightError] = useState("");
   const update = (index: number, patch: Partial<FormCriterion>) => onChange(items.map((c, i) => i === index ? { ...c, ...patch } : c));
-  const cqttAllocated = (() => {
-    if (cqttScore === null) return null;
-    try { return allocateCouncilScores(items, cqttScore).map((c) => c.council ?? null); } catch { return null; }
-  })();
+  // Lấy trực tiếp điểm CQTT đã chấm từng công việc (hồ sơ cũ: phân bổ từ điểm nhóm).
+  const cqttAllocated = cqttScore === null ? null : cqttTaskScores(items, cqttScore);
   const showCqtt = cqttScore !== null;
   const cqttSum = cqttAllocated ? Math.round(items.reduce((s, c, i) => s + c.weight * (cqttAllocated[i] ?? 0), 0) * 100) / 100 : null;
   const span = showCqtt ? 16 : 15;
@@ -32,7 +30,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
         <tr>{["STT", "Nhóm mục tiêu", "Nhiệm vụ", "Chỉ số đo lường KPI", "Phương pháp đo", "Đơn vị đo", "Tỷ trọng (%)"].map((h) => <th key={h} rowSpan={2} className={"border-r px-3 py-3 font-medium " + (h === "Nhóm mục tiêu" ? "sticky left-0 z-20 w-44 min-w-44 max-w-44 bg-muted" : h === "Nhiệm vụ" ? "sticky left-44 z-20 w-80 min-w-80 max-w-80 bg-muted shadow-[2px_0_0_0_hsl(var(--border))]" : "")}>{h}</th>)}
           <th colSpan={3} className="border-b border-r p-2 text-center font-medium">Các mức chỉ tiêu</th>
           <th rowSpan={2} className="px-3 font-medium">Ngày bắt đầu</th><th rowSpan={2} className="px-3 font-medium">Ngày hoàn thành</th>
-          <th colSpan={2} className="border-b p-2 text-center font-medium">Tự đánh giá kết quả thực hiện</th>{showCqtt && <th rowSpan={2} className="whitespace-nowrap p-3 text-center font-medium">CQTT đánh giá<br />(phân bổ)</th>}<th rowSpan={2} className="p-3">Thao tác</th>
+          <th colSpan={2} className="border-b p-2 text-center font-medium">Tự đánh giá kết quả thực hiện</th>{showCqtt && <th rowSpan={2} className="whitespace-nowrap p-3 text-center font-medium">QLTT đánh giá<br />(1-5)</th>}<th rowSpan={2} className="p-3">Thao tác</th>
         </tr>
         <tr>{["Tối thiểu (T)", "Mong đợi (B)", "Thách thức (S)", "Kết quả thực hiện", "CBNV tự đánh giá (1–5)"].map((h) => <th key={h} className="p-2 text-center font-medium">{h}</th>)}</tr>
       </thead>
@@ -65,7 +63,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
           <td className="whitespace-nowrap p-3">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
           <td className="p-2"><Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24" type="number" min="1" max="5" step={showCqtt ? "0.01" : "1"} value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /></td>
-          {showCqtt && <td className="p-3 text-center font-medium text-amber-700" aria-label={`Điểm CQTT phân bổ ${index + 1}`} title="Tham chiếu, không chỉnh sửa">{cqttAllocated?.[index]?.toFixed(2) ?? "—"}</td>}
+          {showCqtt && <td className="p-3 text-center font-medium text-primary" aria-label={`QLTT đánh giá ${index + 1}`} title="Điểm CQTT đã đánh giá cho công việc — tham chiếu, không chỉnh sửa">{cqttAllocated?.[index] == null ? "—" : String(Math.round(cqttAllocated[index]! * 100) / 100)}</td>}
           <td className="p-2"><Button type="button" variant="ghost" size="icon" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><Trash2 /></Button></td>
         </tr>)}
       </Fragment>)}

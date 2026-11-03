@@ -65,7 +65,9 @@ export function AggregateForm({
   onDraftChange,
   batchCandidates,
   onCouncilSummary,
+  onCqttReturned,
 }: {
+  onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
   batchCandidates?: Evaluation[] | undefined;
   onDraftChange?: ((draft: Draft) => void) | undefined;
@@ -177,6 +179,7 @@ export function AggregateForm({
       <AssessmentSummary
         key={previewRole}
         onCouncilSummary={onCouncilSummary}
+        onCqttReturned={onCqttReturned}
         batchCandidates={batchCandidates}
         evaluations={evaluations}
         onExport={exportData}

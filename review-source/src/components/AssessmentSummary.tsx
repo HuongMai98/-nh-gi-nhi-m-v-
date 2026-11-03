@@ -1,8 +1,10 @@
-import { STAGES, type StageKey } from "@/lib/workflow";
-import { useEffect, useState } from "react";
+import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Download, Save, Undo2, ArrowUpRight, Send, CheckCheck, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
 import { cqttTotal, saveDraft, groupScore, proposeCqttKi, cqttScoreForKi, KI_SCORE_RANGES, type Draft, type Evaluation, type Ki } from "@/lib/evaluation";
 
@@ -15,14 +17,16 @@ export function AssessmentSummary({
   onDraftChange,
   batchCandidates,
   onCouncilSummary,
+  onCqttReturned,
 }: {
+  onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
   batchCandidates?: Evaluation[] | undefined;
   evaluations: Evaluation[];
   onExport: () => void;
   onDraftChange?: ((draft: Draft) => void) | undefined;
 }) {
-  const { previewRole, sendOfficeBatch, processCqttBatch, workflows } = useEvaluations();
+  const { previewRole, sendOfficeBatch, processCqttBatch, workflows, updateEvaluation } = useEvaluations();
   // Bước được phép trả về từ CQTT (giao của các khối đang hiển thị); người xử lý chọn 1 bước.
   const cqttTargets = (() => {
     const lists = [...new Set(evaluations.map((e) => e.block))].map((b) => workflows[b].stages.find((s) => s.key === "cqtt")?.returnTo ?? []);
@@ -52,7 +56,11 @@ export function AssessmentSummary({
       );
   };
   const cqttRows = evaluations.filter((e) => e.step === "cqtt");
-  const eligibleIds = cqttRows.filter((e) => { const current = { ...e, ...batchDrafts[e.id] }; const total = cqttTotal(current); return total !== null && Math.abs(total - groupScore(e, true) - groupScore(e, false)) >= 0.005; }).map((e) => e.id);
+  // Gửi điều chỉnh tại màn Tổng hợp: hồ sơ đang rà soát hoặc đã Hoàn tất đánh giá (chưa gửi Hội đồng).
+  const returnRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
+  // Cột Thao tác: hàng icon (Chỉnh sửa · Lưu · Gửi Hội đồng), bên dưới là Gửi điều chỉnh.
+  const actionsWidth = previewRole === "cqtt" && evaluations.some((e) => e.step === "cqtt_report") ? 200 : 200;
+  const eligibleIds = returnRows.filter((e) => { const current = { ...e, ...batchDrafts[e.id] }; const total = cqttTotal(current); return total !== null && Math.abs(total - groupScore(e, true) - groupScore(e, false)) >= 0.005; }).map((e) => e.id);
   const selectedEligible = selectedIds.filter((id) => eligibleIds.includes(id));
   const councilRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
   const allScored = councilRows.length > 0 && councilRows.every((e) => {
@@ -62,6 +70,61 @@ export function AssessmentSummary({
       return total !== null && total >= 1 && total <= 5;
     } catch { return false; }
   });
+  // Gửi điều chỉnh: mở hộp nhập Lý do điều chỉnh (bắt buộc) trước khi gửi.
+  const [returnIds, setReturnIds] = useState<string[] | null>(null);
+  const [returnNote, setReturnNote] = useState("");
+  const [returnError, setReturnError] = useState("");
+  // Lý do đã nhập ở cột Lý do (đang sửa hoặc đã lưu) được dùng làm lý do gửi điều chỉnh.
+  const rowNote = (id: string) => (batchDrafts[id]?.note ?? evaluations.find((x) => x.id === id)?.note ?? "").trim();
+  const sendReturn = (ids: string[], fallback: string): string | null => {
+    const drafts = Object.fromEntries(ids.map((id) => [id, { ...(batchDrafts[id] ?? {}), note: rowNote(id) || fallback.trim(), ...(chosenReturn ? { returnStage: chosenReturn } : {}) }]));
+    const issue = processCqttBatch(ids, drafts, true);
+    if (issue) return issue;
+    setBatchFeedback(`Đã gửi điều chỉnh ${ids.length} hồ sơ.`);
+    setBatchDrafts((current) => Object.fromEntries(Object.entries(current).filter(([id]) => !ids.includes(id))));
+    setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
+    onCqttReturned?.(ids.length);
+    return null;
+  };
+  // Đã có lý do ở cột Lý do thì gửi luôn; thiếu lý do thì mở hộp nhập (lý do được lưu vào cột Lý do).
+  const openReturn = (ids: string[]) => {
+    if (ids.every((id) => rowNote(id)) && cqttTargets.length <= 1) { setBatchFeedback(sendReturn(ids, "") ?? ""); return; }
+    setReturnIds(ids); setReturnNote(""); setReturnError("");
+  };
+  const missingNote = (returnIds ?? []).filter((id) => !rowNote(id));
+  // Gửi điều chỉnh trên thanh công cụ: bắt buộc mọi hồ sơ đã chọn có Lý do ở danh sách, không mở hộp nhập.
+  const [noteRequired, setNoteRequired] = useState<string[]>([]);
+  const sendSelected = () => {
+    const missing = selectedEligible.filter((id) => !rowNote(id));
+    setNoteRequired(missing);
+    if (missing.length) {
+      setBatchFeedback(`Nhập Lý do điều chỉnh cho ${missing.length} hồ sơ đã chọn trước khi gửi.`);
+      // Đưa con trỏ tới ô Lý do còn trống đầu tiên (bảng cuộn ngang).
+      setTimeout(() => {
+        const el = document.querySelector(`[aria-label="Góp ý CQTT ${missing[0]}"]`) as HTMLTextAreaElement | null;
+        el?.scrollIntoView?.({ block: "nearest", inline: "center" });
+        el?.focus({ preventScroll: true });
+      }, 0);
+      return;
+    }
+    setBatchFeedback(sendReturn(selectedEligible, "") ?? `Đã gửi điều chỉnh ${selectedEligible.length} hồ sơ.`);
+    setNoteRequired([]);
+  };
+  const confirmReturn = () => {
+    if (!returnIds?.length) return;
+    if (missingNote.length && !returnNote.trim()) { setReturnError("Vui lòng nhập lý do điều chỉnh."); return; }
+    const issue = sendReturn(returnIds, returnNote);
+    if (issue) { setReturnError(issue); return; }
+    setReturnIds(null);
+  };
+  // Lưu tất cả: điểm/ý kiến hồ sơ đang rà soát và Lý do của hồ sơ đã Hoàn tất đánh giá.
+  const saveAll = () => {
+    const reportIds = evaluations.filter((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined).map((e) => e.id);
+    let issue: string | null = cqttRows.length ? processCqttBatch(cqttRows.map((e) => e.id), batchDrafts, false) : null;
+    for (const id of reportIds) issue = issue ?? updateEvaluation(id, { note: batchDrafts[id]!.note ?? "" });
+    setBatchFeedback(issue ?? "Đã lưu tất cả hồ sơ.");
+    if (!issue) { setBatchDrafts({}); setNoteRequired([]); }
+  };
   const handleCqttBatch = (request: boolean | "council") => {
     const drafts = request === true && chosenReturn ? Object.fromEntries(selectedEligible.map((id) => [id, { ...(batchDrafts[id] ?? {}), returnStage: chosenReturn }])) : batchDrafts;
     const issue = processCqttBatch((request === true ? selectedEligible : (request === "council" ? councilRows : cqttRows).map((e) => e.id)), drafts, request);
@@ -118,13 +181,43 @@ export function AssessmentSummary({
             <Download />
             Xuất CSV
           </Button>
-          {previewRole === "cqtt" && <><Button variant="outline" disabled={!cqttRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length} onClick={() => handleCqttBatch(false)}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => handleCqttBatch(true)}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
+          {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
           {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
           {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
         </div>
       </header>
+      <Dialog open={returnIds !== null} onOpenChange={(open) => { if (!open) setReturnIds(null); }}>
+        <DialogContent className="max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle>Gửi điều chỉnh</DialogTitle>
+            <DialogDescription>
+              {returnIds?.length === 1
+                ? `${evaluations.find((x) => x.id === returnIds[0])?.owner ?? ""} · ${returnIds[0]}`
+                : `${returnIds?.length ?? 0} hồ sơ được chọn`}
+            </DialogDescription>
+          </DialogHeader>
+          {cqttTargets.length > 1 && (
+            <label className="block space-y-1 text-sm">
+              Trả về bước
+              <select aria-label="Trả về bước" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(ev) => setCqttReturnStage(ev.target.value as StageKey)}>
+                {cqttTargets.map((k) => <option key={k} value={k}>{STAGES[k].name} — {handlerFor(evaluations[0]?.block ?? "Khối Cơ quan", k)}</option>)}
+              </select>
+            </label>
+          )}
+          {missingNote.length > 0 && <label className="block space-y-1 text-sm">
+            Lý do điều chỉnh <span className="text-primary">*</span>
+            <textarea aria-label="Lý do điều chỉnh" autoFocus className="min-h-24 w-full rounded-md border p-2 text-sm" value={returnNote} onChange={(ev) => { setReturnNote(ev.target.value); setReturnError(""); }} placeholder="Nhập nội dung yêu cầu CQĐV/CQ điều chỉnh..." />
+            {returnIds && missingNote.length < returnIds.length && <span className="block text-xs text-muted-foreground">Hồ sơ đã có lý do ở cột Lý do giữ nguyên lý do đó.</span>}
+          </label>}
+          {returnError && <p role="alert" className="text-sm text-primary">{returnError}</p>}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReturnIds(null)}>Hủy</Button>
+            <Button onClick={confirmReturn}><Undo2 />Gửi điều chỉnh</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {batchFeedback && (
-        <p role="status" className="border-b px-4 py-3 text-sm">
+        <p role="status" className={"border-b px-4 py-3 text-sm" + (noteRequired.length ? " font-medium text-primary" : "")}>
           {batchFeedback}
         </p>
       )}
@@ -136,13 +229,13 @@ export function AssessmentSummary({
         </span>
       </div>
       <div className="max-h-[65vh] overflow-auto">
-        <table className="w-full min-w-[1730px] table-fixed border-separate border-spacing-0 text-sm">
+        <table style={{ minWidth: 1486 + actionsWidth }} className="w-full table-fixed border-separate border-spacing-0 text-sm">
           <caption className="sr-only">
             Tổng hợp kết quả đánh giá và đề xuất xếp hạng Ki theo template. Điểm tự đánh giá và điểm
             Thường trực được đối chiếu theo nhóm nhiệm vụ.
           </caption>
           <colgroup>
-            {[44, 112, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, 244].map((width, i) => (
+            {[44, 112, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, actionsWidth].map((width, i) => (
               <col key={i} style={{ width }} />
             ))}
           </colgroup>
@@ -230,6 +323,8 @@ export function AssessmentSummary({
                 selected={selectedEligible.includes(e.id)}
                 onSelect={() => setSelectedIds((ids) => ids.includes(e.id) ? ids.filter((id) => id !== e.id) : [...ids, e.id])}
                 editAllVersion={editAllVersion}
+                onRequestReturn={() => openReturn([e.id])}
+                noteRequired={noteRequired.includes(e.id)}
                 initialDraft={batchDrafts[e.id]}
                 onDraftChange={(draft) => {
                   if (previewRole === "office" || previewRole === "cqtt")
@@ -260,7 +355,12 @@ function AssessmentRow({
   onSelect,
   editAllVersion = 0,
   onDraftChange,
+  onRequestReturn,
+  noteRequired = false,
 }: {
+  onRequestReturn?: (() => void) | undefined;
+  /** Hồ sơ đã chọn gửi điều chỉnh nhưng chưa có Lý do. */
+  noteRequired?: boolean;
   evaluation: Evaluation;
   index: number;
   /** Cột Thao tác (ghim phải) chỉ hiện khi CQTT đang có hồ sơ cần chấm. */
@@ -276,7 +376,24 @@ function AssessmentRow({
   const [feedback, setFeedback] = useState("");
   const current = { ...e, ...draft };
   const canScore = previewRole === "cqtt" && e.step === "cqtt";
+  // Lý do điều chỉnh: CQTT nhập trực tiếp cả với hồ sơ đã Hoàn tất đánh giá.
+  const canNote = previewRole === "cqtt" && (e.step === "cqtt" || e.step === "cqtt_report");
+  // Lý do đã lưu hiển thị chỉ đọc; bấm Chỉnh sửa để sửa lại trước khi gửi điều chỉnh.
+  const [noteEditing, setNoteEditing] = useState(!e.note?.trim() || initialDraft?.note !== undefined);
+  // Chỉnh sửa tất cả: mở lại Lý do đã lưu của mọi hồ sơ.
+  // Chỉ phản ứng khi bấm Chỉnh sửa tất cả sau khi dòng hiển thị (lưu xong dòng render lại ở trạng thái chỉ đọc).
+  const editAllSeen = useRef(editAllVersion);
+  useEffect(() => {
+    if (editAllVersion !== editAllSeen.current && canNote) setNoteEditing(true);
+    editAllSeen.current = editAllVersion;
+  }, [editAllVersion, canNote]);
+  const saveNote = () => {
+    const issue = updateEvaluation(e.id, e.step === "cqtt" ? draft : { note: current.note ?? "" });
+    setFeedback(issue ?? "Đã lưu");
+    if (!issue) { setDraft({}); onDraftChange?.({}); setNoteEditing(false); }
+  };
   const [adjusting, setAdjusting] = useState(false);
+  const editing = (canScore && adjusting) || (noteEditing && !!e.note?.trim());
   useEffect(() => { if (editAllVersion > 0 && canScore) setAdjusting(true); }, [editAllVersion, canScore]);
   const canMeta = (previewRole === "office" && e.step === "office") || canScore;
   const change = (patch: Draft) => {
@@ -286,6 +403,11 @@ function AssessmentRow({
     onDraftChange?.(next);
   };
   const self = groupScore(e, true) + groupScore(e, false);
+  const returnButton = (workflows[e.block].stages.find((s) => s.key === "cqtt")?.returnTo.length ?? 0) > 0 ? (
+    <Button type="button" variant="return" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="h-8 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none" aria-label={`Gửi điều chỉnh ${e.id}`} onClick={() => onRequestReturn?.()}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>
+  ) : null;
+  // CQTT đã chấm đủ từng công việc: điểm nhóm lấy theo điểm công việc, không nhập tay.
+  const byTask = e.criteria.length > 0 && e.criteria.every((c) => c.cqtt !== undefined);
   const score = (key: "cqttKey" | "cqttFunction", label: string) => {
     const max = e.criteria
       .filter((c) => (c.group === "A") === (key === "cqttKey"))
@@ -297,7 +419,8 @@ function AssessmentRow({
         min={0}
         max={max}
         step="0.01"
-        disabled={!canScore || !adjusting}
+        disabled={!canScore || !adjusting || byTask}
+        title={byTask ? "Tính từ CQTT đánh giá từng công việc" : undefined}
         value={current[key] ?? ""}
         onChange={(event) =>
           change({ [key]: event.target.value === "" ? undefined : Number(event.target.value) })
@@ -316,7 +439,7 @@ function AssessmentRow({
           " sticky left-0 z-10 bg-card text-center text-sm text-muted-foreground group-hover:bg-muted"
         }
       >
-        <div className="flex flex-col items-center gap-2">{previewRole === "cqtt" && <input type="checkbox" aria-label={`Chọn gửi điều chỉnh ${e.id}`} checked={selected} disabled={!canScore || cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} onChange={onSelect} className="h-4 w-4 accent-primary" />}<span>{index + 1}</span></div>
+        <div className="flex flex-col items-center gap-2">{previewRole === "cqtt" && <input type="checkbox" aria-label={`Chọn gửi điều chỉnh ${e.id}`} checked={selected} disabled={!(canScore || e.step === "cqtt_report") || cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} onChange={onSelect} className="h-4 w-4 accent-primary" />}<span>{index + 1}</span></div>
       </td>
       <td
         className={
@@ -370,15 +493,19 @@ function AssessmentRow({
 
       </td>
       <td className={cell}>
-        <textarea
+        {canNote && !noteEditing ? (
+          <p className="min-h-9 whitespace-pre-wrap py-1.5 text-sm" data-testid={`ly-do-${e.id}`}>{current.note}</p>
+        ) : <textarea
           aria-label={`Góp ý CQTT ${e.id}`}
           rows={2}
-          disabled={!canScore}
+          disabled={!canNote}
           value={current.note ?? ""}
-          placeholder={canScore ? "Lý do điều chỉnh / nội dung rà soát" : "—"}
+          placeholder={canNote ? "Lý do điều chỉnh / nội dung rà soát" : "—"}
           onChange={(event) => change({ note: event.target.value })}
-          className={baseInput + " min-h-[68px] resize-y"}
-        />
+          aria-invalid={noteRequired && !current.note?.trim()}
+          className={baseInput + " min-h-[68px] resize-y" + (noteRequired && !current.note?.trim() ? " border-primary ring-1 ring-primary/30" : "")}
+        />}
+        {noteRequired && !current.note?.trim() && <p className="mt-1 text-xs text-primary">Bắt buộc nhập lý do điều chỉnh</p>}
         {e.response && (
           <details className="mt-2 text-xs">
             <summary className="cursor-pointer text-info">{e.response} · Xem phản hồi</summary>
@@ -430,13 +557,15 @@ function AssessmentRow({
       {showActions && <td
         className={cell + " sticky right-0 z-10 border-l bg-card text-center group-hover:bg-muted"}
       >
-        {canScore && <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-
-          <Button type="button" variant={adjusting ? "secondary" : "outline"} size="icon" className="h-8 w-8 shrink-0 border-0 bg-transparent shadow-none hover:bg-card" title="Điều chỉnh điểm" aria-label={`Điều chỉnh ${e.id}`} aria-pressed={adjusting} onClick={() => setAdjusting(true)}><Pencil className="h-4 w-4" /></Button>
-          <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Lưu" aria-label={`Lưu ${e.id}`} onClick={() => { const issue = updateEvaluation(e.id, draft); setFeedback(issue ?? "Đã lưu"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Save /></Button>
-          {(workflows[e.block].stages.find((s) => s.key === "cqtt")?.returnTo.length ?? 0) > 0 && <Button type="button" variant="return" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="ml-1 h-8 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none" onClick={() => { const issue = processCqttBatch([e.id], { [e.id]: draft }, true); setFeedback(issue ?? "Đã gửi điều chỉnh"); if (!issue) { setDraft({}); onDraftChange?.({}); } }}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>}
+        {/* Thao tác: hàng icon Chỉnh sửa · Lưu · Gửi Hội đồng; Gửi điều chỉnh đặt bên dưới. */}
+        {canNote && <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center gap-1.5">
+            <Button type="button" variant="outline" size="icon" className={cn("h-8 w-8 shrink-0", editing && "border-primary/40 bg-accent text-primary")} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${e.id}`} aria-pressed={editing} onClick={() => { if (canScore) setAdjusting(true); setNoteEditing(true); }}><Pencil className="h-4 w-4" /></Button>
+            <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Lưu" aria-label={`Lưu ${e.id}`} disabled={e.step === "cqtt_report" && draft.note === undefined} onClick={saveNote}><Save /></Button>
+            {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi Hội đồng" aria-label={`Gửi Hội đồng ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
+          </div>
+          {returnButton}
         </div>}
-        {previewRole === "cqtt" && e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} className="inline-flex h-9 items-center gap-1 rounded-md border px-3 text-sm font-medium text-primary hover:bg-accent"><Send className="h-4 w-4" />Trình Hội đồng</Link>}
         {feedback && (
           <p role="status" className="mt-2 text-xs">
             {feedback}

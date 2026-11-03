@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
@@ -30,7 +30,7 @@ describe("assessment summary template", () => {
     fireEvent.click(screen.getByText("Chọn vai trò"));
     expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toHaveValue(null);
     expect(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003")).toHaveValue(null);
-    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
     expect(screen.getByRole("columnheader", { name: "Điểm CQ tự đánh giá" })).toHaveAttribute(
       "colspan",
       "3",
@@ -143,7 +143,7 @@ it("copies personal scores without adjustment and allows switching to manual adj
   fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-003" }));
   expect(record().cqttKey).toBe(0.9);
   expect(record().cqttFunction).toBe(2.55);
-  fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).not.toBeDisabled();
 });
 
@@ -154,21 +154,86 @@ it("saves and requests adjustment from the table toolbar", () => {
   fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-003"), { target: { value: "Bổ sung kết quả" } });
   fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
   expect(record().cqttKey).toBe(0.9);
-  fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.7" } });
   fireEvent.click(screen.getByLabelText("Chọn gửi điều chỉnh DG-2026-Q3-003"));
   fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh (1)" }));
-  expect(record().step).toBe("response");
+  // Đã nhập lý do ở cột Lý do → gửi luôn, lịch sử ghi đích danh cá nhân nhận điều chỉnh.
+  expect(screen.queryByRole("dialog")).toBeNull();
+  const r = record();
+  expect(r.step).toBe("response");
+  expect(r.note).toBe("Bổ sung kết quả");
+  expect(r.history.at(-1).action).toBe("Gửi điều chỉnh cho CQĐV/CQ");
+  expect(r.history.at(-1).note).toContain(r.owner);
 });
 
 it("enables row adjustment request only when CQTT total differs from self total", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
-  const send = screen.getByRole("button", { name: "Gửi điều chỉnh" });
+  const send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
   expect(send).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
   expect(send).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.8" } });
   expect(send).not.toBeDisabled();
+  fireEvent.click(send);
+  // Chưa có lý do → hộp nhập lý do (bắt buộc); lý do được lưu vào trường Lý do.
+  const dialog = screen.getByRole("dialog");
+  expect(dialog).toHaveTextContent("DG-2026-Q3-003");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Gửi điều chỉnh" }));
+  expect(within(dialog).getByRole("alert")).toHaveTextContent("lý do");
+  fireEvent.change(within(dialog).getByLabelText("Lý do điều chỉnh"), { target: { value: "Bổ sung minh chứng" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Gửi điều chỉnh" }));
+  expect(record().step).toBe("response");
+  expect(record().note).toBe("Bổ sung minh chứng");
+});
+
+it("Gửi điều chỉnh trên thanh công cụ bắt buộc có Lý do ở danh sách, không mở hộp nhập", () => {
+  render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
+  fireEvent.click(screen.getByText("Chọn vai trò"));
+  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.7" } });
+  fireEvent.click(screen.getByLabelText("Chọn gửi điều chỉnh DG-2026-Q3-003"));
+  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh (1)" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByText("Bắt buộc nhập lý do điều chỉnh")).toBeInTheDocument();
+  expect(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-003")).toHaveAttribute("aria-invalid", "true");
+  expect(record().step).toBe("cqtt");
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-003"), { target: { value: "Giải trình chênh lệch" } });
+  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh (1)" }));
+  expect(record().step).toBe("response");
+  expect(record().note).toBe("Giải trình chênh lệch");
+});
+
+it("CQTT lưu Lý do trước khi gửi điều chỉnh và bấm Chỉnh sửa để sửa lại", () => {
+  render(<EvaluationProvider><Probe id="DG-2026-Q3-018" role="cqtt" /></EvaluationProvider>);
+  fireEvent.click(screen.getByText("Chọn vai trò"));
+  expect(record().step).toBe("cqtt_report");
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-018"), { target: { value: "Bổ sung minh chứng" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-018" }));
+  expect(record().note).toBe("Bổ sung minh chứng");
+  expect(record().step).toBe("cqtt_report");
+  // Đã lưu: chỉ đọc, có nút Chỉnh sửa.
+  expect(screen.queryByLabelText("Góp ý CQTT DG-2026-Q3-018")).toBeNull();
+  expect(screen.getByTestId("ly-do-DG-2026-Q3-018")).toHaveTextContent("Bổ sung minh chứng");
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-018" }));
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-018"), { target: { value: "Bổ sung minh chứng KPI B.I" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
+  expect(record().note).toBe("Bổ sung minh chứng KPI B.I");
+  expect(screen.getByTestId("ly-do-DG-2026-Q3-018")).toHaveTextContent("Bổ sung minh chứng KPI B.I");
+});
+
+it("Chỉnh sửa tất cả mở lại Lý do đã lưu; Lưu tất cả khoá lại", () => {
+  render(<EvaluationProvider><Probe id="DG-2026-Q3-018" role="cqtt" /></EvaluationProvider>);
+  fireEvent.click(screen.getByText("Chọn vai trò"));
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-018"), { target: { value: "Lý do A" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
+  expect(screen.queryByLabelText("Góp ý CQTT DG-2026-Q3-018")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa tất cả" }));
+  fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-018"), { target: { value: "Lý do B" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
+  expect(record().note).toBe("Lý do B");
+  expect(screen.queryByLabelText("Góp ý CQTT DG-2026-Q3-018")).toBeNull();
 });
