@@ -245,10 +245,6 @@ export function AssessmentSummary({
           </tbody>
         </table>
       </div>
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
-        <span>Đề xuất Ki của CQTT được lưu riêng với Ki Hội đồng phê duyệt.</span>
-        <span>Cuộn ngang để xem đầy đủ các cột →</span>
-      </footer>
     </section>
   );
 }
