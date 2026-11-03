@@ -344,6 +344,7 @@ function Index() {
                   <tr>
                     {[
                       "Mã phiếu",
+                      "Mã nhân viên",
                       "Người thực hiện",
                       "Đơn vị giao",
                       "Đơn vị thực hiện",
@@ -356,7 +357,7 @@ function Index() {
                       "Trạng thái",
                       "Thao tác",
                     ].map((h) => (
-                      <th key={h} className="px-3 py-3 font-medium">
+                      <th key={h} className="whitespace-nowrap px-3 py-3 font-medium">
                         {h}
                       </th>
                     ))}
@@ -365,7 +366,7 @@ function Index() {
                 <tbody>
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={12} className="py-10 text-center text-muted-foreground">
+                      <td colSpan={13} className="py-10 text-center text-muted-foreground">
                         Không có phiếu đánh giá phù hợp
                       </td>
                     </tr>
@@ -374,7 +375,8 @@ function Index() {
                     const result = templateResult(e);
                     return (
                       <tr key={e.id} className="border-b hover:bg-muted/40">
-                        <td className="px-3 py-4 text-muted-foreground">{e.id}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-muted-foreground">{e.id}</td>
+                        <td className="px-3 py-4">{e.employeeId ?? "—"}</td>
                         <td className="px-3 py-4">
                           <Link
                             to="/danh-gia/$id"
@@ -396,8 +398,8 @@ function Index() {
                             {e.unit}
                           </Link>
                         </td>
-                        <td className="px-3 py-4">{e.block}</td>
-                        <td className="px-3 py-4">{e.deadline}</td>
+                        <td className="whitespace-nowrap px-3 py-4">{e.block}</td>
+                        <td className="whitespace-nowrap px-3 py-4">{e.deadline}</td>
                         <td className="px-3 py-4 font-medium">
                           {totalScore(e.criteria).toFixed(2)}
                         </td>

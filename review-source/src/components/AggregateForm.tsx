@@ -108,7 +108,7 @@ export function AggregateForm({
       isKpi
         ? [
             "TT",
-            "Mã số",
+            "Mã nhân viên",
             "Họ và tên",
             "Đơn vị",
             "Tự ĐG trọng tâm",
@@ -258,12 +258,15 @@ export function AggregateForm({
         </div>
       )}
       <div className={mode === "ki" ? "relative isolate max-h-[calc(100dvh-8rem)] overflow-auto rounded-lg border" : "overflow-x-auto rounded-lg border"}>
-        <table className={"w-full text-left text-sm " + (mode === "ki" ? "min-w-[880px]" : "min-w-[1100px]")}>
+        <table className={"w-full text-left text-sm " + (mode === "ki" ? "min-w-[1100px]" : "min-w-[1320px]")}>
           <thead className={mode === "ki" ? "sticky top-0 z-20 bg-muted" : "bg-muted"}>
             <tr>
               {(isKpi
                 ? [
-                    "CQĐV/CQ · Cá nhân",
+                    "Mã nhân viên",
+                    "Họ và tên",
+                    "Đơn vị",
+                    "Chức danh",
                     "Tự ĐG trọng tâm",
                     "Tự ĐG chức năng",
                     "Tổng tự ĐG",
@@ -274,7 +277,10 @@ export function AggregateForm({
                     "Thao tác",
                   ]
                 : [
-                    "Cá nhân",
+                    "Mã nhân viên",
+                    "Họ và tên",
+                    "Đơn vị",
+                    "Chức danh",
                     ...(hideCqtt ? [] : ["Điểm CQTT"]),
                     "Điểm đánh giá",
                     "Xếp loại",
@@ -285,7 +291,7 @@ export function AggregateForm({
                     "Thao tác",
                   ]
               ).map((h) => (
-                <th className={(mode === "ki" ? "px-2 py-2.5 leading-tight 2xl:px-3 2xl:py-3" : "px-3 py-3") + " font-medium"} key={h}>
+                <th className={(mode === "ki" ? "px-2 py-2.5 leading-tight 2xl:py-3" : "px-3 py-3") + " whitespace-nowrap font-medium"} key={h}>
                   {h}
                 </th>
               ))}
@@ -302,7 +308,7 @@ export function AggregateForm({
             ))}
             {!evaluations.length && (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                <td colSpan={12} className="p-8 text-center text-muted-foreground">
                   Không có hồ sơ phù hợp
                 </td>
               </tr>
@@ -363,7 +369,7 @@ function AggregateRow({
     <select
       aria-label={`${label} ${e.id}`}
       disabled={!editable}
-      className={fieldClass + (key === "laborCompliance" ? " w-36 2xl:w-52" : key === "ki" ? " w-20 2xl:w-28" : " w-24 2xl:w-36")}
+      className={fieldClass + (key === "laborCompliance" ? " w-36" : key === "ki" ? " w-20 2xl:w-24" : " w-28 2xl:w-32")}
       value={current[key] ?? ""}
       onChange={(event) => {
         const value = event.target.value;
@@ -379,10 +385,11 @@ function AggregateRow({
       ))}
     </select>
   );
-  const cell = mode === "ki" ? "px-2 py-2.5 align-top 2xl:px-3 2xl:py-3" : "px-3 py-3 align-top";
+  const cell = mode === "ki" ? "px-2 py-2.5 align-top 2xl:py-3" : "px-3 py-3 align-top";
   return (
     <tr className="border-t">
-      <td className={cell + (isKpi ? "" : " min-w-40 2xl:min-w-52")}>
+      <td className={cell + " tabular-nums"}>{e.employeeId ?? "—"}</td>
+      <td className={cell + " min-w-36"}>
         <Link
           to="/danh-gia/$id"
           params={{ id: e.id }}
@@ -390,11 +397,9 @@ function AggregateRow({
         >
           {e.owner}
         </Link>
-        <div className="mt-1 text-xs">{e.unit}</div>
-        <div className="mt-1 text-xs text-muted-foreground">
-          {e.employeeId ?? "—"} · {e.jobTitle ?? "—"}
-        </div>
       </td>
+      <td className={cell + " min-w-40"}>{e.unit}</td>
+      <td className={cell + " whitespace-nowrap"}>{e.jobTitle ?? "—"}</td>
       {isKpi ? (
         <>
           <td className={cell}>{number(groupScore(e, true))}</td>
@@ -442,14 +447,14 @@ function AggregateRow({
               )}
             </div>
           </td>
-          <td className={cell + " min-w-24"}>{result.rating}</td>
+          <td className={cell + " whitespace-nowrap"}>{result.rating}</td>
           <td className={cell}>
             {choose("locationCompliance", ["Tuân thủ", "Không tuân thủ"], "Tuân thủ địa điểm")}
           </td>
           <td className={cell}>{choose("laborCompliance", LABOR, "Tuân thủ nội quy")}</td>
           <td className={cell}>{choose("ki", KI, "Xếp Ki")}{current.ki && current.ki !== "K" && <p className="mt-1 text-xs text-muted-foreground">{KI_SCORE_RANGES[current.ki].min.toFixed(2)}–{KI_SCORE_RANGES[current.ki].max.toFixed(2)} điểm</p>}{current.ki === "K" && <p className="mt-1 text-xs text-muted-foreground">Không đánh giá</p>}</td>
           <td className={cell}>
-            <div>{result.completion}</div>
+            <div className="whitespace-nowrap">{result.completion}</div>
             {["council", "council_adjust", "ceo"].includes(e.step) && (
               <p className="mt-1 text-xs text-primary">{current.ki || Object.keys(draft).length ? kiError(current) : ""}</p>
             )}
@@ -477,7 +482,7 @@ function AggregateRow({
             <Save />
           </Button>
         )}
-        <Link to="/danh-gia/$id" params={{ id: e.id }} className="mt-2 block text-xs text-primary">
+        <Link to="/danh-gia/$id" params={{ id: e.id }} className="mt-2 block whitespace-nowrap text-xs text-primary">
           Mở hồ sơ
         </Link>
         {error && (

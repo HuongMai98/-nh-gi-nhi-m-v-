@@ -100,7 +100,8 @@ export function AssessmentSummary({
               <span className="rounded-md bg-muted px-2 py-1 font-medium">
                 {periods.length === 1 ? periods[0] : "Các kỳ đánh giá"}
               </span>
-              {canBatchSend || previewRole === "cqtt" || previewRole === "council" ? <span className="inline-flex flex-wrap items-center gap-1.5">{[["Cơ quan", agencyCount, "Số phiếu Khối Cơ quan"], ["Đơn vị", unitCount, "Số phiếu Khối Đơn vị"], ["Tổng", countRows.length, "Tổng số phiếu"]].map(([label, count, hint]) => <span key={label} title={String(hint)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-muted-foreground">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b>phiếu</span>)}</span> : <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>}
+              {canBatchSend || previewRole === "cqtt" || previewRole === "council" || previewRole === "ceo" ? <span className="inline-flex flex-wrap items-center gap-1.5">{[["Cơ quan", agencyCount, "Số phiếu Khối Cơ quan"], ["Đơn vị", unitCount, "Số phiếu Khối Đơn vị"], ["Tổng", countRows.length, "Tổng số phiếu"]].map(([label, count, hint]) => <span key={label} title={String(hint)} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1 text-muted-foreground">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b>phiếu</span>)}</span> : <span className="text-muted-foreground">{evaluations.length} hồ sơ</span>}
+              {previewRole !== "ceo" && <>
               <span className="text-border">|</span>
               <span className="text-muted-foreground">
                 CQTT đã chấm{" "}
@@ -108,6 +109,7 @@ export function AssessmentSummary({
                   {scored}/{evaluations.length}
                 </b>
               </span>
+              </>}
             </div>
           </div>
         </div>
@@ -134,13 +136,13 @@ export function AssessmentSummary({
         </span>
       </div>
       <div className="max-h-[65vh] overflow-auto">
-        <table className="w-full min-w-[1700px] table-fixed border-separate border-spacing-0 text-sm">
+        <table className="w-full min-w-[1730px] table-fixed border-separate border-spacing-0 text-sm">
           <caption className="sr-only">
             Tổng hợp kết quả đánh giá và đề xuất xếp hạng Ki theo template. Điểm tự đánh giá và điểm
             Thường trực được đối chiếu theo nhóm nhiệm vụ.
           </caption>
           <colgroup>
-            {[44, 82, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, 244].map((width, i) => (
+            {[44, 112, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, 244].map((width, i) => (
               <col key={i} style={{ width }} />
             ))}
           </colgroup>
@@ -152,10 +154,10 @@ export function AssessmentSummary({
               >
                 {previewRole === "cqtt" ? <input type="checkbox" aria-label="Chọn tất cả hồ sơ lệch điểm" disabled={!eligibleIds.length} checked={eligibleIds.length > 0 && selectedEligible.length === eligibleIds.length} onChange={(event) => setSelectedIds(event.target.checked ? eligibleIds : [])} className="h-4 w-4 accent-primary" /> : "TT"}
               </th>
-              <th rowSpan={2} className={primaryHeader + " sticky left-[44px] z-40 bg-muted"}>
-                Mã số
+              <th rowSpan={2} className={primaryHeader + " sticky left-[44px] z-40 whitespace-nowrap bg-muted"}>
+                Mã nhân viên
               </th>
-              <th rowSpan={2} className={primaryHeader + " sticky left-[126px] z-40 bg-muted"}>
+              <th rowSpan={2} className={primaryHeader + " sticky left-[156px] z-40 bg-muted"}>
                 Họ và tên
               </th>
               <th rowSpan={2} className={primaryHeader + " bg-muted"}>
@@ -324,7 +326,7 @@ function AssessmentRow({
       >
         {e.employeeId ?? "—"}
       </td>
-      <td className={cell + " sticky left-[126px] z-10 bg-card group-hover:bg-muted"}>
+      <td className={cell + " sticky left-[156px] z-10 bg-card group-hover:bg-muted"}>
         <Link
           to="/danh-gia/$id"
           params={{ id: e.id }}
