@@ -8,6 +8,7 @@ import { AggregateForm, exportCsv, fieldClass } from "@/components/AggregateForm
 import { useEvaluations } from "@/components/evaluation-context";
 import { roleOf, statusLabelOf,
   STATUS,
+  STEPS,
   MAIN_STEPS,
   mainStage,
   ROLES,
@@ -561,10 +562,9 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
             <summary className="cursor-pointer">
               {h.at} · {h.actorName ?? ROLES[h.role]} · {actionLabel(h.action)} {h.note && `— ${h.note}`}
             </summary>
-            <div className="mt-2 grid gap-2 text-xs md:grid-cols-2">
-              <pre className="overflow-auto rounded bg-muted p-3">Trước: {h.before}</pre>
-              <pre className="overflow-auto rounded bg-muted p-3">Sau: {h.after}</pre>
-            </div>
+            <ul className="mt-2 space-y-1 rounded bg-muted p-3 text-xs">
+              {historyChanges(h.before, h.after).map((line, j) => <li key={j}>{line}</li>)}
+            </ul>
           </details>
         ))}
       </section>
@@ -576,6 +576,44 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit }: { ev: Evaluat
       )}
     </AppShell>
   );
+}
+const HISTORY_FIELDS: Record<string, string> = {
+  step: "Trạng thái", cqttKey: "Điểm CQTT – nhiệm vụ trọng tâm", cqttFunction: "Điểm CQTT – nhiệm vụ chức năng",
+  cqtt: "Tổng điểm CQTT", council: "Điểm Hội đồng", proposedKi: "Ki đề xuất", cqttAdjustmentPercent: "% điều chỉnh CQTT",
+  reviewAssistant: "Trợ lý rà soát", reviewRemark: "Nhận xét rà soát", ki: "Xếp loại Ki", location: "Tuân thủ địa điểm",
+  labor: "Tuân thủ kỷ luật lao động", culture: "Tuân thủ văn hoá", response: "Phản hồi", responseNote: "Ý kiến phản hồi",
+};
+const historyValue = (key: string, v: unknown) =>
+  v === undefined || v === null || v === "" ? "—"
+    : key === "step" ? STEPS.find((s) => s.key === v)?.label ?? String(v)
+      : typeof v === "number" ? String(Math.round(v * 100) / 100) : String(v);
+// Đổi bản ghi lịch sử (JSON trước/sau) thành danh sách thay đổi dễ đọc.
+function historyChanges(before: string, after: string): string[] {
+  let a: unknown, b: unknown;
+  try { a = JSON.parse(before); b = JSON.parse(after); } catch { return [`${before} → ${after}`]; }
+  const lines: string[] = [];
+  const criteriaChanges = (x: Criterion[] = [], y: Criterion[] = []) => {
+    if (x.length !== y.length) lines.push(`Số nhiệm vụ: ${x.length} → ${y.length}`);
+    y.forEach((c, i) => {
+      const o = x[i];
+      if (!o) return;
+      const name = c.goal || `Nhiệm vụ ${i + 1}`;
+      if (o.self !== c.self) lines.push(`${name} – tự đánh giá: ${historyValue("", o.self || undefined)} → ${historyValue("", c.self || undefined)}`);
+      if (o.result !== c.result) lines.push(`${name} – kết quả: ${historyValue("", o.result)} → ${historyValue("", c.result)}`);
+      if (o.weight !== c.weight) lines.push(`${name} – tỷ trọng: ${Math.round(o.weight * 100)}% → ${Math.round(c.weight * 100)}%`);
+    });
+  };
+  if (Array.isArray(a) || Array.isArray(b)) criteriaChanges(a as Criterion[], b as Criterion[]);
+  else {
+    const x = (a ?? {}) as Record<string, unknown>, y = (b ?? {}) as Record<string, unknown>;
+    for (const key of Object.keys(HISTORY_FIELDS)) {
+      const from = historyValue(key, x[key]), to = historyValue(key, y[key]);
+      if (from !== to) lines.push(`${HISTORY_FIELDS[key]}: ${from} → ${to}`);
+    }
+    if (JSON.stringify(x["criteria"]) !== JSON.stringify(y["criteria"]) && (x["criteria"] || y["criteria"]))
+      criteriaChanges(x["criteria"] as Criterion[], y["criteria"] as Criterion[]);
+  }
+  return lines.length ? lines : ["Không thay đổi dữ liệu."];
 }
 function actionLabel(action: string) {
   return (
