@@ -31,7 +31,7 @@ function UnassessedEmployees() {
   const pending = officeUnassessedEvaluations(evaluations, period, block, unit);
   const rows = pending.filter((e) => `${e.owner} ${e.employeeId ?? ""} ${e.unit}`.toLowerCase().includes(query.toLowerCase()));
   return (
-    <AppShell title="Nhân viên chưa đánh giá" crumbs={<span>Đánh giá › Nhân viên chưa đánh giá</span>}
+    <AppShell title="Nhân viên chưa đánh giá" crumbs={<><Link to="/" className="hover:text-foreground">Đánh giá</Link><span>›</span><span>Nhân viên chưa đánh giá</span></>}
       actions={<Button variant="outline" asChild><Link to="/"><ArrowLeft />Danh sách đánh giá</Link></Button>}>
       {previewRole !== "office" ? <p className="py-6 text-sm text-muted-foreground">Danh sách dành cho Văn phòng/Ban Chiến lược.</p> : <>
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4 text-sm">

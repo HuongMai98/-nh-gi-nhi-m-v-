@@ -52,7 +52,7 @@ function Detail() {
   if (!ev) throw notFound();
   const editAllowed = ev.step !== "done" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   const showView = () => { void navigate({ search: {} }); };
-  if (mode === "edit" && (ev.step === "self" || ev.step === "response") && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<span>Đánh giá › Chỉnh sửa đánh giá</span>}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
+  if (mode === "edit" && (ev.step === "self" || ev.step === "response") && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<><Link to="/" className="hover:text-foreground">Đánh giá</Link><span>›</span><span>Chỉnh sửa đánh giá</span></>}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
   return (
     <EvaluationDetail
       key={`${ev.id}-${ev.updated}-${ev.history?.length ?? 0}-${ev.step}-${previewRole}-${mode ?? "view"}`}
