@@ -42,6 +42,8 @@ import { AggregateForm } from "@/components/AggregateForm";
 import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { useEvaluations } from "@/components/evaluation-context";
 
+// ponytail: tạm ẩn tab Phụ lục Kết quả, đổi thành true khi có nghiệp vụ dùng lại (code vẫn giữ nguyên).
+const SHOW_APPENDIX_TAB = false;
 /** Tổng hợp KPI (Ki) và Phụ lục chỉ có dữ liệu khi CQTT đã hoàn tất rà soát và gửi Hội đồng. */
 const KI_DATA_STEPS: Step[] = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"];
 const hasKiData = (e: Evaluation) => KI_DATA_STEPS.includes(e.step) || (e.step === "custom" && e.councilScore !== undefined);
@@ -189,7 +191,7 @@ function Index() {
             ["appendix", "Phụ lục Kết quả"],
           ] as const
         )
-          .filter(([key]) => previewRole !== "performer" || key === "list")
+          .filter(([key]) => (previewRole !== "performer" || key === "list") && (SHOW_APPENDIX_TAB || key !== "appendix"))
           .map(([key, label]) => (
             <button
               role="tab"
