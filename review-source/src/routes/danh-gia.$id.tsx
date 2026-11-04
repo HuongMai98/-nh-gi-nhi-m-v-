@@ -806,7 +806,7 @@ function PersonalTable({
               <>
                 <td className="px-3">{totalScore(items).toFixed(2)}</td>
                 <td className="px-3 text-primary" data-testid="qltt-total">{qlttTotal?.toFixed(2) ?? "—"}</td>
-                {showCouncil && <td className="px-3 font-semibold" data-testid="council-task-total">{allocatedTotal(items)?.toFixed(2) ?? "—"}</td>}
+                {showCouncil && <td className="px-3 font-semibold text-primary" data-testid="council-task-total">{allocatedTotal(items)?.toFixed(2) ?? "—"}</td>}
               </>
             )}
           </tr>
@@ -816,6 +816,9 @@ function PersonalTable({
               <td className="whitespace-nowrap px-3 py-3 font-semibold text-primary" data-testid="qltt-rating">
                 {qlttTotal === null ? "—" : rating(qlttTotal).label}
               </td>
+              {showCouncil && <td className="whitespace-nowrap px-3 py-3 font-semibold text-primary" data-testid="council-task-rating">
+                {allocatedTotal(items) === null ? "—" : rating(allocatedTotal(items)!).label}
+              </td>}
             </tr>
           )}
         </tbody>

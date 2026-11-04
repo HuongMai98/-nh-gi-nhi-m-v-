@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({ Link: ({children}: {children: React.ReactNode}) => <a>{children}</a>, createFileRoute: () => (c: unknown) => c }));
-import { EVALUATIONS, saveDraft, transition, cqttTaskScores, cqttTotal, type Evaluation } from "@/lib/evaluation";
+import { EVALUATIONS, saveDraft, transition, cqttTaskScores, cqttTotal, rating, type Evaluation } from "@/lib/evaluation";
 import { EvaluationProvider } from "@/components/EvaluationProvider";
 import { useEvaluations } from "@/components/evaluation-context";
 import { EvaluationDetail } from "@/routes/danh-gia.$id";
@@ -32,6 +32,7 @@ function Probe() {
 it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng công việc rồi Lưu",()=>{
   render(<EvaluationProvider><Probe/></EvaluationProvider>);
   fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  expect(screen.getByTestId("council-task-rating")).toHaveTextContent("—");
   const inputs=screen.getAllByRole("spinbutton",{name:/Hội đồng đánh giá mục tiêu/});
   expect(inputs).toHaveLength(base.criteria.length);
   fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
@@ -41,6 +42,11 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
     expect(input).toHaveValue(Math.round(expected[i]! * 100) / 100);
     expect((input as HTMLInputElement).validity.stepMismatch).toBe(false);
   });
+  const total = Math.round(base.criteria.reduce((sum,c,i)=>sum+c.weight*(Math.round(expected[i]!*100)/100),0)*100)/100;
+  expect(screen.getByTestId("council-task-total")).toHaveTextContent(total.toFixed(2));
+  expect(screen.getByTestId("council-task-rating")).toHaveTextContent(rating(total).label);
+  expect(screen.getByTestId("council-task-total")).toHaveClass("text-primary");
+  expect(screen.getByTestId("council-task-rating")).toHaveClass("text-primary");
   fireEvent.change(inputs[0]!,{target:{value:"3.25"}});
   fireEvent.click(screen.getByRole("button",{name:"Lưu"}));
   const saved=JSON.parse(screen.getByTestId("record").textContent!);
