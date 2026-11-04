@@ -1,8 +1,9 @@
 import { expect, it } from "vitest";
-import { sameUnitPerformers, type User } from "@/lib/users";
-it("includes current user and only colleagues from their unit, deduplicated by ID", () => {
-  const current: User = { employeeId: "01", name: "A", unit: "Ban A", block: "Khối Cơ quan" };
-  const colleague = { ...current, employeeId: "02", name: "B" };
-  expect(sameUnitPerformers([current, colleague, { ...current, employeeId: "03", unit: "Ban B" }], current)).toEqual([current, colleague]);
-  expect(sameUnitPerformers([], current)).toEqual([current]);
+import { unitLeaders, type User } from "@/lib/users";
+it("chỉ lấy lãnh đạo cao nhất của đơn vị người tạo phiếu", () => {
+  const leader: User = { employeeId: "01", name: "A", unit: "Ban A", block: "Khối Cơ quan" };
+  const staff = { ...leader, employeeId: "02", name: "B" };
+  const other = { ...leader, employeeId: "03", unit: "Ban B" };
+  expect(unitLeaders([other, leader, staff], staff)).toEqual([leader]);
+  expect(unitLeaders([], staff)).toEqual([staff]);
 });

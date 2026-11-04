@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useEvaluations } from "@/components/evaluation-context";
 import { allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
-import { CURRENT_USER, USERS, sameUnitPerformers, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
+import { CURRENT_USER, USERS, unitLeaders, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
 import { SOURCE_TASKS, completedTasks } from "@/lib/source-tasks";
 
@@ -23,8 +23,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [responseNote, setResponseNote] = useState(existing?.responseNote ?? "");
   const unit = existing?.unit ?? CURRENT_USER.unit;
   const block = existing?.block ?? CURRENT_USER.block;
-  const [performerId, setPerformerId] = useState(existing?.employeeId ?? CURRENT_USER.employeeId);
-  const performers = existing ? USERS.filter((u) => u.employeeId === existing.employeeId) : sameUnitPerformers(USERS, CURRENT_USER);
+  const [performerId, setPerformerId] = useState(existing?.employeeId ?? unitLeaders(USERS, CURRENT_USER)[0]!.employeeId);
+  const performers = existing ? USERS.filter((u) => u.employeeId === existing.employeeId) : unitLeaders(USERS, CURRENT_USER);
   const performer = performers.find((person) => person.employeeId === performerId);
   const tasksFor = (group: Criterion["group"]) => completedTasks(SOURCE_TASKS, performerId, group);
   const [quarter, setQuarter] = useState(existing?.period.split("/")[0]?.replace("Quý ", "") ?? "III");

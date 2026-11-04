@@ -7,9 +7,10 @@ export type User = {
   block: Evaluation["block"];
 };
 
-export function sameUnitPerformers(users: User[], currentUser: User): User[] {
-  return [...new Map([currentUser, ...users.filter((user) => user.unit === currentUser.unit)]
-    .map((user) => [user.employeeId, user])).values()];
+/** Người được đánh giá: lãnh đạo cao nhất của cơ quan/đơn vị người tạo phiếu. */
+// ponytail: danh bạ mẫu chưa có chức vụ, coi người đầu tiên của đơn vị là lãnh đạo cao nhất; thay bằng trường lãnh đạo từ API tổ chức khi tích hợp.
+export function unitLeaders(users: User[], currentUser: User): User[] {
+  return [users.find((user) => user.unit === currentUser.unit) ?? currentUser];
 }
 
 // shortcut: danh bạ và phiên đăng nhập mẫu, thay bằng API người dùng và phiên QLTT khi tích hợp.
