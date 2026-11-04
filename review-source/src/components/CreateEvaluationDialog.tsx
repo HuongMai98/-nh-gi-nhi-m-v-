@@ -167,7 +167,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
           {error && <p role="alert" className="text-sm text-primary">{error}</p>}
           {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
         </div>
-        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu nháp"}</Button>{responding ? <>
+        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu"}</Button>{responding ? <>
           <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
           <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
           <Button type="submit" disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>

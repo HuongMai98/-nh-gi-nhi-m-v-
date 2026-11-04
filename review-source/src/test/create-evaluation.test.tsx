@@ -9,7 +9,7 @@ it("saves an incomplete self-score draft with current user metadata", () => {
   expect(screen.getByLabelText(/^Ngày đánh giá/)).toHaveValue(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   fireEvent.change(screen.getByLabelText(/Hạn đánh giá/), { target: { value: "2026-11-20" } });
   fireEvent.click(screen.getByRole("button", { name: "Lấy tất cả nhiệm vụ" }));
-  fireEvent.click(screen.getByRole("button", { name: "Lưu nháp" }));
+  fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
   expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ owner: CURRENT_USER.name, unit: CURRENT_USER.unit, step: "self", employeeId: CURRENT_USER.employeeId, jobTitle: expect.any(String) }));
 });
 it("blocks incomplete sending and sends complete evaluation with actual sender history", () => {
