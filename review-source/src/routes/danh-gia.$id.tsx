@@ -94,7 +94,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   // CQTT chấm từng công việc ngay trên form Phiếu đánh giá, cột QLTT đánh giá.
   const canCqttTasks = own && ev.step === "cqtt";
   const canCouncilTasks = own && previewRole === "council" && ["council", "council_adjust"].includes(ev.step);
-  const showCouncilTasks = previewRole === "council" || !!ev.councilTaskScored;
+  const showCouncilTasks = previewRole !== "performer" && (previewRole === "council" || !!ev.councilTaskScored);
   const qlttSummaryScore = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"].includes(ev.step)
     ? allocatedTotal(items)
     : items.some(c => c.cqtt !== undefined) ? cqttTaskTotal(items) : cqttTotal(ev);

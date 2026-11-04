@@ -152,3 +152,18 @@ describe("Chờ CQ/CQĐV phản hồi: QLTT đánh giá (1-5) lấy điểm CQTT
     expect(screen.getByLabelText("QLTT đánh giá 2")).toHaveTextContent("4");
   });
 });
+
+it.each(["self", "office", "cqtt", "response", "cqtt_report", "council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"] as const)(
+  "CQĐV/CQ không thấy cột CQTT đánh giá ở bước %s, kể cả phiếu đã có điểm Hội đồng",
+  step => {
+    const base=EVALUATIONS.find(e=>e.step==="council")!;
+    const e={...base,step,councilTaskScored:true,councilReviewed:true,criteria:base.criteria.map(c=>({...c,cqtt:4,council:3}))};
+    render(<EvaluationProvider><EvaluationDetail ev={e} readOnly/></EvaluationProvider>);
+    fireEvent.click(screen.getByRole("tab",{name:"Phiếu đánh giá"}));
+    expect(screen.queryByRole("columnheader",{name:/^CQTT đánh giá/})).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader",{name:"QLTT đánh giá (1-5)"})).toBeInTheDocument();
+    if (["council","council_adjust","ceo","approved","dispatch","sign","done"].includes(step)) {
+      expect(screen.getByTestId("qltt-total")).toHaveTextContent("3.00");
+    }
+  },
+);
