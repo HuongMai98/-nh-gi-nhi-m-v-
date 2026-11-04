@@ -6,7 +6,7 @@ import { SOURCE_TASKS, completedKeyTasks } from "@/lib/source-tasks";
 import { CURRENT_USER } from "@/lib/users";
 it("lists the selected performer's completed key tasks and fills task metadata", () => {
   render(<EvaluationProvider><CreateEvaluationDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} /></EvaluationProvider>);
-  expect(screen.queryByRole("columnheader", { name: "QLTT đánh giá (tự phân bổ)" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).not.toBeInTheDocument();
   expect(screen.queryByText("Tuân thủ nội quy lao động")).not.toBeInTheDocument();
   expect(screen.queryByText("THỦ TRƯỞNG GIAO NHIỆM VỤ")).not.toBeInTheDocument();
   const task = completedKeyTasks(SOURCE_TASKS, CURRENT_USER.employeeId)[0]!;

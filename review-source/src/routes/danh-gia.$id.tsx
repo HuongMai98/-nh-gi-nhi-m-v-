@@ -216,7 +216,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
         "Ngày hoàn thành",
         "Kết quả",
         "CBNV tự đánh giá",
-        "QLTT đánh giá (tự phân bổ)",
+        "QLTT đánh giá (1-5)",
       ],
       ...ev.criteria.map((c) => [
         c.goal,
@@ -738,7 +738,7 @@ function PersonalTable({
               "Ngày hoàn thành",
               ...(assignment
                 ? []
-                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (tự phân bổ)"])]),
+                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (1-5)"])]),
             ].map((h) => (
               <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24")}>
                 {h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
