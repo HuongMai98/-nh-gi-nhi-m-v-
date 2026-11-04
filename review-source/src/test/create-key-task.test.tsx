@@ -17,6 +17,8 @@ it("lists the selected performer's completed key tasks and fills task metadata",
   fireEvent.change(picker, { target: { value: task.id } });
   expect(screen.getByLabelText("Chỉ số đo lường KPI 1", { exact: true })).toHaveValue(task.criterion.kpi);
   expect(screen.getByLabelText("Tỷ trọng 1", { exact: true })).toHaveValue(10);
+  // Kết quả thực hiện điền sẵn từ kết quả của nhiệm vụ (VOffice MISSION_RESULT).
+  expect(screen.getByLabelText("Kết quả thực hiện 1", { exact: true })).toHaveValue(task.criterion.result);
   // Các mức chỉ tiêu lấy theo nhiệm vụ, chỉ đọc.
   (["t", "b", "s"] as const).forEach((k) =>
     expect(screen.getByLabelText(`Chỉ tiêu ${k.toUpperCase()} 1`, { exact: true })).toHaveTextContent(task.criterion.target[k] || "—"));
