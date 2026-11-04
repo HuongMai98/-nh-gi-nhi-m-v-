@@ -2,6 +2,7 @@ import { useState, useRef, type FormEvent } from "react";
 import { Plus, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EvaluationDateInput } from "@/components/EvaluationDateInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
 import { allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
@@ -139,8 +140,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
               <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
                 <label className="space-y-1.5 text-sm">Khối <span className="text-primary">*</span><Input className="bg-muted/40 shadow-none" readOnly value={block} /></label>
                 <div className="grid grid-cols-2 gap-2"><label className="space-y-1.5 text-sm">Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className="space-y-1.5 text-sm">Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Ngày đánh giá <span className="text-primary">*</span></span><Input className="relative min-w-0 bg-card pr-10 shadow-none [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer" required type="date" value={evaluationDate} onChange={(event) => setEvaluationDate(event.target.value)} /></label>
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Hạn đánh giá <span className="text-primary">*</span></span><Input className="relative min-w-0 bg-card pr-10 shadow-none [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer" required type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} /></label>
+                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
+                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
               </div>
             </div>
           </section>
