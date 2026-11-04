@@ -44,7 +44,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "cqtt", label: "Rà soát, chấm điểm", actor: "CQTT" },
   { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
-  { key: "council", label: "Tổng hợp KPI", actor: "Hội đồng" },
+  { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
   { key: "ceo", label: "Phê duyệt kết quả", actor: "TGĐ" },
   { key: "council_adjust", label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" },
   { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
