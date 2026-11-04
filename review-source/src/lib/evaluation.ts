@@ -50,7 +50,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
   { key: "sign", label: "Trình ký phiếu ĐG", actor: "CQĐV/CQ" },
-  { key: "done", label: "Đã trình ký", actor: "CQĐV/CQ" },
+  { key: "done", label: "Đã phê duyệt", actor: "CQĐV/CQ" },
   { key: "custom", label: "Bước bổ sung", actor: "Theo cấu hình" },
 ];
 export const MAIN_STEPS = [
