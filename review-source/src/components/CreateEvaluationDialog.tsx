@@ -28,10 +28,11 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const performer = performers.find((person) => person.employeeId === performerId);
     const [quarter, setQuarter] = useState(existing?.period.split("/")[0]?.replace("Quý ", "") ?? "III");
   const [year, setYear] = useState(existing?.period.split("/")[1] ?? "2026");
-  const tasksFor = (group: Criterion["group"]) => quarterTasks(SOURCE_TASKS, performerId, quarter, year, group);
+  const taskUnit = performer?.unit ?? unit;
+  const tasksFor = (group: Criterion["group"]) => quarterTasks(SOURCE_TASKS, taskUnit, quarter, year, group);
   const [evaluationDate, setEvaluationDate] = useState(existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   const [deadline, setDeadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? "");
-  const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.employeeId === existing.employeeId && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
+  const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.unit === existing.unit && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
   const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -147,7 +148,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
           </section>
           <section className="border-t pt-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h2 className="text-sm font-semibold">2. Đánh giá kết quả thực hiện nhiệm vụ, công việc</h2><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
-            <Button type="button" variant="outline" className="mb-4" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, performerId, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
+            <Button type="button" variant="outline" className="mb-4" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
             <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} />
             <Button type="button" variant="outline" className="mt-3" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
           </section>

@@ -9,7 +9,7 @@ it("lists the selected performer's completed key tasks and fills task metadata",
   expect(screen.queryByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).not.toBeInTheDocument();
   expect(screen.queryByText("Tuân thủ nội quy lao động")).not.toBeInTheDocument();
   expect(screen.queryByText("THỦ TRƯỞNG GIAO NHIỆM VỤ")).not.toBeInTheDocument();
-  const task = quarterTasks(SOURCE_TASKS, CURRENT_USER.employeeId, "III", "2026", "A")[0]!;
+  const task = quarterTasks(SOURCE_TASKS, CURRENT_USER.unit, "III", "2026", "A")[0]!;
   const picker = screen.getByRole("combobox", { name: "Nhiệm vụ *" });
   expect(screen.getByRole("combobox", { name: "Nhiệm vụ * 2" })).toBeInTheDocument();
   expect(screen.getByRole("combobox", { name: "Nhiệm vụ * 3" })).toBeInTheDocument();
@@ -23,7 +23,7 @@ it("lists the selected performer's completed key tasks and fills task metadata",
   expect(screen.getByLabelText("Chỉ tiêu T 2", { exact: true })).toHaveTextContent("—");
   for (const group of ["B-I", "B-II"]) {
     const row = group === "B-I" ? 2 : 3;
-    const source = SOURCE_TASKS.find((t) => t.employeeId === CURRENT_USER.employeeId && t.criterion.group === group)!;
+    const source = SOURCE_TASKS.find((t) => t.unit === CURRENT_USER.unit && t.criterion.group === group)!;
     fireEvent.change(screen.getByRole("combobox", { name: `Nhiệm vụ * ${row}` }), { target: { value: source.id } });
     expect(screen.getByLabelText(`Chỉ số đo lường KPI ${row}`, { exact: true })).toHaveValue(source.criterion.kpi);
   }
