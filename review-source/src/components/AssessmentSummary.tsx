@@ -59,7 +59,7 @@ export function AssessmentSummary({
   // Gửi điều chỉnh tại màn Tổng hợp: hồ sơ đang rà soát hoặc đã Hoàn tất đánh giá (chưa gửi Hội đồng).
   const returnRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
   // Cột Thao tác: hàng icon (Chỉnh sửa · Lưu · Gửi Hội đồng), bên dưới là Gửi điều chỉnh.
-  const actionsWidth = previewRole === "cqtt" && evaluations.some((e) => e.step === "cqtt_report") ? 200 : 200;
+  const actionsWidth = showActions ? 200 : 0;
   const eligibleIds = returnRows.filter((e) => { const current = { ...e, ...batchDrafts[e.id] }; const total = cqttTotal(current); return total !== null && Math.abs(total - groupScore(e, true) - groupScore(e, false)) >= 0.005; }).map((e) => e.id);
   const selectedEligible = selectedIds.filter((id) => eligibleIds.includes(id));
   const councilRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
@@ -223,19 +223,15 @@ export function AssessmentSummary({
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/30 px-4 py-2.5 text-xs text-muted-foreground">
         <span>Điểm nhóm đã nhân tỷ trọng · Thang tổng điểm 1–5</span>
-        <span>
-          <i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-violet-500" />
-          Thường trực đánh giá
-        </span>
       </div>
       <div className="max-h-[65vh] overflow-auto">
-        <table style={{ minWidth: 1486 + actionsWidth }} className="w-full table-fixed border-separate border-spacing-0 text-sm">
+        <table style={{ minWidth: 1184 + actionsWidth }} className="w-full table-fixed border-separate border-spacing-0 text-sm">
           <caption className="sr-only">
             Tổng hợp kết quả đánh giá và đề xuất xếp hạng Ki theo template. Điểm tự đánh giá và điểm
             Thường trực được đối chiếu theo nhóm nhiệm vụ.
           </caption>
           <colgroup>
-            {[44, 112, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, 112, 190, actionsWidth].map((width, i) => (
+            {[44, 112, 170, 185, 76, 76, 78, 76, 76, 78, 235, 108, ...(showActions ? [actionsWidth] : [])].map((width, i) => (
               <col key={i} style={{ width }} />
             ))}
           </colgroup>
@@ -275,12 +271,6 @@ export function AssessmentSummary({
                 Đề xuất
                 <br />
                 xếp hạng Ki
-              </th>
-              <th rowSpan={2} className={primaryHeader + " bg-muted"}>
-                Trợ lý
-              </th>
-              <th rowSpan={2} className={primaryHeader + " bg-muted"}>
-                Ghi chú
               </th>
               {showActions && (
                 <th
@@ -335,7 +325,7 @@ export function AssessmentSummary({
             ))}
             {!evaluations.length && (
               <tr>
-                <td colSpan={15} className="p-10 text-center text-muted-foreground">
+                <td colSpan={13} className="p-10 text-center text-muted-foreground">
                   Không có hồ sơ phù hợp
                 </td>
               </tr>
@@ -395,7 +385,6 @@ function AssessmentRow({
   const [adjusting, setAdjusting] = useState(false);
   const editing = (canScore && adjusting) || (noteEditing && !!e.note?.trim());
   useEffect(() => { if (editAllVersion > 0 && canScore) setAdjusting(true); }, [editAllVersion, canScore]);
-  const canMeta = (previewRole === "office" && e.step === "office") || canScore;
   const change = (patch: Draft) => {
     const next = { ...draft, ...patch };
     setDraft(next);
@@ -526,27 +515,6 @@ function AssessmentRow({
 
 
         {canScore && current.proposedKi && current.proposedKi !== "K" && <p className="mt-1 text-xs text-muted-foreground">{KI_SCORE_RANGES[current.proposedKi].min}–{KI_SCORE_RANGES[current.proposedKi].max} điểm</p>}      </td>
-      <td className={cell}>
-        <input
-          aria-label={`Trợ lý ${e.id}`}
-          disabled={!canMeta}
-          value={current.reviewAssistant ?? ""}
-          onChange={(event) => change({ reviewAssistant: event.target.value })}
-          placeholder={canMeta ? "Mã trợ lý" : ""}
-          className={baseInput}
-        />
-      </td>
-      <td className={cell}>
-        <textarea
-          aria-label={`Ghi chú ${e.id}`}
-          rows={2}
-          disabled={!canMeta}
-          value={current.reviewRemark ?? ""}
-          onChange={(event) => change({ reviewRemark: event.target.value })}
-          placeholder={canMeta ? "Nhập ghi chú..." : ""}
-          className={baseInput + " min-h-[68px] resize-y"}
-        />
-      </td>
       {showActions && <td
         className={cell + " sticky right-0 z-10 border-l bg-card text-center group-hover:bg-muted"}
       >

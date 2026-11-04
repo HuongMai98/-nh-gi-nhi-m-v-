@@ -42,35 +42,11 @@ describe("assessment summary template", () => {
     fireEvent.change(screen.getByLabelText("Đề xuất xếp hạng Ki DG-2026-Q3-003"), {
       target: { value: "B" },
     });
-    fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-003"), {
-      target: { value: "Kiểm tra hồ sơ" },
-    });
     fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-003" }));
     expect(record().proposedKi).toBe("B");
-    expect(record().reviewRemark).toBe("Kiểm tra hồ sơ");
     expect(record().councilScore).toBeUndefined();
     expect(record().ki).toBeUndefined();
     expect(record().history.at(-1).after).toContain('"proposedKi":"B"');
-  });
-  it("lets office edit batch metadata without a row save button", () => {
-    render(
-      <EvaluationProvider>
-        <Probe id="DG-2026-Q3-005" role="office" />
-      </EvaluationProvider>,
-    );
-    fireEvent.click(screen.getByText("Chọn vai trò"));
-    expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-005")).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Trợ lý DG-2026-Q3-005"), {
-      target: { value: "quyendv" },
-    });
-    fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-005"), {
-      target: { value: "Cần bổ sung" },
-    });
-    expect(screen.queryByRole("button", { name: "Lưu" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Trợ lý DG-2026-Q3-005")).toHaveValue("quyendv");
-    expect(screen.getByLabelText("Ghi chú DG-2026-Q3-005")).toHaveValue("Cần bổ sung");
-    expect(record().cqttKey).toBeUndefined();
-    expect(record().step).toBe("office");
   });
 });
 
@@ -104,27 +80,19 @@ function BatchProbe() {
     </>
   );
 }
-it("office sends all pending records together and keeps unfinished row metadata", () => {
+it("office sends all pending records together", () => {
   render(
     <EvaluationProvider>
       <BatchProbe />
     </EvaluationProvider>,
   );
   fireEvent.click(screen.getByText("Chuẩn bị gửi chung"));
-  fireEvent.change(screen.getByLabelText("Trợ lý DG-2026-Q3-005"), {
-    target: { value: "quyendv" },
-  });
   fireEvent.click(screen.getByText("Lọc hồ sơ khác"));
   fireEvent.click(screen.getByText("Hiển thị tất cả"));
-  expect(screen.getByLabelText("Trợ lý DG-2026-Q3-005")).toHaveValue("quyendv");
-  fireEvent.change(screen.getByLabelText("Ghi chú DG-2026-Q3-005"), {
-    target: { value: "Gửi chung" },
-  });
   fireEvent.click(screen.getByRole("button", { name: "Gửi CQTT" }));
   const all = JSON.parse(screen.getByTestId("batch-records").textContent ?? "[]");
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-005")).toMatchObject({
     step: "cqtt",
-    reviewAssistant: "quyendv",
   });
   expect(all.find((e: { id: string }) => e.id === "BATCH-002").step).toBe("cqtt");
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-002").step).toBe("council");

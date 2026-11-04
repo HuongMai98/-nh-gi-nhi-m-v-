@@ -121,8 +121,6 @@ export function AggregateForm({
             "Tổng CQTT",
             "Lý do",
             "Đề xuất xếp hạng Ki",
-            "Trợ lý",
-            "Ghi chú",
             "Phản hồi",
           ]
         : [
@@ -154,8 +152,6 @@ export function AggregateForm({
               cqttTotal(e),
               e.note,
               e.proposedKi,
-              e.reviewAssistant,
-              e.reviewRemark,
               e.responseNote,
             ]
           : [
