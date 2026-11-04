@@ -41,6 +41,7 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   render(<EvaluationProvider><Probe onFinished={done}/></EvaluationProvider>);
   fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent("—");
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
   expect(screen.getByTestId("review-score-summary").children).toHaveLength(2);
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("CBNV tự đánh giá");
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("QLTT đánh giá");
@@ -57,6 +58,7 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   const total = Math.round(base.criteria.reduce((sum,c,i)=>sum+c.weight*(Math.round(expected[i]!*100)/100),0)*100)/100;
   expect(screen.getByTestId("council-task-total")).toHaveTextContent(total.toFixed(2));
   expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent(total.toFixed(2));
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent(rating(total).ki);
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent(rating(total).label);
   expect(screen.getByTestId("council-task-total")).toHaveClass("text-primary");
   expect(screen.getByTestId("council-task-rating")).toHaveClass("text-primary");
@@ -65,7 +67,27 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   const saved=JSON.parse(screen.getByTestId("record").textContent!);
   expect(saved.criteria[0].council).toBe(3.25);
   expect(saved.councilReviewed).toBe(false);
+  expect(screen.getByTestId("evaluation-ki")).not.toHaveTextContent("—");
   expect(done).not.toHaveBeenCalled();
+});
+
+it("Ki dự kiến cập nhật theo điểm QLTT và tuân thủ ngay trên phiếu, không tự lưu hay hoàn tất",()=>{
+  render(<EvaluationProvider><Probe/></EvaluationProvider>);
+  fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  const before=JSON.parse(screen.getByTestId("record").textContent!);
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A");
+  fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:"Vi phạm nhưng chưa đến mức bị xử lý kỷ luật"}});
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("B");
+  fireEvent.change(screen.getByLabelText("Địa điểm làm việc"),{target:{value:"Không tuân thủ"}});
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("D");
+  fireEvent.change(screen.getByLabelText("Địa điểm làm việc"),{target:{value:"Tuân thủ"}});
+  fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:"Tuân thủ"}});
+  screen.getAllByRole("spinbutton",{name:/Hội đồng đánh giá mục tiêu/}).forEach(input=>fireEvent.change(input,{target:{value:"4.8"}}));
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A+");
+  fireEvent.change(screen.getByRole("spinbutton",{name:"Hội đồng đánh giá mục tiêu 1"}),{target:{value:""}});
+  expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
+  expect(JSON.parse(screen.getByTestId("record").textContent!)).toEqual(before);
 });
 
 it("Hoàn tất đánh giá lưu điểm và về danh sách đã đánh giá, chưa trình TGĐ",()=>{

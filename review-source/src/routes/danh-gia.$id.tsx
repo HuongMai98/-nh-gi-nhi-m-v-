@@ -22,6 +22,7 @@ import { roleOf, statusLabelOf,
   cqttGroupsFromTasks,
   cqttTaskScores,
   cqttTotal,
+  councilAutoKi,
   rating,
   templateResult,
   getEvaluation,
@@ -108,7 +109,18 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     cultureCompliance: ev.cultureCompliance ?? "",
   });
   const [complianceTouched, setComplianceTouched] = useState(false);
-  const result = templateResult(ev);
+  const councilPreview = showCouncilTasks && ["council", "council_adjust"].includes(ev.step);
+  const councilScore = allocatedTotal(items);
+  const councilReady = councilScore !== null && items.length > 0 && items.every(c => c.council !== undefined && Number.isFinite(c.council) && c.council >= 1 && c.council <= 5)
+    && !!compliance.locationCompliance && !!compliance.laborCompliance;
+  const preview: Evaluation = {
+    ...ev, ...compliance, criteria: items,
+    councilScore: councilReady ? councilScore! : undefined,
+    ki: undefined, councilReviewed: councilReady,
+    approvedScore: undefined, approvedKi: undefined,
+  };
+  if (councilReady) preview.ki = councilAutoKi(preview);
+  const result = templateResult(councilPreview ? preview : ev);
   // Trả về theo cấu hình luồng duyệt: người xử lý chọn bước đích trong danh sách được phép.
   const flow = workflows[ev.block];
   const fromStage = stageOf(ev.step);
@@ -493,7 +505,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 ? "Xếp loại đã phê duyệt"
                 : "Xếp loại dự kiến"}
             </div>
-            <div className="mt-1 text-5xl font-bold text-primary">{result.ki}</div>
+            <div className="mt-1 text-5xl font-bold text-primary" data-testid="evaluation-ki">{result.ki}</div>
             <div className="mt-1 text-sm font-medium">
               {result.score === null && result.ki === "—" ? "Chưa có đánh giá" : result.rating}
             </div>
