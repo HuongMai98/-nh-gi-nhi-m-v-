@@ -2,6 +2,7 @@ import { CURRENT_USER, canSubmitEvaluation, validateSelfSubmission } from "@/lib
 import { useState, type ReactNode } from "react";
 import {
   EVALUATIONS,
+  allocatedTotal,
   kiError,
   processCqttBatch,
   forwardOfficeBatch,
@@ -185,7 +186,11 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         createCouncilSummary: (ids) => {
           if (previewRole !== "council") return;
           // Chỉ tổng hợp các phiếu Hội đồng đã chấm xong; giữ nguyên điểm chi tiết.
-          setEvaluations((current) => current.map((e) => ids.includes(e.id) && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? { ...e, councilSummaryCreated: true } : e));
+          setEvaluations((current) => current.map((e) => {
+            if (!ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) || !e.councilReviewed) return e;
+            const score = allocatedTotal(e.criteria);
+            return score === null ? e : { ...e, councilScore: score, councilSummaryCreated: true };
+          }));
         },
         replaceSelfEvaluation,
         previewRole,
