@@ -17,6 +17,10 @@ it("lists the selected performer's completed key tasks and fills task metadata",
   fireEvent.change(picker, { target: { value: task.id } });
   expect(screen.getByLabelText("Chỉ số đo lường KPI 1", { exact: true })).toHaveValue(task.criterion.kpi);
   expect(screen.getByLabelText("Tỷ trọng 1", { exact: true })).toHaveValue(10);
+  // Các mức chỉ tiêu lấy theo nhiệm vụ, chỉ đọc.
+  (["t", "b", "s"] as const).forEach((k) =>
+    expect(screen.getByLabelText(`Chỉ tiêu ${k.toUpperCase()} 1`, { exact: true })).toHaveTextContent(task.criterion.target[k] || "—"));
+  expect(screen.getByLabelText("Chỉ tiêu T 2", { exact: true })).toHaveTextContent("—");
   for (const group of ["B-I", "B-II"]) {
     const row = group === "B-I" ? 2 : 3;
     const source = SOURCE_TASKS.find((t) => t.employeeId === CURRENT_USER.employeeId && t.criterion.group === group)!;

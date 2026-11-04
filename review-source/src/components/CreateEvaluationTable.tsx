@@ -59,7 +59,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
             setWeightError("");
             update(index, { weight: value / 100 });
           }} /></td>
-          {(["t", "b", "s"] as const).map((key) => <td key={key} className="p-2 text-center"><Input readOnly aria-label={`Chỉ tiêu ${key.toUpperCase()} ${index + 1}`} className="w-20" value={item.target[key]} /></td>)}
+          {(["t", "b", "s"] as const).map((key) => <td key={key} aria-label={`Chỉ tiêu ${key.toUpperCase()} ${index + 1}`} title="Lấy theo nhiệm vụ đã chọn" className="min-w-20 whitespace-nowrap p-3 text-center tabular-nums">{item.target[key] || "—"}</td>)}
           <td className="whitespace-nowrap p-3">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
           <td className="p-2"><Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24" type="number" min="1" max="5" step={showCqtt ? "0.01" : "1"} value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /></td>
