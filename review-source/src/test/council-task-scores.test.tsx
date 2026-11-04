@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({ Link: ({children}: {children: React.ReactNode}) => <a>{children}</a>, createFileRoute: () => (c: unknown) => c }));
-import { EVALUATIONS, saveDraft, transition, type Evaluation } from "@/lib/evaluation";
+import { EVALUATIONS, saveDraft, transition, cqttTaskScores, cqttTotal, type Evaluation } from "@/lib/evaluation";
 import { EvaluationProvider } from "@/components/EvaluationProvider";
 import { useEvaluations } from "@/components/evaluation-context";
 import { EvaluationDetail } from "@/routes/danh-gia.$id";
@@ -36,6 +36,11 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   expect(inputs).toHaveLength(base.criteria.length);
   fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
   expect((inputs[0] as HTMLInputElement).value).not.toBe("");
+  const expected = cqttTaskScores(base.criteria, cqttTotal(base))!;
+  inputs.forEach((input, i) => {
+    expect(input).toHaveValue(Math.round(expected[i]! * 100) / 100);
+    expect((input as HTMLInputElement).validity.stepMismatch).toBe(false);
+  });
   fireEvent.change(inputs[0]!,{target:{value:"3.25"}});
   fireEvent.click(screen.getByRole("button",{name:"Lưu"}));
   const saved=JSON.parse(screen.getByTestId("record").textContent!);

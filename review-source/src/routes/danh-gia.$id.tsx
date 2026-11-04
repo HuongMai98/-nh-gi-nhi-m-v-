@@ -745,7 +745,10 @@ function PersonalTable({
                 {h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
                 {canCouncil && h.startsWith("QLTT") && (
                   <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
-                    onClick={() => onChange(items.map((c,i) => ({ ...c, council: cqttRef?.[i] ?? undefined })))}><Copy className="h-4 w-4" /></Button>
+                    onClick={() => onChange(items.map((c,i) => {
+                      const score = cqttRef?.[i];
+                      return { ...c, council: score == null ? undefined : Math.round(score * 100) / 100 };
+                    }))}><Copy className="h-4 w-4" /></Button>
                 )}
                 {canCqtt && h.startsWith("QLTT") && (
                   <Button
