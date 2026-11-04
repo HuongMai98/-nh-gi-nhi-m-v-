@@ -433,7 +433,7 @@ function Index() {
                       "Đơn vị thực hiện",
                       "Khối",
                       "Hạn đánh giá",
-                      "Tự ĐG",
+                      "CBNV đánh giá",
                       "QLTT đánh giá",
                       "Xếp loại",
                       "Trạng thái",
