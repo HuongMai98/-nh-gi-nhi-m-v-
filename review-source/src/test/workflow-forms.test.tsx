@@ -31,9 +31,8 @@ describe("workflow forms", () => {
       </EvaluationProvider>,
     );
     role("council");
-    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveAttribute("readonly");
-    fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "A+" } });
-    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveValue(4.1);
+    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     screen.getAllByRole("spinbutton", { name: /Hội đồng đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"4.8"}}));
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
@@ -79,35 +78,25 @@ it("view mode locks evaluation fields and exposes the explicit edit action", () 
   expect(onEdit).toHaveBeenCalledOnce();
 });
 
-it("saves council edits using the save-all action", () => {
+it("sends the saved council summary to the CEO without changing its assessment", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
   role("council");
-  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
-  fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
-  expect(record().councilScore).toBe(4.1);
-  expect(record().ki).toBe("B");
-  expect(record().councilReviewed).toBe(false);
-});
-
-it("saves pending council edits and sends them to the CEO", () => {
-  render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
-  role("council");
-  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "A" } });
+  const before=record();
   fireEvent.click(screen.getByRole("button", { name: "Gửi TGĐ" }));
   expect(record().step).toBe("ceo");
   expect(record().councilScore).toBe(4.1);
   expect(record().ki).toBe("A");
+  expect(record().criteria).toEqual(before.criteria);
+  expect(record().locationCompliance).toBe(before.locationCompliance);
+  expect(record().laborCompliance).toBe(before.laborCompliance);
 });
-it("updates Ki counts from unsaved council edits", () => {
+it("Ki counts display the saved council results without editable summary fields", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
   role("council");
   expect(screen.getByTestId("ki-count-A")).toHaveTextContent("1");
-  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
-  expect(screen.getByTestId("ki-count-A")).toHaveTextContent("0");
-  expect(screen.getByTestId("ki-count-B")).toHaveTextContent("1");
-  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "K" } });
+  expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002").tagName).toBe("SPAN");
   expect(screen.getByTestId("ki-count-B")).toHaveTextContent("0");
-  expect(screen.getByTestId("ki-count-K")).toHaveTextContent("1");
+  expect(screen.getByTestId("ki-count-K")).toHaveTextContent("0");
 });
 it("lets CEO adjust totals directly or return to council with a required reason", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);

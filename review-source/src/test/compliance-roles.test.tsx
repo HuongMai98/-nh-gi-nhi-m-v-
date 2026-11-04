@@ -72,8 +72,8 @@ it.each([
   fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:labor}});
   fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
   fireEvent.click(screen.getByRole("button",{name:"Tạo tổng hợp KI"}));
-  expect(screen.getByLabelText("Tuân thủ địa điểm DG-2026-Q3-002")).toHaveValue(location);
-  expect(screen.getByLabelText("Tuân thủ nội quy DG-2026-Q3-002")).toHaveValue(labor);
-  expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveValue(ki);
-  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveValue(4.1);
+  expect(screen.getByLabelText("Tuân thủ địa điểm DG-2026-Q3-002")).toHaveTextContent(location);
+  expect(screen.getByLabelText("Tuân thủ nội quy DG-2026-Q3-002")).toHaveTextContent(labor);
+  expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveTextContent(ki);
+  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
 });

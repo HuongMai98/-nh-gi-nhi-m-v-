@@ -19,21 +19,20 @@ function Probe() {
   );
 }
 
-it("Hội đồng bấm Lưu một dòng chỉ lưu nháp, chưa hoàn tất đánh giá", () => {
+it("Tổng hợp KI của Hội đồng chỉ hiển thị dữ liệu, không có ô nhập hoặc nút Lưu", () => {
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   expect(screen.queryByRole("columnheader", { name: "Điểm CQTT" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Sao chép điểm CQTT/ })).not.toBeInTheDocument();
   expect(screen.getByRole("columnheader", { name: "Điểm đánh giá" })).toBeInTheDocument();
-  const score = screen.getByRole("spinbutton", { name: "Điểm đánh giá DG-2026-Q3-002" });
-  expect(score).toHaveAttribute("readonly");
-  fireEvent.change(score, { target: { value: "5" } });
-  expect(score).toHaveValue(4.1);
-  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
-  expect(score).toHaveValue(4.1);
+  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
+  expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveTextContent("A");
+  expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Lưu DG-2026-Q3-002" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Lưu tất cả" })).not.toBeInTheDocument();
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
   expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
-  fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-002" }));
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
   expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
 });

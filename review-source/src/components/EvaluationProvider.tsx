@@ -175,10 +175,11 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
             const updates = new Map(ids.map((id) => {
               const e = evaluations.find((e) => e.id === id);
               if (!e || !["council", "council_adjust"].includes(e.step)) throw new Error("Hồ sơ không còn ở bước Hội đồng đánh giá.");
-              const next = saveDraft(e, "council", drafts[id] ?? {}, new Date().toLocaleString("vi-VN"));
+              const at = new Date().toLocaleString("vi-VN");
+              const next = submit && !Object.keys(drafts[id] ?? {}).length ? e : saveDraft(e, "council", drafts[id] ?? {}, at);
               const issue = kiError(next);
               if (issue) throw new Error(e.owner + ": " + issue);
-              return [id, submit ? transition(next, "council", "submit", {}, next.updated) : next] as const;
+              return [id, submit ? transition(next, "council", "submit", {}, at) : next] as const;
             }));
             setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
             return null;

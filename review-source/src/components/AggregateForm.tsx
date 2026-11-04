@@ -194,13 +194,8 @@ export function AggregateForm({
           <h2 className="font-semibold">{title}</h2>
           {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2"><Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button variant="outline" disabled={!evaluations.some((e) => ["council", "council_adjust"].includes(e.step))} onClick={() => {
-          const ids = evaluations.filter((e) => ["council", "council_adjust"].includes(e.step)).map((e) => e.id);
-          const issue = saveCouncilBatch(ids, councilDrafts);
-          setBatchMessage(issue ?? "Đã lưu tất cả đánh giá.");
-          if (!issue) setCouncilDrafts({});
-        }}><Save />Lưu tất cả</Button>}{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
-          const issue = saveCouncilBatch(evaluations.map((e) => e.id), councilDrafts, true);
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2"><Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
+          const issue = saveCouncilBatch(evaluations.map((e) => e.id), {}, true);
           setBatchMessage(issue ?? "Đã gửi tất cả đánh giá lên TGĐ.");
           if (!issue) setCouncilDrafts({});
         }}><Send />Gửi TGĐ</Button>}{mode === "ki" && previewRole === "ceo" && <>{ceoAdjustOn && <Button variant="outline" disabled={!evaluations.some((e) => e.step === "ceo")} onClick={() => {
@@ -335,7 +330,7 @@ function AggregateRow({
   const isKpi = mode === "kpi";
   const editable = isKpi
     ? previewRole === "cqtt" && e.step === "cqtt"
-    : mode === "ki" && ((previewRole === "council" && ["council", "council_adjust"].includes(e.step)) || (previewRole === "ceo" && e.step === "ceo" && workflows[e.block].branches.ceoDirectAdjust));
+    : mode === "ki" && previewRole === "ceo" && e.step === "ceo" && workflows[e.block].branches.ceoDirectAdjust;
   const [draft, setDraft] = useState<Draft>({});
   const [error, setError] = useState("");
   const [kiDriven, setKiDriven] = useState(false);
@@ -347,7 +342,8 @@ function AggregateRow({
   const current = { ...e, ...draft, ...(mode === "ki" ? { councilReviewed: true } : {}) };
   const councilTotalReadOnly = mode === "ki" && previewRole === "council";
   const result = templateResult(current);
-  const numeric = (key: "cqttKey" | "cqttFunction" | "councilScore", label: string) => (
+  const numeric = (key: "cqttKey" | "cqttFunction" | "councilScore", label: string) => councilTotalReadOnly
+    ? <span aria-label={`${label} ${e.id}`} className="font-medium tabular-nums">{number(current[key])}</span> : (
     <input
       aria-label={`${label} ${e.id}`}
       className={fieldClass + (mode === "ki" ? " w-20" : " w-24")}
@@ -371,7 +367,7 @@ function AggregateRow({
     key: "ki" | "locationCompliance" | "laborCompliance",
     choices: string[],
     label: string,
-  ) => (
+  ) => councilTotalReadOnly ? <span aria-label={`${label} ${e.id}`}>{current[key] || "—"}</span> : (
     <select
       aria-label={`${label} ${e.id}`}
       disabled={!editable}
