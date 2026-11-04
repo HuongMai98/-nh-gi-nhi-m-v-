@@ -19,14 +19,14 @@ function Probe() {
   );
 }
 
-it("Hội đồng bấm Lưu một dòng (giữ nguyên giá trị điền sẵn) là đã chấm", () => {
+it("Hội đồng bấm Lưu một dòng chỉ lưu nháp, chưa hoàn tất đánh giá", () => {
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
   expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
   fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-002" }));
-  expect(screen.getByTestId("reviewed").textContent).toBe("true");
-  expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("1/1");
+  expect(screen.getByTestId("reviewed").textContent).toBe("false");
+  expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
 });
 
 function CeoProbe() {

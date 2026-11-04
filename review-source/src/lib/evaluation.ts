@@ -503,13 +503,13 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       const complete = next.criteria.length > 0 && next.criteria.every(c => c.council !== undefined);
       next.councilScore = complete ? allocatedTotal(next.criteria)! : undefined;
       next.ki = complete ? councilAutoKi(next) : undefined;
-      next.councilReviewed = complete;
+      next.councilReviewed = !!e.councilReviewed && complete && !next.criteria.some((c, i) => c.council !== e.criteria[i]!.council);
     } else {
       if (!next.councilTaskScored || next.councilScore !== e.councilScore) {
         next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
         next.councilTaskScored = false;
       }
-      next.councilReviewed = !!next.ki;
+      next.councilReviewed = !!e.councilReviewed && !!next.ki;
     }
   }
   if (role === "ceo") {
@@ -669,7 +669,7 @@ export function transition(
     if (kiError(e)) throw new Error(kiError(e));
     return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách Hội đồng đã đánh giá.", at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
-    if (e.councilTaskScored && !e.councilSummaryCreated) throw new Error("Hãy tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình TGĐ.");
+    if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình TGĐ.");
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");

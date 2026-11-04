@@ -9,6 +9,7 @@ function Probe() {
   return <><output>{JSON.stringify(e)}</output><button onClick={() => setPreviewRole("council")}>Vai trò</button><button onClick={() => createCouncilSummary([e.id])}>Tạo tổng hợp</button>
     <button onClick={() => updateEvaluation(e.id, {criteria:e.criteria.map((c,i)=>({...c,council:i%2?3:4}))})}>Lưu điểm</button>
     <button onClick={() => updateEvaluation(e.id, {criteria:e.criteria.map(c=>({...c,council:3.5}))})}>Sửa điểm</button>
+    <button onClick={() => updateEvaluation(e.id, {}, "finish")}>Hoàn tất</button>
   </>;
 }
 it("only creates council summary after the council explicitly requests it", () => {
@@ -19,6 +20,10 @@ it("only creates council summary after the council explicitly requests it", () =
   fireEvent.click(screen.getByText("Tạo tổng hợp"));
   expect(record().councilSummaryCreated).not.toBe(true);
   fireEvent.click(screen.getByText("Lưu điểm"));
+  expect(councilStatus(record().step,record().councilReviewed)).toBe("pending");
+  fireEvent.click(screen.getByText("Tạo tổng hợp"));
+  expect(record().councilSummaryCreated).not.toBe(true);
+  fireEvent.click(screen.getByText("Hoàn tất"));
   expect(councilStatus(record().step,record().councilReviewed)).toBe("completed");
   expect(record().councilSummaryCreated).not.toBe(true);
   const before=record();
@@ -29,4 +34,5 @@ it("only creates council summary after the council explicitly requests it", () =
   expect(record().criteria).toEqual(before.criteria);
   fireEvent.click(screen.getByText("Sửa điểm"));
   expect(record().councilSummaryCreated).toBe(false);
+  expect(councilStatus(record().step,record().councilReviewed)).toBe("pending");
 });

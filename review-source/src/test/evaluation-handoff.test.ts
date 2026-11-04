@@ -30,7 +30,9 @@ describe("evaluation workflow", () => {
     e = transition(e, "cqtt", "send", {}, "now");
     expect(e.councilScore).toBe(4.1);
     const revised = saveDraft(e, "council", { councilScore: 4.8, ki: "A+" }, "now");
-    expect(templateResult(revised).score).toBe(4.8);
+    expect(revised.councilScore).toBe(4.8);
+    expect(templateResult(revised).score).toBeNull();
+    expect(templateResult(transition(revised, "council", "finish", {}, "now")).score).toBe(4.8);
     expect(revised.cqttFunction).toBe(3.2);
     expect(revised.criteria.map((c) => c.self)).toEqual(e.criteria.map((c) => c.self));
     expect(revised.criteria.reduce((sum, c) => sum + c.weight * c.council!, 0)).toBeCloseTo(

@@ -151,7 +151,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       issue ? "" : action === "finish" && (canCqttTasks || canCouncilTasks) ? "Đã lưu điểm QLTT đánh giá và hoàn tất đánh giá." : action ? "Đã chuyển hồ sơ." : "Đã lưu.",
     );
     if (!issue) { setCqttTouched(false); setComplianceTouched(false); if (items.some((c) => c.cqtt !== undefined)) setCqttEditing(false); }
-    if (!issue && canCouncilTasks && (action === "finish" || (!action && cqttTouched && items.every(c => c.council !== undefined)))) onCouncilSaved?.();
+    if (!issue && canCouncilTasks && action === "finish") onCouncilSaved?.();
     // CQTT Hoàn tất đánh giá → về Danh sách, bộ lọc Đã hoàn tất đánh giá để tổng hợp.
     if (!issue && action === "finish" && previewRole === "cqtt") onCqttFinished?.();
   };

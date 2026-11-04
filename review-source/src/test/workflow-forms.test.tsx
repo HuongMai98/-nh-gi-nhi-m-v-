@@ -89,7 +89,7 @@ it("saves council edits using the save-all action", () => {
   fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
   expect(record().councilScore).toBe(2.5);
   expect(record().ki).toBe("B");
-  expect(record().councilReviewed).toBe(true);
+  expect(record().councilReviewed).toBe(false);
 });
 
 it("saves pending council edits and sends them to the CEO", () => {
