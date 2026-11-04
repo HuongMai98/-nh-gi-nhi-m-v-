@@ -39,8 +39,8 @@ describe("workflow forms", () => {
     fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "3.8" } });
     expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveValue("A");
     fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "4.8" } });
-    fireEvent.click(screen.getByRole("button", { name: "Trình TGĐ" }));
-    expect(record().step).toBe("ceo");
+    fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
+    expect(record().step).toBe("council");
     expect(record().councilScore).toBe(4.8);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getAllByText("4.80")).toHaveLength(2);

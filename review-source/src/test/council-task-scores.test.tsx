@@ -16,18 +16,24 @@ it("Hội đồng lưu điểm từng công việc, bảo toàn điểm CQTT và
   expect(saved.criteria.map(c=>c.council)).toEqual(criteria.map(c=>c.council));
   expect(saved.councilReviewed).toBe(true);
   expect(saved.councilScore).toBe(Math.round(criteria.reduce((n,c)=>n+c.weight*c.council!,0)*100)/100);
+  const finished=transition(saved,"council","finish",{},"now");
+  expect(finished.step).toBe("council");
+  expect(finished.councilReviewed).toBe(true);
+  expect(finished.councilSummaryCreated).not.toBe(true);
+  expect(finished.criteria).toEqual(saved.criteria);
   expect(()=>transition(saved,"council","submit",{},"now")).toThrow(/tổng hợp KI/);
   expect(transition({...saved,councilSummaryCreated:true},"council","submit",{},"now").criteria).toEqual(saved.criteria);
   expect(()=>saveDraft(e,"council",{criteria:criteria.map(c=>({...c,council:6}))},"now")).toThrow(/1 đến 5/);
   const partial=saveDraft(e,"council",{criteria:criteria.map((c,i)=>({...c,council:i?undefined:4}))},"now");
   expect(partial.councilReviewed).toBe(false);
+  expect(()=>transition(partial,"council","finish",{},"now")).toThrow(/Nhập đủ điểm/);
   expect(()=>transition(partial,"council","submit",{},"now")).toThrow();
 });
 
-function Probe() {
+function Probe({onFinished}: {onFinished?: () => void}) {
   const {evaluations,setPreviewRole,previewRole}=useEvaluations();
   const e=evaluations.find(e=>e.id===base.id)!;
-  return <><button onClick={()=>setPreviewRole("council")}>Hội đồng</button><output data-testid="record">{JSON.stringify(e)}</output><EvaluationDetail key={`${e.id}-${e.history?.length}-${previewRole}`} ev={e}/></>;
+  return <><button onClick={()=>setPreviewRole("council")}>Hội đồng</button><output data-testid="record">{JSON.stringify(e)}</output><EvaluationDetail key={`${e.id}-${e.history?.length}-${previewRole}`} ev={e} onCouncilSaved={onFinished}/></>;
 }
 it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng công việc rồi Lưu",()=>{
   render(<EvaluationProvider><Probe/></EvaluationProvider>);
@@ -52,4 +58,20 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   const saved=JSON.parse(screen.getByTestId("record").textContent!);
   expect(saved.criteria[0].council).toBe(3.25);
   expect(saved.councilReviewed).toBe(true);
+});
+
+it("Hoàn tất đánh giá lưu điểm và về danh sách đã đánh giá, chưa trình TGĐ",()=>{
+  const done=vi.fn();
+  render(<EvaluationProvider><Probe onFinished={done}/></EvaluationProvider>);
+  fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  expect(screen.queryByRole("button",{name:"Trình TGĐ"})).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
+  expect(done).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
+  const saved=JSON.parse(screen.getByTestId("record").textContent!);
+  expect(saved.step).toBe("council");
+  expect(saved.councilReviewed).toBe(true);
+  expect(saved.history.at(-1).action).toBe("Hoàn tất đánh giá");
+  expect(done).toHaveBeenCalledOnce();
 });

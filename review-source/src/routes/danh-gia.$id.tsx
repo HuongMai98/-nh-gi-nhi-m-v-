@@ -128,7 +128,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))
         ? aggregateDraft
         : {};
-    if ((canCqttTasks || canCouncilTasks) && cqttTouched) patch = { ...patch, criteria: items };
+    if ((canCqttTasks || canCouncilTasks) && (cqttTouched || (canCouncilTasks && action === "finish" && tab === "personal"))) patch = { ...patch, criteria: items };
     // Gửi điều chỉnh từ phiếu: đã đánh giá đủ từng công việc thì tổng hợp luôn điểm để CQĐV/CQ tham chiếu.
     // Hoàn tất đánh giá thì chưa tổng hợp: CQTT bấm Tổng hợp ở màn danh sách.
     if (canCqttTasks && action === "request") {
@@ -148,10 +148,10 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     const issue = updateEvaluation(ev.id, patch, action);
     setError(issue ?? "");
     setMessage(
-      issue ? "" : action === "finish" && canCqttTasks ? "Đã lưu điểm QLTT đánh giá và hoàn tất đánh giá." : action ? "Đã chuyển hồ sơ." : "Đã lưu.",
+      issue ? "" : action === "finish" && (canCqttTasks || canCouncilTasks) ? "Đã lưu điểm QLTT đánh giá và hoàn tất đánh giá." : action ? "Đã chuyển hồ sơ." : "Đã lưu.",
     );
     if (!issue) { setCqttTouched(false); setComplianceTouched(false); if (items.some((c) => c.cqtt !== undefined)) setCqttEditing(false); }
-    if (!issue && !action && canCouncilTasks && cqttTouched && items.every(c => c.council !== undefined)) onCouncilSaved?.();
+    if (!issue && canCouncilTasks && (action === "finish" || (!action && cqttTouched && items.every(c => c.council !== undefined)))) onCouncilSaved?.();
     // CQTT Hoàn tất đánh giá → về Danh sách, bộ lọc Đã hoàn tất đánh giá để tổng hợp.
     if (!issue && action === "finish" && previewRole === "cqtt") onCqttFinished?.();
   };
@@ -170,8 +170,8 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               : ["council", "council_adjust"].includes(ev.step)
                 ? [
                     {
-                      action: "submit",
-                      label: ev.step === "council_adjust" ? "Trình lại TGĐ" : "Trình TGĐ",
+                      action: "finish",
+                      label: "Hoàn tất đánh giá",
                     },
                   ]
                 : ev.step === "ceo"

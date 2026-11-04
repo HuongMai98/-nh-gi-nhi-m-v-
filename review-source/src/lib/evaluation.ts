@@ -663,6 +663,11 @@ export function transition(
     next = advance(e, { kind: "fixed", key: "cqtt" });
   } else if (["council", "council_adjust"].includes(e.step) && action === "return") {
     return returnTo(e, role, "council", patch.returnStage, reason, at);
+  } else if (["council", "council_adjust"].includes(e.step) && action === "finish") {
+    if (!e.criteria.length || e.criteria.some(c => c.council === undefined || !Number.isFinite(c.council) || c.council < 1 || c.council > 5))
+      throw new Error("Nhập đủ điểm QLTT đánh giá từ 1 đến 5 cho từng công việc trước khi hoàn tất.");
+    if (kiError(e)) throw new Error(kiError(e));
+    return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách Hội đồng đã đánh giá.", at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
     if (e.councilTaskScored && !e.councilSummaryCreated) throw new Error("Hãy tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình TGĐ.");
     if (kiError(e)) throw new Error(kiError(e));
