@@ -162,7 +162,6 @@ function Index() {
             </Button>
           )}
           {/* Nút thao tác chính theo vai trò, đặt bên phải cùng các nút khác. */}
-          {previewRole === "council" && activeView === "list" && councilFilter === "completed" && <Button disabled={!rows.some(e => !e.councilSummaryCreated)} onClick={() => { createCouncilSummary(rows.map(e => e.id)); setView("ki"); }}><KanbanSquare />Tổng hợp KI</Button>}
           {previewRole === "ceo" && activeView === "list" && <Button variant="outline" className="h-10" disabled={!rows.length} onClick={() => setView("ki")}><BarChart3 />Xem tổng hợp Ki</Button>}
         </>
       }
@@ -353,6 +352,18 @@ function Index() {
             />
           ) : (
             <div>
+            {previewRole === "council" && activeView === "list" && councilFilter === "completed" && (
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-base font-semibold">Danh sách đánh giá</h2>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-md border bg-card px-2.5 py-1 font-medium text-foreground">{period}</span>
+                    <span className="rounded-md border bg-card px-2.5 py-1">Hội đồng đã đánh giá <b className="tabular-nums text-foreground">{rows.length}</b> phiếu</span>
+                  </div>
+                </div>
+                <Button disabled={!rows.some(e => !e.councilSummaryCreated)} onClick={() => { createCouncilSummary(rows.map(e => e.id)); setView("ki"); }}><KanbanSquare />Tổng hợp KI</Button>
+              </div>
+            )}
             {previewRole === "office" && activeView === "list" && (() => {
               const waiting = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && e.step === "office");
               const chip = "rounded-md border bg-card px-2.5 py-1 text-xs text-muted-foreground";
