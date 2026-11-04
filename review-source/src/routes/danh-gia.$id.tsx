@@ -427,7 +427,6 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             </summary>
             <div className="space-y-4 border-t p-4">
           <section aria-label="Thông tin người thực hiện">
-            <h2 className="mb-3 text-sm font-semibold">Thông tin người thực hiện</h2>
             <div className="grid grid-cols-1 gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
               {[["Họ và tên", ev.owner], ["Mã nhân viên", ev.employeeId], ["Đơn vị", ev.unit], ["Chức danh", ev.jobTitle], ["Địa điểm làm việc", ev.location], ["Phiếu giao nhiệm vụ", ev.assignmentRef]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
             </div>
