@@ -513,6 +513,15 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       }
       next.councilReviewed = !!e.councilReviewed && !!next.ki;
     }
+    const complianceChanged = (["locationCompliance", "laborCompliance", "cultureCompliance"] as const)
+      .some(key => key in patch && next[key] !== e[key]);
+    if (complianceChanged) {
+      next.ki = councilAutoKi(next);
+      if (next.councilTaskScored) {
+        next.councilReviewed = false;
+        next.councilSummaryCreated = false;
+      }
+    }
   }
   if (role === "ceo") {
     // TGĐ điều chỉnh trực tiếp: kiểm tra điều kiện Ki và phân bổ lại điểm xuống từng mục tiêu.

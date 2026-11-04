@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import {
   EVALUATIONS,
   allocatedTotal,
+  councilAutoKi,
   kiError,
   processCqttBatch,
   forwardOfficeBatch,
@@ -189,7 +190,9 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
           setEvaluations((current) => current.map((e) => {
             if (!ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) || !e.councilReviewed) return e;
             const score = allocatedTotal(e.criteria);
-            return score === null ? e : { ...e, councilScore: score, councilSummaryCreated: true };
+            if (score === null) return e;
+            const summary = { ...e, councilScore: score, councilSummaryCreated: true };
+            return { ...summary, ki: councilAutoKi(summary) };
           }));
         },
         replaceSelfEvaluation,
