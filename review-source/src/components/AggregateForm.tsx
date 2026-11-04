@@ -96,8 +96,8 @@ export function AggregateForm({
         ? "Tổng hợp KPI — BM01"
         : "Phụ lục Kết quả";
   const isKpi = mode === "kpi";
-  // TGĐ không xem Điểm CQTT.
-  const hideCqtt = previewRole === "ceo";
+  // Tổng hợp KI sử dụng điểm Hội đồng đã chấm ở chi tiết công việc.
+  const hideCqtt = mode === "ki" || previewRole === "ceo";
   const summaryRecords = evaluations.map((e) => ({ ...e, ...councilDrafts[e.id], ...(mode === "ki" ? { councilReviewed: true } : {}) }));
   const counts = KI.map((ki) => ({
     ki,
@@ -426,11 +426,11 @@ function AggregateRow({
         </>
       ) : (
         <>
-          {previewRole !== "ceo" && <td className={cell}>{number(cqttTotal(e))}</td>}
+          {mode !== "ki" && previewRole !== "ceo" && <td className={cell}>{number(cqttTotal(e))}</td>}
           <td className={cell}>
             <div className="flex items-center gap-1">
               {numeric("councilScore", "Điểm đánh giá")}
-              {editable && previewRole !== "ceo" && (
+              {editable && mode !== "ki" && previewRole !== "ceo" && (
                 <Button
                   type="button"
                   variant="ghost"

@@ -22,6 +22,9 @@ function Probe() {
 it("Hội đồng bấm Lưu một dòng chỉ lưu nháp, chưa hoàn tất đánh giá", () => {
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
+  expect(screen.queryByRole("columnheader", { name: "Điểm CQTT" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Sao chép điểm CQTT/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: "Điểm đánh giá" })).toBeInTheDocument();
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
   expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
   fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-002" }));
