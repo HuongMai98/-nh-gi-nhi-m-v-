@@ -44,7 +44,7 @@ describe("workflow forms", () => {
     expect(record().councilScore).toBe(4.8);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getAllByText("4.80")).toHaveLength(2);
-    expect(screen.getByRole("columnheader", { name: "Hội đồng đánh giá (1-5)" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).toBeInTheDocument();
     expect(screen.getAllByLabelText(/^QLTT đánh giá \d/)).toHaveLength(8);
     expect(
       record().criteria.reduce(

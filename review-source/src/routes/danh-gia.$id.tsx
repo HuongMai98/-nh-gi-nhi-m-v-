@@ -739,11 +739,11 @@ function PersonalTable({
               "Ngày hoàn thành",
               ...(assignment
                 ? []
-                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "Hội đồng đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (tự phân bổ)"])]),
+                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (tự phân bổ)"])]),
             ].map((h) => (
               <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24")}>
                 {h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
-                {canCouncil && h.startsWith("Hội đồng") && (
+                {canCouncil && h.startsWith("QLTT") && (
                   <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
                     onClick={() => onChange(items.map((c,i) => ({ ...c, council: cqttRef?.[i] ?? undefined })))}><Copy className="h-4 w-4" /></Button>
                 )}
