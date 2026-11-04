@@ -426,7 +426,7 @@ function Index() {
                     {[
                       "Mã phiếu",
                       "Mã nhân viên",
-                      "Người thực hiện",
+                      "Họ và tên",
                       "Đơn vị giao",
                       "Đơn vị thực hiện",
                       "Khối",
