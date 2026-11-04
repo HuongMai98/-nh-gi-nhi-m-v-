@@ -29,28 +29,6 @@ it("Hội đồng bấm Lưu một dòng (giữ nguyên giá trị điền sẵn
   expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("1/1");
 });
 
-function SummaryProbe() {
-  const { evaluations, setPreviewRole, createCouncilSummary } = useEvaluations();
-  const e = evaluations.find((e) => e.id === "DG-2026-Q3-002")!;
-  return (
-    <>
-      <button onClick={() => setPreviewRole("council")}>Chọn vai trò</button>
-      <button onClick={() => createCouncilSummary([e.id])}>Tổng hợp</button>
-      <AggregateForm mode="ki" evaluations={[e]} />
-    </>
-  );
-}
-
-it("Tổng hợp KI để trống Điểm đánh giá; nút Sao chép điền Điểm CQTT", () => {
-  render(<EvaluationProvider><SummaryProbe /></EvaluationProvider>);
-  fireEvent.click(screen.getByText("Chọn vai trò"));
-  fireEvent.click(screen.getByText("Tổng hợp"));
-  const score = screen.getByRole("spinbutton", { name: "Điểm đánh giá DG-2026-Q3-002" }) as HTMLInputElement;
-  expect(score.value).toBe("");
-  fireEvent.click(screen.getByRole("button", { name: "Sao chép điểm CQTT DG-2026-Q3-002" }));
-  expect(score.value).toBe("4.1");
-});
-
 function CeoProbe() {
   const { evaluations, setPreviewRole } = useEvaluations();
   const e = evaluations.find((e) => e.step === "ceo")!;

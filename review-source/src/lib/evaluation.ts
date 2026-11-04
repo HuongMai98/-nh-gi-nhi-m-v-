@@ -447,6 +447,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       return { ...c, council: value };
     });
     next.councilTaskScored = true;
+    if (next.criteria.some((c, i) => c.council !== e.criteria[i]!.council)) next.councilSummaryCreated = false;
   } else if (patch.criteria && role === "cqtt") {
     // CQTT đánh giá từng công việc (cột QLTT đánh giá): chỉ ghi điểm CQTT, không sửa dữ liệu cá nhân.
     if (patch.criteria.length !== e.criteria.length)
@@ -663,6 +664,7 @@ export function transition(
   } else if (["council", "council_adjust"].includes(e.step) && action === "return") {
     return returnTo(e, role, "council", patch.returnStage, reason, at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
+    if (e.councilTaskScored && !e.councilSummaryCreated) throw new Error("Hãy tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình TGĐ.");
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");

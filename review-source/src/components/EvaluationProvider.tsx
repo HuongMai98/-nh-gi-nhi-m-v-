@@ -2,7 +2,6 @@ import { CURRENT_USER, canSubmitEvaluation, validateSelfSubmission } from "@/lib
 import { useState, type ReactNode } from "react";
 import {
   EVALUATIONS,
-  allocateCouncilScores,
   kiError,
   processCqttBatch,
   forwardOfficeBatch,
@@ -185,10 +184,8 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         },
         createCouncilSummary: (ids) => {
           if (previewRole !== "council") return;
-          // Tổng hợp KI: để trống các ô Hội đồng cần chấm (trừ phiếu Hội đồng đã chấm); dùng nút Sao chép điểm CQTT để điền.
-          setEvaluations((current) => current.map((e) => !ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) ? e
-            : e.councilSummaryCreated || e.councilReviewed || e.councilTaskScored ? { ...e, councilSummaryCreated: true }
-              : (({ councilScore: _s, ki: _k, locationCompliance: _l, laborCompliance: _b, ...rest }) => ({ ...rest, councilSummaryCreated: true, criteria: allocateCouncilScores(e.criteria, undefined) }))(e)));
+          // Chỉ tổng hợp các phiếu Hội đồng đã chấm xong; giữ nguyên điểm chi tiết.
+          setEvaluations((current) => current.map((e) => ids.includes(e.id) && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? { ...e, councilSummaryCreated: true } : e));
         },
         replaceSelfEvaluation,
         previewRole,

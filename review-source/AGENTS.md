@@ -22,3 +22,4 @@
 
 - Office batch sending includes only office-stage records in the selected period/block. Preserve pending metadata drafts across filtering, validate the whole batch before updating React state, and leave other stages untouched.
 - Derive office unassessed/required totals and the dedicated unassessed employee route from the full EvaluationProvider state using office-filter, scoped by period, block and performing unit independently of list search and processing-status filters; unassessed means still at self stage, and navigation carries the same scope in search parameters.
+- Council: saving complete per-task scores places a record in the Hội đồng đã đánh giá list; Tổng hợp KI is initiated from that list and preserves scored details. Unreviewed records cannot be summarized. Editing task scores invalidates the existing summary and requires summarizing again before CEO submission.

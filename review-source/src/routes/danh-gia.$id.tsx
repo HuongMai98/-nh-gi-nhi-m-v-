@@ -64,10 +64,11 @@ function Detail() {
       readOnly={mode !== "edit" || !editAllowed}
       onEdit={editAllowed ? () => { void navigate({ search: { mode: "edit" } }); } : undefined}
       onCqttFinished={() => { void navigate({ to: "/", search: { cqtt: "report" } }); }}
+      onCouncilSaved={() => { void navigate({ to: "/", search: { council: "completed" } }); }}
     />
   );
 }
-export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished }: { ev: Evaluation; readOnly?: boolean; onEdit?: (() => void) | undefined; onCqttFinished?: (() => void) | undefined }) {
+export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished, onCouncilSaved }: { ev: Evaluation; readOnly?: boolean; onEdit?: (() => void) | undefined; onCqttFinished?: (() => void) | undefined; onCouncilSaved?: (() => void) | undefined }) {
   const { previewRole, updateEvaluation, workflows } = useEvaluations();
   const [tab, setTab] = useState<"personal" | "kpi" | "ki" | "appendix" | "assignment">(
     (previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) && !readOnly
@@ -150,6 +151,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
       issue ? "" : action === "finish" && canCqttTasks ? "Đã lưu điểm QLTT đánh giá và hoàn tất đánh giá." : action ? "Đã chuyển hồ sơ." : "Đã lưu.",
     );
     if (!issue) { setCqttTouched(false); setComplianceTouched(false); if (items.some((c) => c.cqtt !== undefined)) setCqttEditing(false); }
+    if (!issue && !action && canCouncilTasks && cqttTouched && items.every(c => c.council !== undefined)) onCouncilSaved?.();
     // CQTT Hoàn tất đánh giá → về Danh sách, bộ lọc Đã hoàn tất đánh giá để tổng hợp.
     if (!issue && action === "finish" && previewRole === "cqtt") onCqttFinished?.();
   };

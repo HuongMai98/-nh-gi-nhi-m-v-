@@ -16,7 +16,8 @@ it("Hội đồng lưu điểm từng công việc, bảo toàn điểm CQTT và
   expect(saved.criteria.map(c=>c.council)).toEqual(criteria.map(c=>c.council));
   expect(saved.councilReviewed).toBe(true);
   expect(saved.councilScore).toBe(Math.round(criteria.reduce((n,c)=>n+c.weight*c.council!,0)*100)/100);
-  expect(transition(saved,"council","submit",{},"now").criteria).toEqual(saved.criteria);
+  expect(()=>transition(saved,"council","submit",{},"now")).toThrow(/tổng hợp KI/);
+  expect(transition({...saved,councilSummaryCreated:true},"council","submit",{},"now").criteria).toEqual(saved.criteria);
   expect(()=>saveDraft(e,"council",{criteria:criteria.map(c=>({...c,council:6}))},"now")).toThrow(/1 đến 5/);
   const partial=saveDraft(e,"council",{criteria:criteria.map((c,i)=>({...c,council:i?undefined:4}))},"now");
   expect(partial.councilReviewed).toBe(false);
