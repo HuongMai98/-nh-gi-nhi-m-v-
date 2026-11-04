@@ -548,9 +548,6 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 </select>
               </label>
             ))}
-            <p className="mt-3 text-xs text-muted-foreground">
-              {canCompliance ? "CQTT, Hội đồng, TGĐ đánh giá tuân thủ ở bước xử lý của mình." : "Kết quả từ Tổng hợp KPI."}
-            </p>
           </section>
           <section className="rounded-lg border p-4 text-sm">
             <h2 className="mb-3 flex items-center gap-2 font-medium">
