@@ -432,6 +432,8 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
               : [];
   if (Object.keys(patch).some((k) => !allowed.includes(k)))
     throw new Error("Không được sửa trường dữ liệu ở bước này.");
+  if (role === "council" && e.councilTaskScored && "councilScore" in patch && patch.councilScore !== e.councilScore)
+    throw new Error("Điểm đánh giá được tổng hợp từ chi tiết công việc. Vui lòng sửa điểm tại chi tiết công việc.");
   if (patch.criteria && e.step === "response") {
     // Tiếp thu: cá nhân được cập nhật lại toàn bộ dữ liệu đã chấm (nhiệm vụ, tỷ trọng, kết quả, điểm).
     if (!patch.criteria.length) throw new Error("Phiếu phải có ít nhất một nhiệm vụ.");

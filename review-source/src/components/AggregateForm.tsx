@@ -345,6 +345,7 @@ function AggregateRow({
     onDraftChange?.(next);
   };
   const current = { ...e, ...draft, ...(mode === "ki" ? { councilReviewed: true } : {}) };
+  const councilTotalReadOnly = mode === "ki" && previewRole === "council";
   const result = templateResult(current);
   const numeric = (key: "cqttKey" | "cqttFunction" | "councilScore", label: string) => (
     <input
@@ -355,8 +356,10 @@ function AggregateRow({
       min={key === "councilScore" ? kiDriven && current.ki && current.ki !== "K" ? KI_SCORE_RANGES[current.ki].min : 1 : 0}
       max={key === "councilScore" && kiDriven && current.ki && current.ki !== "K" ? KI_SCORE_RANGES[current.ki].max : 5}
       disabled={!editable}
+      readOnly={key === "councilScore" && councilTotalReadOnly}
       value={current[key] ?? ""}
       onChange={(event) => {
+        if (key === "councilScore" && councilTotalReadOnly) return;
         const value = event.target.value === "" ? undefined : Number(event.target.value);
         if (key === "councilScore") setKiDriven(false);
         setError("");
@@ -376,7 +379,7 @@ function AggregateRow({
       value={current[key] ?? ""}
       onChange={(event) => {
         const value = event.target.value;
-        if (key === "ki") { setKiDriven(!!value); setError(""); change(value ? councilKiDraft(value as Ki) : { ki: undefined }); return; }
+        if (key === "ki") { setKiDriven(!councilTotalReadOnly && !!value); setError(""); change(councilTotalReadOnly ? { ki: value ? value as Ki : undefined } : value ? councilKiDraft(value as Ki) : { ki: undefined }); return; }
         setKiDriven(false);
         const patch = { [key]: value };
         change({ ...patch, ki: councilAutoKi({ ...current, ...patch }) });

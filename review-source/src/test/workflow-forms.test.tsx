@@ -24,21 +24,18 @@ const role = (value: string) => {
   if (value === "council") fireEvent.click(screen.getByRole("tab", { name: "Tổng hợp KPI" }));
 };
 describe("workflow forms", () => {
-  it("submits the edited council total and auto-fills the personal template with automatically allocated task scores", () => {
+  it("council edits task scores in the detail and the aggregate total remains read-only", () => {
     render(
       <EvaluationProvider>
         <Screen id="DG-2026-Q3-002" />
       </EvaluationProvider>,
     );
     role("council");
-    fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), {
-      target: { value: "4.8" },
-    });
+    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveAttribute("readonly");
     fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "A+" } });
-    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveValue(4.5);
-    fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "3.8" } });
-    expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveValue("A");
-    fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "4.8" } });
+    expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveValue(4.1);
+    fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
+    screen.getAllByRole("spinbutton", { name: /Hội đồng đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"4.8"}}));
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
     expect(record().step).toBe("council");
     expect(record().councilScore).toBe(4.8);
@@ -87,7 +84,7 @@ it("saves council edits using the save-all action", () => {
   role("council");
   fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
   fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
-  expect(record().councilScore).toBe(2.5);
+  expect(record().councilScore).toBe(4.1);
   expect(record().ki).toBe("B");
   expect(record().councilReviewed).toBe(false);
 });
@@ -95,17 +92,17 @@ it("saves council edits using the save-all action", () => {
 it("saves pending council edits and sends them to the CEO", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
   role("council");
-  fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "4.6" } });
+  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "A" } });
   fireEvent.click(screen.getByRole("button", { name: "Gửi TGĐ" }));
   expect(record().step).toBe("ceo");
-  expect(record().councilScore).toBe(4.6);
-  expect(record().ki).toBe("A+");
+  expect(record().councilScore).toBe(4.1);
+  expect(record().ki).toBe("A");
 });
 it("updates Ki counts from unsaved council edits", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
   role("council");
   expect(screen.getByTestId("ki-count-A")).toHaveTextContent("1");
-  fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002"), { target: { value: "3" } });
+  fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "B" } });
   expect(screen.getByTestId("ki-count-A")).toHaveTextContent("0");
   expect(screen.getByTestId("ki-count-B")).toHaveTextContent("1");
   fireEvent.change(screen.getByLabelText("Xếp Ki DG-2026-Q3-002"), { target: { value: "K" } });
