@@ -41,6 +41,10 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   render(<EvaluationProvider><Probe onFinished={done}/></EvaluationProvider>);
   fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent("—");
+  expect(screen.getByTestId("review-score-summary").children).toHaveLength(2);
+  expect(screen.getByTestId("review-score-summary")).toHaveTextContent("CBNV tự đánh giá");
+  expect(screen.getByTestId("review-score-summary")).toHaveTextContent("QLTT đánh giá");
+  expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("—");
   const inputs=screen.getAllByRole("spinbutton",{name:/Hội đồng đánh giá mục tiêu/});
   expect(inputs).toHaveLength(base.criteria.length);
   fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
@@ -52,6 +56,7 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   });
   const total = Math.round(base.criteria.reduce((sum,c,i)=>sum+c.weight*(Math.round(expected[i]!*100)/100),0)*100)/100;
   expect(screen.getByTestId("council-task-total")).toHaveTextContent(total.toFixed(2));
+  expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent(total.toFixed(2));
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent(rating(total).label);
   expect(screen.getByTestId("council-task-total")).toHaveClass("text-primary");
   expect(screen.getByTestId("council-task-rating")).toHaveClass("text-primary");

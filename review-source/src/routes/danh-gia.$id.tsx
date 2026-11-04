@@ -94,6 +94,9 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const canCqttTasks = own && ev.step === "cqtt";
   const canCouncilTasks = own && previewRole === "council" && ["council", "council_adjust"].includes(ev.step);
   const showCouncilTasks = previewRole === "council" || !!ev.councilTaskScored;
+  const qlttSummaryScore = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"].includes(ev.step)
+    ? allocatedTotal(items)
+    : items.some(c => c.cqtt !== undefined) ? cqttTaskTotal(items) : cqttTotal(ev);
   // Điểm QLTT đã lưu hiển thị chỉ đọc; bấm Chỉnh sửa để sửa tiếp trước khi Hoàn tất đánh giá.
   const [cqttEditing, setCqttEditing] = useState(!ev.criteria.some((c) => c.cqtt !== undefined));
   const cqttInputs = canCqttTasks && cqttEditing;
@@ -494,18 +497,14 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <div className="mt-1 text-sm font-medium">
               {result.score === null && result.ki === "—" ? "Chưa có đánh giá" : result.rating}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-3 text-sm">
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-sm" data-testid="review-score-summary">
               <div>
-                <div className="text-xs text-muted-foreground">Tự ĐG</div>
+                <div className="text-xs text-muted-foreground">CBNV tự đánh giá</div>
                 <div className="font-semibold">{totalScore(items).toFixed(2)}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">CQTT</div>
-                <div className="font-semibold">{cqttTotal(ev)?.toFixed(2) ?? "—"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Hội đồng</div>
-                <div className="font-semibold">{result.score?.toFixed(2) ?? "—"}</div>
+                <div className="text-xs text-muted-foreground">QLTT đánh giá</div>
+                <div className="font-semibold" data-testid="qltt-summary-score">{qlttSummaryScore?.toFixed(2) ?? "—"}</div>
               </div>
             </div>
             <div className="mt-3 border-t pt-3 text-xs text-muted-foreground">
