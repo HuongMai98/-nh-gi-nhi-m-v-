@@ -434,7 +434,7 @@ function Index() {
                       "Khối",
                       "Hạn đánh giá",
                       "Tự ĐG",
-                      ...(previewRole === "performer" ? ["QLTT đánh giá"] : ["CQTT đánh giá", "Hội đồng ĐG"]),
+                      "QLTT đánh giá",
                       "Xếp loại",
                       "Trạng thái",
                       "Thao tác",
@@ -448,7 +448,7 @@ function Index() {
                 <tbody>
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={previewRole === "performer" ? 12 : 13} className="py-10 text-center text-muted-foreground">
+                      <td colSpan={12} className="py-10 text-center text-muted-foreground">
                         Không có phiếu đánh giá phù hợp
                       </td>
                     </tr>
@@ -485,14 +485,9 @@ function Index() {
                         <td className="px-3 py-4 font-medium">
                           {totalScore(e.criteria).toFixed(2)}
                         </td>
-                        {previewRole === "performer" ? (
-                          <td className="px-3 py-4 font-medium">{(["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"].includes(e.step)
+                        <td className="px-3 py-4 font-medium">{(["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"].includes(e.step)
                             ? allocatedTotal(e.criteria)
                             : e.criteria.some(c => c.cqtt !== undefined) ? cqttTaskTotal(e.criteria) : cqttTotal(e))?.toFixed(2) ?? "—"}</td>
-                        ) : <>
-                          <td className="px-3 py-4 font-medium">{cqttTotal(e)?.toFixed(2) ?? "—"}</td>
-                          <td className="px-3 py-4 font-medium">{result.score?.toFixed(2) ?? "—"}</td>
-                        </>}
                         <td className="px-3 py-4">{result.ki}</td>
                         <td className="px-3 py-4">
                           <StatusPill tone={STATUS[e.step].tone}>
