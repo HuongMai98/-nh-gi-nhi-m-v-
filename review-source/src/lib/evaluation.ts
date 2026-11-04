@@ -56,7 +56,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
 export const MAIN_STEPS = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Đang tổng hợp", actor: "VP / Ban CL" },
-  { key: "cqtt", label: "CQTT đang rà soát", actor: "CQTT" },
+  { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
   { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
   { key: "ceo", label: "Chờ TGĐ phê duyệt", actor: "TGĐ" },
   { key: "approved", label: "Đã phê duyệt", actor: "Hội đồng → VP/Ban CL → CQĐV/CQ" },
@@ -155,6 +155,7 @@ export type Evaluation = {
   reviewRemark?: string;
   councilSummaryCreated?: boolean;
   councilReviewed?: boolean;
+  councilTaskScored?: boolean;
   councilScore?: number | undefined;
   ki?: Ki | undefined;
   note?: string;
@@ -414,6 +415,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
             ? ["note"]
           : role === "council"
             ? [
+                "criteria",
                 "councilScore",
                 "ki",
                 "locationCompliance",
@@ -436,6 +438,15 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     if (patch.criteria.some((c) => !Number.isFinite(c.self) || c.self < 0 || c.self > 5))
       throw new Error("Điểm tự đánh giá từ 1–5.");
     next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined }));
+  } else if (patch.criteria && role === "council") {
+    if (patch.criteria.length !== e.criteria.length) throw new Error("Không được thay đổi mục tiêu gốc.");
+    next.criteria = e.criteria.map((c, i) => {
+      const value = patch.criteria![i]!.council;
+      if (value !== undefined && (!Number.isFinite(value) || value < 1 || value > 5))
+        throw new Error("Điểm Hội đồng từng công việc phải từ 1 đến 5.");
+      return { ...c, council: value };
+    });
+    next.councilTaskScored = true;
   } else if (patch.criteria && role === "cqtt") {
     // CQTT đánh giá từng công việc (cột QLTT đánh giá): chỉ ghi điểm CQTT, không sửa dữ liệu cá nhân.
     if (patch.criteria.length !== e.criteria.length)
@@ -486,7 +497,20 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       if (value !== undefined && value > max + 0.00001)
         throw new Error("Điểm nhóm vượt tỷ trọng đã giao.");
     }
-  if (role === "council") { next.criteria = allocateCouncilScores(next.criteria, next.councilScore); next.councilReviewed = !!next.ki; }
+  if (role === "council") {
+    if (patch.criteria) {
+      const complete = next.criteria.length > 0 && next.criteria.every(c => c.council !== undefined);
+      next.councilScore = complete ? allocatedTotal(next.criteria)! : undefined;
+      next.ki = complete ? councilAutoKi(next) : undefined;
+      next.councilReviewed = complete;
+    } else {
+      if (!next.councilTaskScored || next.councilScore !== e.councilScore) {
+        next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
+        next.councilTaskScored = false;
+      }
+      next.councilReviewed = !!next.ki;
+    }
+  }
   if (role === "ceo") {
     // TGĐ điều chỉnh trực tiếp: kiểm tra điều kiện Ki và phân bổ lại điểm xuống từng mục tiêu.
     const issue = kiError(next);
@@ -642,7 +666,7 @@ export function transition(
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
-    next = advance({ ...e, councilReviewed: true, criteria: allocateCouncilScores(e.criteria, e.councilScore) }, { kind: "fixed", key: "council" });
+    next = advance({ ...e, councilReviewed: true, criteria: e.councilTaskScored ? e.criteria : allocateCouncilScores(e.criteria, e.councilScore) }, { kind: "fixed", key: "council" });
   } else if (e.step === "ceo") {
     if (action === "return") {
       const ceoTarget = resolveReturn(e.block, "ceo", patch.returnStage);

@@ -19,8 +19,10 @@ function Screen({ id }: { id: string }) {
   );
 }
 const record = () => JSON.parse(screen.getByTestId("record").textContent ?? "{}");
-const role = (value: string) =>
+const role = (value: string) => {
   fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value } });
+  if (value === "council") fireEvent.click(screen.getByRole("tab", { name: "Tổng hợp KPI" }));
+};
 describe("workflow forms", () => {
   it("submits the edited council total and auto-fills the personal template with automatically allocated task scores", () => {
     render(
@@ -42,8 +44,8 @@ describe("workflow forms", () => {
     expect(record().councilScore).toBe(4.8);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getAllByText("4.80")).toHaveLength(2);
-    expect(screen.getByText("QLTT đánh giá (tự phân bổ)")).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/^Điểm phân bổ mục tiêu/)).toHaveLength(8);
+    expect(screen.getByRole("columnheader", { name: "Hội đồng đánh giá (1-5)" })).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/^QLTT đánh giá \d/)).toHaveLength(8);
     expect(
       record().criteria.reduce(
         (sum: number, c: { weight: number; council: number }) => sum + c.weight * c.council,

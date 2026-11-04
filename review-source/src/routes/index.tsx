@@ -478,7 +478,7 @@ function Index() {
                           <StatusPill tone={STATUS[e.step].tone}>
                             {e.step === "custom" ? statusLabelOf(e) : FILTER_STEPS.find((s) => s.key === listStage(e))?.label}
                           </StatusPill>
-                          {/* Trạng thái chung giữ "CQTT đang rà soát"; phiếu đã hoàn tất (bộ lọc riêng) chỉ ghi trạng thái tổng hợp. */}
+                          {/* Trạng thái chung giữ "CQTT đang đánh giá"; phiếu đã hoàn tất (bộ lọc riêng) chỉ ghi trạng thái tổng hợp. */}
                           {previewRole === "cqtt" && e.step === "cqtt_report" && (
                             <div className={cn("mt-1 whitespace-nowrap text-xs", e.cqttSummarized ? "text-muted-foreground" : "font-medium text-amber-700")}>
                               {e.cqttSummarized ? "Đã tổng hợp" : "Chưa tổng hợp"}
@@ -507,7 +507,7 @@ function Index() {
                                 ? <span className="whitespace-nowrap text-xs font-medium text-success">Đã tổng hợp</span>
                                 : <Button variant="outline" size="sm" className="h-8 px-2.5" aria-label={`Tổng hợp ${e.id}`} title="Tổng hợp điểm Thường trực đánh giá từ chi tiết" onClick={() => { const issue = summarizeCqtt([e.id]); setCqttError(issue ?? ""); if (!issue) setView("kpi"); }}><KanbanSquare className="h-4 w-4" />Tổng hợp</Button>
                             )}
-                            {previewRole === "cqtt" && e.step === "cqtt" && (
+                            {((previewRole === "cqtt" && e.step === "cqtt") || (previewRole === "council" && ["council", "council_adjust"].includes(e.step))) && (
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Đánh giá" aria-label={`Đánh giá ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>
                             )}
                             <Link to="/danh-gia/$id" params={{ id: e.id }} title="Xem chi tiết">

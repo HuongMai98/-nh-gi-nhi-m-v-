@@ -99,6 +99,16 @@ describe("CQTT đánh giá từng công việc", () => {
     expect(record().step).toBe("cqtt_report");
   });
 
+  it("Sao chép điểm CBNV tự đánh giá sang cột QLTT đánh giá (1-5)", () => {
+    render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
+    fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sao chép điểm CBNV tự đánh giá" }));
+    cqttRecord.criteria.forEach((c, i) =>
+      expect(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`)).toHaveValue(c.self || null));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+    expect(record().criteria.map((c: { cqtt?: number }) => c.cqtt)).toEqual(cqttRecord.criteria.map((c) => c.self || undefined));
+  });
+
   it("form Phiếu đánh giá: CQTT chấm cột QLTT đánh giá từng công việc rồi lưu", () => {
     render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
     fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });

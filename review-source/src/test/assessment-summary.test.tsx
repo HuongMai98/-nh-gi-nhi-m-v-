@@ -132,25 +132,12 @@ it("office sends all pending records together and keeps unfinished row metadata"
   expect(screen.getByText("Đã gửi 2 phiếu đến CQTT rà soát.")).toBeInTheDocument();
 });
 
-it("copies personal scores without adjustment and allows switching to manual adjustment", () => {
-  render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
-  fireEvent.click(screen.getByText("Chọn vai trò"));
-  expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
-  expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toHaveValue(0.9);
-  expect(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003")).toHaveValue(2.55);
-  expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Lưu DG-2026-Q3-003" }));
-  expect(record().cqttKey).toBe(0.9);
-  expect(record().cqttFunction).toBe(2.55);
-  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
-  expect(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003")).not.toBeDisabled();
-});
-
 it("saves and requests adjustment from the table toolbar", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
-  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"), { target: { value: "0.9" } });
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.55" } });
   fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-003"), { target: { value: "Bổ sung kết quả" } });
   fireEvent.click(screen.getByRole("button", { name: "Lưu tất cả" }));
   expect(record().cqttKey).toBe(0.9);
@@ -172,7 +159,9 @@ it("enables row adjustment request only when CQTT total differs from self total"
   fireEvent.click(screen.getByText("Chọn vai trò"));
   const send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
   expect(send).toBeDisabled();
-  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"), { target: { value: "0.9" } });
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.55" } });
   expect(send).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.8" } });
@@ -192,7 +181,9 @@ it("enables row adjustment request only when CQTT total differs from self total"
 it("Gửi điều chỉnh trên thanh công cụ bắt buộc có Lý do ở danh sách, không mở hộp nhập", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
-  fireEvent.click(screen.getByRole("button", { name: "Không điều chỉnh DG-2026-Q3-003" }));
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
+  fireEvent.change(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"), { target: { value: "0.9" } });
+  fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.55" } });
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.7" } });
   fireEvent.click(screen.getByLabelText("Chọn gửi điều chỉnh DG-2026-Q3-003"));

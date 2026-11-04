@@ -1,7 +1,7 @@
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download, Save, Undo2, ArrowUpRight, Send, CheckCheck, Pencil } from "lucide-react";
+import { Download, Save, Undo2, ArrowUpRight, Send, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -482,14 +482,7 @@ function AssessmentRow({
           " border-r border-violet-200 bg-violet-50/60 text-center font-semibold tabular-nums text-violet-800"
         }
       >
-        <div className="relative flex min-h-8 items-center justify-center"><span>{canScore && adjusting && current.proposedKi && current.proposedKi !== "K" ? <input aria-label={`Tổng điểm CQTT ${e.id}`} type="number" step="0.01" min={KI_SCORE_RANGES[current.proposedKi].min} max={KI_SCORE_RANGES[current.proposedKi].max} className="h-9 w-16 rounded-md border border-violet-200 bg-card px-1 text-center text-sm" value={cqttTotal(current) ?? ""} onChange={(event) => { try { change(cqttScoreForKi(current, current.proposedKi!, Number(event.target.value))); } catch (error) { setFeedback(error instanceof Error ? error.message : "Điểm không hợp lệ"); } }} /> : format(cqttTotal(current))}</span>{canScore && (
-          <Button type="button" variant={adjusting ? "outline" : "secondary"} size="icon" className="absolute left-[calc(50%+1.5rem)] top-1/2 h-7 w-7 -translate-y-1/2 shadow-none" title="Không điều chỉnh" aria-label={`Không điều chỉnh ${e.id}`} aria-pressed={!adjusting} onClick={() => {
-            const patch = { ...draft, cqttKey: groupScore(e, true), cqttFunction: groupScore(e, false), proposedKi: undefined };
-            change(patch);
-
-            setAdjusting(false);
-          }}><CheckCheck className="h-4 w-4" /></Button>
-        )}</div>
+        <div className="relative flex min-h-8 items-center justify-center"><span>{canScore && adjusting && current.proposedKi && current.proposedKi !== "K" ? <input aria-label={`Tổng điểm CQTT ${e.id}`} type="number" step="0.01" min={KI_SCORE_RANGES[current.proposedKi].min} max={KI_SCORE_RANGES[current.proposedKi].max} className="h-9 w-16 rounded-md border border-violet-200 bg-card px-1 text-center text-sm" value={cqttTotal(current) ?? ""} onChange={(event) => { try { change(cqttScoreForKi(current, current.proposedKi!, Number(event.target.value))); } catch (error) { setFeedback(error instanceof Error ? error.message : "Điểm không hợp lệ"); } }} /> : format(cqttTotal(current))}</span></div>
 
       </td>
       <td className={cell}>

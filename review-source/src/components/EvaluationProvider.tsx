@@ -187,7 +187,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
           if (previewRole !== "council") return;
           // Tổng hợp KI: để trống các ô Hội đồng cần chấm (trừ phiếu Hội đồng đã chấm); dùng nút Sao chép điểm CQTT để điền.
           setEvaluations((current) => current.map((e) => !ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) ? e
-            : e.councilSummaryCreated || e.councilReviewed ? { ...e, councilSummaryCreated: true }
+            : e.councilSummaryCreated || e.councilReviewed || e.councilTaskScored ? { ...e, councilSummaryCreated: true }
               : (({ councilScore: _s, ki: _k, locationCompliance: _l, laborCompliance: _b, ...rest }) => ({ ...rest, councilSummaryCreated: true, criteria: allocateCouncilScores(e.criteria, undefined) }))(e)));
         },
         replaceSelfEvaluation,

@@ -1,7 +1,7 @@
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ChevronDown, ClipboardCheck, Pencil, Download, MessageSquare, Save, Send, Undo2 } from "lucide-react";
+import { Check, ChevronDown, ClipboardCheck, Copy, Pencil, Download, MessageSquare, Save, Send, Undo2 } from "lucide-react";
 import { AppShell, StatusPill, statusStepClasses } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { AggregateForm, exportCsv, fieldClass, LABOR } from "@/components/AggregateForm";
@@ -70,7 +70,7 @@ function Detail() {
 export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished }: { ev: Evaluation; readOnly?: boolean; onEdit?: (() => void) | undefined; onCqttFinished?: (() => void) | undefined }) {
   const { previewRole, updateEvaluation, workflows } = useEvaluations();
   const [tab, setTab] = useState<"personal" | "kpi" | "ki" | "appendix" | "assignment">(
-    previewRole === "cqtt" && ev.step === "cqtt" && !readOnly
+    (previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) && !readOnly
       ? "personal"
       : ["council", "council_adjust", "ceo"].includes(ev.step)
         ? "ki"
@@ -78,7 +78,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
           ? "kpi"
           : "personal",
   );
-  const [items, setItems] = useState<Criterion[]>(ev.criteria.map((c) => ({ ...c })));
+  const [items, setItems] = useState<Criterion[]>(ev.criteria.map((c) => ({ ...c, council: previewRole === "council" && !ev.councilReviewed && !ev.councilTaskScored ? undefined : c.council })));
   const [aggregateDraft, setAggregateDraft] = useState<Draft>({});
   const [cqttTouched, setCqttTouched] = useState(false);
   const [note, setNote] = useState("");
@@ -91,6 +91,8 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
   const canRespond = own && ev.step === "response";
   // CQTT chấm từng công việc ngay trên form Phiếu đánh giá, cột QLTT đánh giá.
   const canCqttTasks = own && ev.step === "cqtt";
+  const canCouncilTasks = own && previewRole === "council" && ["council", "council_adjust"].includes(ev.step);
+  const showCouncilTasks = previewRole === "council" || !!ev.councilTaskScored;
   // Điểm QLTT đã lưu hiển thị chỉ đọc; bấm Chỉnh sửa để sửa tiếp trước khi Hoàn tất đánh giá.
   const [cqttEditing, setCqttEditing] = useState(!ev.criteria.some((c) => c.cqtt !== undefined));
   const cqttInputs = canCqttTasks && cqttEditing;
@@ -125,7 +127,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
       own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))
         ? aggregateDraft
         : {};
-    if (canCqttTasks && cqttTouched) patch = { ...patch, criteria: items };
+    if ((canCqttTasks || canCouncilTasks) && cqttTouched) patch = { ...patch, criteria: items };
     // Gửi điều chỉnh từ phiếu: đã đánh giá đủ từng công việc thì tổng hợp luôn điểm để CQĐV/CQ tham chiếu.
     // Hoàn tất đánh giá thì chưa tổng hợp: CQTT bấm Tổng hợp ở màn danh sách.
     if (canCqttTasks && action === "request") {
@@ -258,7 +260,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
             <Download />
             Xuất template CSV
           </Button>
-          {readOnly && onEdit && (previewRole === "cqtt" && ev.step === "cqtt" ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><Pencil />Chỉnh sửa</Button>)}
+          {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><Pencil />Chỉnh sửa</Button>)}
           {readOnly && ev.step === "self" && previewRole === "performer" && canSubmitEvaluation(ev, CURRENT_USER) && <Button onClick={() => run("submit")}><Send />Gửi đánh giá</Button>}
           {canCqttTasks && !cqttEditing && (
             <Button variant="outline" onClick={() => { setCqttEditing(true); setTab("personal"); }}>
@@ -266,7 +268,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
               Chỉnh sửa
             </Button>
           )}
-          {(canSelf || canRespond || (cqttInputs && tab === "personal") || (canCompliance && complianceTouched)) && (
+          {(canSelf || canRespond || ((cqttInputs || canCouncilTasks) && tab === "personal") || (canCompliance && complianceTouched)) && (
             <Button variant="outline" onClick={() => run()}>
               <Save />
               Lưu
@@ -470,8 +472,10 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished 
                 canSelf={canSelf && tab === "personal"}
                 canResult={(canSelf || canRespond) && tab === "personal"}
                 canCqtt={cqttInputs && tab === "personal"}
-                cqttRef={ev.step === "response" ? cqttTaskScores(ev.criteria, cqttTotal(ev)) : null}
-                onChange={(next) => { setItems(next); if (canCqttTasks) setCqttTouched(true); }}
+                showCouncil={showCouncilTasks}
+                canCouncil={canCouncilTasks && tab === "personal"}
+                cqttRef={ev.step === "response" || showCouncilTasks ? cqttTaskScores(ev.criteria, cqttTotal(ev)) : null}
+                onChange={(next) => { setItems(next); if (canCqttTasks || canCouncilTasks) setCqttTouched(true); }}
               />
 
             </section>
@@ -645,6 +649,7 @@ function historyChanges(before: string, after: string): string[] {
       const name = c.goal || `Nhiệm vụ ${i + 1}`;
       if (o.self !== c.self) lines.push(`${name} – tự đánh giá: ${historyValue("", o.self || undefined)} → ${historyValue("", c.self || undefined)}`);
       if (o.result !== c.result) lines.push(`${name} – kết quả: ${historyValue("", o.result)} → ${historyValue("", c.result)}`);
+      if (o.council !== c.council) lines.push(`${name} – Hội đồng đánh giá: ${historyValue("", o.council)} → ${historyValue("", c.council)}`);
       if (o.cqtt !== c.cqtt) lines.push(`${name} – QLTT đánh giá: ${historyValue("", o.cqtt)} → ${historyValue("", c.cqtt)}`);
       if (o.weight !== c.weight) lines.push(`${name} – tỷ trọng: ${Math.round(o.weight * 100)}% → ${Math.round(c.weight * 100)}%`);
     });
@@ -683,6 +688,8 @@ function PersonalTable({
   canSelf,
   canResult,
   canCqtt = false,
+  showCouncil = false,
+  canCouncil = false,
   cqttRef = null,
   onChange,
 }: {
@@ -693,6 +700,8 @@ function PersonalTable({
   canSelf: boolean;
   canResult: boolean;
   canCqtt?: boolean;
+  showCouncil?: boolean;
+  canCouncil?: boolean;
   onChange: (items: Criterion[]) => void;
 }) {
   // Cột QLTT đánh giá: điểm CQTT chấm từng công việc; sau Hội đồng là điểm phân bổ.
@@ -728,10 +737,27 @@ function PersonalTable({
               "Ngày hoàn thành",
               ...(assignment
                 ? []
-                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (tự phân bổ)"]),
+                : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "Hội đồng đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (tự phân bổ)"])]),
             ].map((h) => (
               <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24")}>
                 {h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
+                {canCouncil && h.startsWith("Hội đồng") && (
+                  <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
+                    onClick={() => onChange(items.map((c,i) => ({ ...c, council: cqttRef?.[i] ?? undefined })))}><Copy className="h-4 w-4" /></Button>
+                )}
+                {canCqtt && h.startsWith("QLTT") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="ml-1 h-7 w-7 align-middle"
+                    title="Sao chép điểm CBNV tự đánh giá"
+                    aria-label="Sao chép điểm CBNV tự đánh giá"
+                    onClick={() => onChange(items.map((c) => ({ ...c, cqtt: c.self || undefined })))}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                )}
               </th>
             ))}
           </tr>
@@ -759,6 +785,8 @@ function PersonalTable({
               canSelf={canSelf}
               canResult={canResult}
               canCqtt={canCqtt}
+              showCouncil={showCouncil}
+              canCouncil={canCouncil}
               cqttRef={cqttRef}
               update={update}
             />
@@ -773,6 +801,7 @@ function PersonalTable({
               <>
                 <td className="px-3">{totalScore(items).toFixed(2)}</td>
                 <td className="px-3 text-primary" data-testid="qltt-total">{qlttTotal?.toFixed(2) ?? "—"}</td>
+                {showCouncil && <td className="px-3 font-semibold" data-testid="council-task-total">{allocatedTotal(items)?.toFixed(2) ?? "—"}</td>}
               </>
             )}
           </tr>
@@ -796,6 +825,8 @@ function GroupRows({
   canSelf,
   canResult,
   canCqtt,
+  showCouncil,
+  canCouncil,
   cqttRef,
   update,
 }: {
@@ -806,13 +837,15 @@ function GroupRows({
   canSelf: boolean;
   canResult: boolean;
   canCqtt: boolean;
+  showCouncil: boolean;
+  canCouncil: boolean;
   update: (i: number, patch: Partial<Criterion>) => void;
 }) {
   const date = (v: string | undefined) => (v ? v.split("-").reverse().join("/") : "—");
   return (
     <>
       <tr className="bg-accent/50 text-primary">
-        <td colSpan={assignment ? 10 : 13} className="px-2 py-2 text-xs font-semibold">
+        <td colSpan={assignment ? 10 : showCouncil ? 14 : 13} className="px-2 py-2 text-xs font-semibold">
           {label}
         </td>
       </tr>
@@ -916,6 +949,11 @@ function GroupRows({
                   {cqttRef ? (cqttRef[i] == null ? "—" : String(Math.round(cqttRef[i]! * 100) / 100)) : (c.council?.toFixed(4) ?? c.cqtt ?? "—")}
                 </td>
               )}
+              {showCouncil && <td className="px-3">
+                {canCouncil ? <input aria-label={`Hội đồng đánh giá mục tiêu ${i+1}`} type="number" min="1" max="5" step="0.01" className={fieldClass + " my-2 w-24"}
+                  value={c.council ?? ""} onChange={event => update(i, { council: event.target.value === "" ? undefined : Number(event.target.value) })} />
+                  : c.council?.toFixed(2) ?? "—"}
+              </td>}
             </>
           )}
         </tr>
