@@ -23,6 +23,23 @@ function Screen({ id, onFinished }: { id: string; onFinished?: () => void }) {
 const record = () => JSON.parse(screen.getByTestId("record").textContent ?? "{}");
 
 describe("CQTT đánh giá từng công việc", () => {
+  it("tính Ki ngay theo điểm QLTT và tuân thủ, chưa tự lưu phiếu", () => {
+    render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
+    fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
+    const before = record();
+    fireEvent.change(screen.getByLabelText("Địa điểm làm việc"), { target: { value: "Tuân thủ" } });
+    fireEvent.change(screen.getByLabelText("Nội quy lao động"), { target: { value: "Tuân thủ" } });
+    cqttRecord.criteria.forEach((_, i) => fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: "4.1" } }));
+    expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A");
+    expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("4.10");
+    fireEvent.change(screen.getByLabelText("Nội quy lao động"), { target: { value: "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" } });
+    expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("B");
+    fireEvent.change(screen.getByLabelText("Địa điểm làm việc"), { target: { value: "Không tuân thủ" } });
+    expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("D");
+    fireEvent.change(screen.getByLabelText("QLTT đánh giá mục tiêu 1"), { target: { value: "" } });
+    expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
+    expect(record()).toEqual(before);
+  });
   it("lưu điểm và nhận xét từng công việc; chấm đủ thì tính điểm nhóm CQTT", () => {
     const e = structuredClone(cqttRecord);
     const scores = e.criteria.map((_, i) => (i % 2 ? 4 : 3));

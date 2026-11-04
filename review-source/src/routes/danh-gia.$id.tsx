@@ -110,8 +110,12 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   });
   const [complianceTouched, setComplianceTouched] = useState(false);
   const councilPreview = showCouncilTasks && ["council", "council_adjust"].includes(ev.step);
-  const councilScore = allocatedTotal(items);
-  const councilReady = councilScore !== null && items.length > 0 && items.every(c => c.council !== undefined && Number.isFinite(c.council) && c.council >= 1 && c.council <= 5)
+  const cqttPreview = previewRole === "cqtt" && ["cqtt", "cqtt_report", "response"].includes(ev.step);
+  const councilScore = cqttPreview ? cqttTaskTotal(items) : allocatedTotal(items);
+  const councilReady = councilScore !== null && items.length > 0 && items.every(c => {
+    const score = cqttPreview ? c.cqtt : c.council;
+    return score !== undefined && Number.isFinite(score) && score >= 1 && score <= 5;
+  })
     && !!compliance.locationCompliance && !!compliance.laborCompliance;
   const preview: Evaluation = {
     ...ev, ...compliance, criteria: items,
@@ -120,7 +124,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     approvedScore: undefined, approvedKi: undefined,
   };
   if (councilReady) preview.ki = councilAutoKi(preview);
-  const result = templateResult(councilPreview ? preview : ev);
+  const result = templateResult(councilPreview || cqttPreview ? preview : ev);
   // Trả về theo cấu hình luồng duyệt: người xử lý chọn bước đích trong danh sách được phép.
   const flow = workflows[ev.block];
   const fromStage = stageOf(ev.step);
