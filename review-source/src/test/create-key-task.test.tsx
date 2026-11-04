@@ -2,14 +2,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { EvaluationProvider } from "@/components/EvaluationProvider";
-import { SOURCE_TASKS, completedKeyTasks } from "@/lib/source-tasks";
+import { SOURCE_TASKS, quarterTasks } from "@/lib/source-tasks";
 import { CURRENT_USER } from "@/lib/users";
 it("lists the selected performer's completed key tasks and fills task metadata", () => {
   render(<EvaluationProvider><CreateEvaluationDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} /></EvaluationProvider>);
   expect(screen.queryByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).not.toBeInTheDocument();
   expect(screen.queryByText("Tuân thủ nội quy lao động")).not.toBeInTheDocument();
   expect(screen.queryByText("THỦ TRƯỞNG GIAO NHIỆM VỤ")).not.toBeInTheDocument();
-  const task = completedKeyTasks(SOURCE_TASKS, CURRENT_USER.employeeId)[0]!;
+  const task = quarterTasks(SOURCE_TASKS, CURRENT_USER.employeeId, "III", "2026", "A")[0]!;
   const picker = screen.getByRole("combobox", { name: "Nhiệm vụ *" });
   expect(screen.getByRole("combobox", { name: "Nhiệm vụ * 2" })).toBeInTheDocument();
   expect(screen.getByRole("combobox", { name: "Nhiệm vụ * 3" })).toBeInTheDocument();
