@@ -20,7 +20,7 @@ it("updates the original self-evaluation without creating another record", () =>
   fireEvent.change(screen.getByLabelText(/^Ngày đánh giá/), { target: { value: "2026-11-01" } });
   fireEvent.change(screen.getByLabelText(/^Hạn đánh giá/), { target: { value: "2026-11-25" } });
   fireEvent.change(screen.getByLabelText("Điểm tự đánh giá nhiệm vụ 1"), { target: { value: "3" } });
-  fireEvent.click(screen.getByRole("button", { name: "Lưu cập nhật" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cập nhật" }));
   const state = JSON.parse(screen.getByTestId("state").textContent!);
   expect(state.count).toBe(86);
   expect(state.record.criteria[0].self).toBe(3);

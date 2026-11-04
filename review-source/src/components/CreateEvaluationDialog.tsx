@@ -34,7 +34,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  // Luồng phản hồi CQTT: Tiếp thu (điền điểm CQTT) → Lưu cập nhật → Gửi CQTT.
+  // Luồng phản hồi CQTT: Tiếp thu (điền điểm CQTT) → Cập nhật → Gửi CQTT.
   const [acceptedResponse, setAcceptedResponse] = useState(existing?.response === "Tiếp thu");
   const [savedResponse, setSavedResponse] = useState(existing?.response === "Tiếp thu");
   const setCriteria = (change: FormCriterion[] | ((current: FormCriterion[]) => FormCriterion[])) => {
@@ -56,7 +56,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     setError("");
     setAcceptedResponse(true);
     setSavedResponse(false);
-    setNotice("Đã điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá. Bấm Lưu cập nhật để lưu.");
+    setNotice("Đã điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá. Bấm Cập nhật để lưu.");
   }
   const weight = Math.round(criteria.reduce((sum, item) => sum + item.weight, 0) * 10000) / 100;
 
@@ -81,7 +81,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     if (responding) {
       const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, ...c }) => c);
       const accepted = { criteria: updatedCriteria, response: "Tiếp thu" as const, responseNote: responseNote.trim() };
-      // Lưu cập nhật: lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
+      // Cập nhật: lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
       const issue = intent === "send_cqtt"
         ? updateEvaluation(existing!.id, accepted, "respond")
         : updateEvaluation(existing!.id, acceptedResponse ? accepted : { criteria: updatedCriteria, responseNote });
@@ -159,15 +159,15 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
               <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
-              <li><span className="font-medium text-foreground">Lưu cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
-              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Lưu cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
+              <li><span className="font-medium text-foreground">Cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
+              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
               <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
             </ul>
           </section>}
           {error && <p role="alert" className="text-sm text-primary">{error}</p>}
           {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
         </div>
-        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Lưu cập nhật" : "Lưu"}</Button>{responding ? <>
+        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Cập nhật" : "Lưu"}</Button>{responding ? <>
           <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
           <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
           <Button type="submit" disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>

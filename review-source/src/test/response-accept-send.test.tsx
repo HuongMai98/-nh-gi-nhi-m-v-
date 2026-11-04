@@ -4,11 +4,11 @@ import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { EvaluationProvider } from "@/components/EvaluationProvider";
 import { EVALUATIONS, allocateCouncilScores, cqttTotal } from "@/lib/evaluation";
 
-it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Lưu cập nhật → Gửi CQTT", () => {
+it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Cập nhật → Gửi CQTT", () => {
   const existing = EVALUATIONS.find((e) => e.id === "DG-2026-Q3-009")!;
   const onCreated = vi.fn();
   render(<EvaluationProvider><CreateEvaluationDialog existing={existing} open onOpenChange={vi.fn()} onCreated={onCreated} /></EvaluationProvider>);
-  const save = screen.getByRole("button", { name: "Lưu cập nhật" });
+  const save = screen.getByRole("button", { name: "Cập nhật" });
   const send = screen.getByRole("button", { name: "Gửi CQTT" });
   expect(save).toBeDisabled();
   expect(send).toBeDisabled();
