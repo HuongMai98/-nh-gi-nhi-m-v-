@@ -15,7 +15,7 @@ export function EvaluationDateInput({ value, onChange, label }: { value: string;
       <PopoverTrigger asChild><button type="button" aria-label={`Chọn ${label.toLowerCase()}`} className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><CalendarDays className="size-4" /></button></PopoverTrigger>
     </div>
     <PopoverContent align="start" className="w-auto p-0">
-      <Calendar mode="single" locale={vi} weekStartsOn={1} selected={selected} {...(selected ? { defaultMonth: selected } : {})} className="[--cell-size:2.5rem]" formatters={{ formatWeekdayName: date => date.getDay() === 0 ? "CN" : `T${date.getDay() + 1}` }} onSelect={date => { if (date) { onChange(format(date, "yyyy-MM-dd")); setOpen(false); } }} />
+      <Calendar mode="single" locale={vi} weekStartsOn={1} selected={selected} {...(selected ? { defaultMonth: selected } : {})} className="[--cell-size:2.25rem]" formatters={{ formatWeekdayName: date => date.getDay() === 0 ? "CN" : `T${date.getDay() + 1}` }} onSelect={date => { if (date) { onChange(format(date, "yyyy-MM-dd")); setOpen(false); } }} />
     </PopoverContent>
   </Popover>;
 }
