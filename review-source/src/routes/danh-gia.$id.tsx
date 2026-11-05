@@ -737,14 +737,14 @@ function PersonalTable({
               "Đơn vị đo",
               "Tỷ trọng (%)",
             ].map((h) => (
-              <th key={h} rowSpan={2} className="px-2 py-3 font-medium">
+              <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Tỷ trọng (%)" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>
                 {h}{h === "Mục tiêu nhiệm vụ/công việc" && <span className="block font-normal italic">(Kết quả mong đợi đối với nhiệm vụ/công việc)</span>}{h === "Phương pháp đo" && <span className="block font-normal italic">(công thức hoặc mô tả cách tính)</span>}{h === "Đơn vị đo" && <span className="block font-normal italic">(số, số lượng, %, điểm, ...)</span>}
               </th>
             ))}
             <th colSpan={3} className="border-b px-2 py-2 text-center font-medium">
               Các mức chỉ tiêu
             </th>
-            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className="px-2 py-3 font-medium">{h}</th>)}
+            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Tỷ trọng (%)" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>{h}</th>)}
             {!assignment && <th colSpan={showCouncil ? 4 : 3} className="border-b px-2 py-2 text-center font-medium">Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc</th>}
           </tr>
           <tr>
@@ -758,7 +758,7 @@ function PersonalTable({
                 ? []
                 : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (1-5)"])]),
             ].map((h) => (
-              <th key={h} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24", (h.startsWith("CBNV") || h.startsWith("QLTT")) && "text-center")}>
+              <th key={h} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24", (h.startsWith("CBNV") || h.startsWith("QLTT") || h === "Kết quả thực hiện") && "text-center")}>
                 {h.startsWith("CBNV") ? <>CBNV tự<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.startsWith("QLTT") ? <>QLTT<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
                 {canCouncil && h.startsWith("QLTT") && (
                   <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
