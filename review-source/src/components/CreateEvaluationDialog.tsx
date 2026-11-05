@@ -146,24 +146,26 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const title = existing ? "Cập nhật phiếu đánh giá" : "Tạo phiếu đánh giá";
   return <form id={FORM_ID} onSubmit={submit} aria-label={title} className="space-y-4">
     <h2 className="sr-only">{title}</h2>
-    <div className="grid items-start gap-4 xl:grid-cols-[430px_minmax(0,1fr)]">
-      <div className="space-y-4">
-        <section className={card}>
-          <h3 className={cardTitle}>Người được đánh giá</h3>
+    <div className="space-y-4">
+      <section className={card} aria-label="Thông tin chung">
+        <h3 className={cardTitle}>Thông tin chung</h3>
+        <div className="grid items-start gap-6 xl:grid-cols-2">
+        <div className="space-y-4">
+          
           <label className={fieldLabel + " block"}>Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass + " font-normal text-foreground"} value={performerId} onChange={(event) => {
             setPerformerId(event.target.value);
             setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
           }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-sm">{Object.entries({ employeeId: performer?.employeeId ?? "—", unit: performer?.unit ?? unit, ...personalMetadata(performerId) }).map(([key, value]) => <div key={key}><div className="text-xs text-muted-foreground">{key === "unit" ? "Đơn vị" : key === "employeeId" ? "Mã nhân viên" : key === "jobTitle" ? "Chức danh" : key === "location" ? "Địa điểm làm việc" : "Phiếu giao nhiệm vụ"}</div><div className="mt-1 text-foreground">{value}</div></div>)}</div>
-        </section>
-        <section className={card}>
-          <h3 className={cardTitle}>Kỳ đánh giá</h3>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
           <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
           <div className="grid grid-cols-2 gap-4"><label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
           <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
           <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
-        </section>
-      </div>
+        </div>
+        </div>
+      </section>
       <div className={card + " min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
         <Button type="button" variant="outline" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
