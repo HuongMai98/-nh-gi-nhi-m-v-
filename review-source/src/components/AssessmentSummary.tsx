@@ -1,3 +1,4 @@
+import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +14,7 @@ const format = (value: number | undefined | null) => (value == null ? "—" : va
 const baseInput =
   "w-full rounded-md border border-input bg-card h-9 px-2 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20 disabled:border-transparent disabled:bg-transparent disabled:text-foreground disabled:opacity-100";
 export function AssessmentSummary({
+  allowPdfExport = true,
   evaluations,
   onExport,
   onDraftChange,
@@ -20,6 +22,7 @@ export function AssessmentSummary({
   onCouncilSummary,
   onCqttReturned,
 }: {
+  allowPdfExport?: boolean;
   onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
   batchCandidates?: Evaluation[] | undefined;
@@ -178,6 +181,7 @@ export function AssessmentSummary({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {allowPdfExport && <ExportEvaluationPdf evaluations={evaluations.map(e => ({ ...e, ...batchDrafts[e.id] }))} mode="kpi" />}
           <Button variant="outline" onClick={onExport}>
             <Download />
             Xuất CSV

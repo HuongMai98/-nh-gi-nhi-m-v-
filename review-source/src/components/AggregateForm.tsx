@@ -1,3 +1,4 @@
+import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
 import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
@@ -60,6 +61,7 @@ const KI_TONES = [
   { ki: "K", label: "Không đánh giá", badge: "bg-slate-500 text-white", bar: "bg-slate-400", text: "text-slate-600", card: "border-slate-200 bg-slate-50" },
 ] as const;
 export function AggregateForm({
+  allowPdfExport = true,
   evaluations,
   mode,
   onDraftChange,
@@ -67,6 +69,7 @@ export function AggregateForm({
   onCouncilSummary,
   onCqttReturned,
 }: {
+  allowPdfExport?: boolean;
   onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
   batchCandidates?: Evaluation[] | undefined;
@@ -178,6 +181,7 @@ export function AggregateForm({
         onCqttReturned={onCqttReturned}
         batchCandidates={batchCandidates}
         evaluations={evaluations}
+        allowPdfExport={allowPdfExport}
         onExport={exportData}
         onDraftChange={onDraftChange}
       />
@@ -190,7 +194,7 @@ export function AggregateForm({
           <h2 className="font-semibold">{title}</h2>
           {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2"><Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{allowPdfExport && <ExportEvaluationPdf evaluations={summaryRecords} mode="ki" />}<Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
           const issue = saveCouncilBatch(evaluations.map((e) => e.id), {}, true);
           setBatchMessage(issue ?? "Đã gửi tất cả đánh giá lên TGĐ.");
           if (!issue) setCouncilDrafts({});

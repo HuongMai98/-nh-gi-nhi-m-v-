@@ -9,7 +9,7 @@ it("opens a large Vietnamese calendar and returns a local ISO date", () => {
   const grid = screen.getByRole("grid");
   expect(grid.closest('[data-slot="calendar"]')).toHaveClass("[--cell-size:2.25rem]");
   expect(screen.getByText("CN")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Thứ Năm, ngày 5 tháng 11 năm 2026" }));
+  fireEvent.click(screen.getByRole("button", { name: /Thứ Năm, ngày 5 tháng 11 năm 2026/ }));
   expect(onChange).toHaveBeenCalledWith("2026-11-05");
   expect(screen.queryByRole("grid")).not.toBeInTheDocument();
 });

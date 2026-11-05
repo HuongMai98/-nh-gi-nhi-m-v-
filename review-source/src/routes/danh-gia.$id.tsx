@@ -1,3 +1,4 @@
+import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
@@ -277,6 +278,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       title={`${readOnly ? "Xem đánh giá" : "Chỉnh sửa đánh giá"} – ${ev.unit}`}
       actions={
         <>
+          <ExportEvaluationPdf evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
           <Button variant="outline" onClick={downloadTemplate}>
             <Download />
             Xuất template CSV
@@ -482,7 +484,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               ))}
           </div>
           {tab === "kpi" || tab === "ki" || tab === "appendix" ? (
-            <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><AggregateForm evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
+            <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><AggregateForm allowPdfExport={false} evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
           ) : (
             <section className="space-y-4">
               {tab === "personal" && <h2 className="font-semibold">Phiếu đánh giá kết quả thực hiện nhiệm vụ/công việc</h2>}
