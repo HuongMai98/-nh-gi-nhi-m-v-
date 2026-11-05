@@ -144,6 +144,10 @@ function Index() {
   const [pagination, setPagination] = useState({ scope, page: 1 });
   const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(rows.length / pageSize))) : 1;
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
+  const selectedRoleStatus = previewRole === "office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter;
+  const roleStatus = (e: Evaluation) => e.step === "custom" && roleOf(e) === previewRole ? "pending" : previewRole === "office" ? officeAggregationStatus(e) : previewRole === "cqtt" ? cqttStatus(e) : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) : ceoStatus(e.step);
+  const roleStatusOptions = (previewRole === "office" ? [{ key: "pending", label: "Chờ tổng hợp" }, { key: "completed", label: "Đã tổng hợp" }] : previewRole === "cqtt" ? [{ key: "pending", label: "Chờ CQTT đánh giá" }, { key: "report", label: "Đã hoàn tất đánh giá" }, { key: "waiting", label: "Chờ CQ/CQĐV phản hồi" }, { key: "submitted", label: "Đã trình Hội đồng" }] : previewRole === "council" ? COUNCIL_FILTERS : CEO_FILTERS).map(option => ({ ...option, tone: option.key === "approved" || option.key === "completed" || option.key === "report" ? "success" as const : option.key === "adjustment" || option.key === "waiting" ? "warning" as const : "info" as const }));
+  const changeRoleStatus = (value: string) => { setSelectedBatch(undefined); if (previewRole === "office") setOfficeStatus(value as OfficeStatus); else if (previewRole === "cqtt") setCqttFilter(value as CqttStatus); else if (previewRole === "council") setCouncilFilter(value as CouncilFilter); else setCeoFilter(value as CeoFilter); };
   const toggle = (k: Step) =>
     setFilter((s) => {
       const n = new Set(s);
@@ -223,13 +227,13 @@ function Index() {
               <option key={value}>{value}</option>
             ))}
           </select>
-          {previewRole === "office" ? <div>
-            <div className="mb-3 border-b pb-3 font-medium">Trạng thái tổng hợp</div>
-            <select aria-label="Trạng thái tổng hợp" value={officeStatus} onChange={(event) => setOfficeStatus(event.target.value as OfficeStatus)} className="h-9 w-full rounded-md border bg-card px-2 text-sm">
-              <option value="pending">Chờ tổng hợp</option><option value="completed">Đã tổng hợp</option>
-            </select>
-            <div className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && officeAggregationStatus(e) === officeStatus).length} cá nhân</div>
-          </div> : previewRole === "cqtt" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái rà soát</div><select aria-label="Trạng thái rà soát" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={cqttFilter} onChange={(e) => { setSelectedBatch(undefined); setCqttFilter(e.target.value as CqttStatus); }}><option value="pending">Chờ CQTT đánh giá</option><option value="report">Đã hoàn tất đánh giá</option><option value="waiting">Chờ CQ/CQĐV phản hồi</option><option value="submitted">Đã trình Hội đồng</option></select></div> : previewRole === "council" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái Hội đồng</div><select aria-label="Trạng thái Hội đồng" value={councilFilter} onChange={(event) => { setSelectedBatch(undefined); setCouncilFilter(event.target.value as CouncilFilter); }} className="h-9 w-full rounded-md border bg-card px-2 text-sm">{COUNCIL_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select><p className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && councilStatus(e.step, !!e.councilReviewed) === councilFilter).length} hồ sơ</p></div> : previewRole === "ceo" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái phê duyệt</div><select aria-label="Trạng thái phê duyệt" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={ceoFilter} onChange={(e) => setCeoFilter(e.target.value as CeoFilter)}>{CEO_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select></div> : <>
+          {["office", "cqtt", "council", "ceo"].includes(previewRole) ? <>
+            <div className="mb-3 border-b pb-3 font-medium">Trạng thái</div>
+            <div className="space-y-4">{roleStatusOptions.map(option => <label key={option.key} className="flex cursor-pointer items-center gap-2 text-foreground">
+              <span className="relative grid size-5 shrink-0 place-items-center"><input type="checkbox" checked={selectedRoleStatus === option.key} onChange={() => changeRoleStatus(option.key)} style={{ "--box": toneBoxColor[option.tone] } as React.CSSProperties} className="peer size-5 cursor-pointer appearance-none rounded-md border border-body bg-card checked:border-[var(--box)] checked:bg-[var(--box)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><Check aria-hidden strokeWidth={3} className="pointer-events-none absolute size-3.5 text-white opacity-0 peer-checked:opacity-100" /></span>
+              <span>{option.label}</span><span className="ml-auto text-xs text-muted-foreground">{evaluations.filter(e => e.period === period && (block === "all" || e.block === block) && roleStatus(e) === option.key).length}</span>
+            </label>)}</div>
+          </> : <>
           <div className="mb-3 border-b pb-3 font-medium">{previewRole === "performer" ? "Trạng thái" : "Bước xử lý"}</div>
           <div className="space-y-4">
             {FILTER_STEPS.map((s) => (
