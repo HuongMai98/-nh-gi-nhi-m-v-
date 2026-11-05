@@ -1,3 +1,4 @@
+import { assessmentCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
 import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
@@ -109,6 +110,7 @@ export function AggregateForm({
   const classified = counts.reduce((sum, c) => sum + c.n, 0);
   const denominator = counts.filter((c) => c.ki !== "K").reduce((n, c) => n + c.n, 0);
   function exportData() {
+    if (isKpi) { exportCsv(title, assessmentCsvRows(summaryRecords)); return; }
     exportCsv(title, [
       isKpi
         ? [
