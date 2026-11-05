@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EvaluationDateInput } from "@/components/EvaluationDateInput";
 import { useEvaluations } from "@/components/evaluation-context";
-import { allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
+import { statusLabelOf, allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
 import { CURRENT_USER, USERS, unitLeaders, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
@@ -149,21 +149,19 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     <div className="space-y-4">
       <section className={card} aria-label="Thông tin chung">
         <h3 className={cardTitle}>Thông tin chung</h3>
-        <div className="grid items-start gap-6 xl:grid-cols-2">
-        <div className="space-y-4">
-          
+        <div className="grid grid-cols-1 items-start gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <label className={fieldLabel + " block"}>Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass + " font-normal text-foreground"} value={performerId} onChange={(event) => {
             setPerformerId(event.target.value);
             setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
           }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-sm">{Object.entries({ employeeId: performer?.employeeId ?? "—", unit: performer?.unit ?? unit, ...personalMetadata(performerId) }).map(([key, value]) => <div key={key}><div className="text-xs text-muted-foreground">{key === "unit" ? "Đơn vị" : key === "employeeId" ? "Mã nhân viên" : key === "jobTitle" ? "Chức danh" : key === "location" ? "Địa điểm làm việc" : "Phiếu giao nhiệm vụ"}</div><div className="mt-1 text-foreground">{value}</div></div>)}</div>
+          {[["Mã nhân viên", performer?.employeeId], ["Đơn vị", performer?.unit ?? unit], ["Chức danh", personalMetadata(performerId).jobTitle], ["Địa điểm làm việc", personalMetadata(performerId).location], ["Phiếu giao nhiệm vụ", personalMetadata(performerId).assignmentRef]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
+        <div className="grid grid-cols-1 items-start gap-4 border-t pt-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <div className="grid grid-cols-2 gap-4"><label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
+          <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
+          <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{existing ? statusLabelOf(existing) : "Chờ tự đánh giá"}</div></div>
           <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
           <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
-        </div>
         </div>
       </section>
       <div className={card + " min-w-0"}>
