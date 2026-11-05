@@ -1,5 +1,5 @@
+import { TrashIcon } from "@/components/icons";
 import { Fragment, useState } from "react";
-import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cqttTaskScores, totalScore, type Criterion } from "@/lib/evaluation";
@@ -64,7 +64,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
           <td className="p-2">{showCqtt ? <Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24 text-center" type="number" min="1" max="5" step="0.01" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /> : <select aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="mx-auto h-9 w-28 min-w-28 rounded-md border bg-card px-2 text-center text-sm" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })}><option value="">Chọn điểm</option>{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>}</td>
           {showCqtt && <td className="p-3 text-center font-medium text-primary" aria-label={`QLTT đánh giá ${index + 1}`} title="Điểm CQTT đã đánh giá cho công việc — tham chiếu, không chỉnh sửa">{cqttAllocated?.[index] == null ? "—" : String(Math.round(cqttAllocated[index]! * 100) / 100)}</td>}
-          <td className="p-2"><Button type="button" variant="ghost" size="icon" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><Trash2 /></Button></td>
+          <td className="p-2"><Button type="button" variant="ghost" size="action" title="Xóa nhiệm vụ" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><TrashIcon /></Button></td>
         </tr>)}
       </Fragment>)}
       </tbody>

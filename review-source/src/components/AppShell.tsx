@@ -220,6 +220,17 @@ export function AppShell({
   );
 }
 
+/** Màu ô tích theo trạng thái (kiểu bộ lọc Trạng thái của VOffice: tích thì tô màu của trạng thái). */
+export const toneBoxColor: Record<string, string> = {
+  pending: "#EAB308",
+  review: "#8B5CF6",
+  council: "#F97316",
+  warning: "#F59E0B",
+  info: "#60A5FA",
+  danger: "#EF4444",
+  success: "#22C55E",
+  muted: "#9CA3AF",
+};
 const toneCls = {
   pending:
     "border-yellow-300 bg-yellow-50 text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200",

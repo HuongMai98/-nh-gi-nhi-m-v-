@@ -1,9 +1,9 @@
-import { useState, useRef, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Plus, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EvaluationDateInput } from "@/components/EvaluationDateInput";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
 import { allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
@@ -13,7 +13,14 @@ import { SOURCE_TASKS, quarterTasks } from "@/lib/source-tasks";
 
 import { CreateEvaluationTable, type FormCriterion } from "@/components/CreateEvaluationTable";
 const blankCriterion = (): Criterion => ({ group: "A", goal: "", kpi: "", unit: "", weight: 1, target: { t: "", b: "", s: "" }, result: "", self: 0 });
-const selectClass = "h-9 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring";
+const selectClass = "h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring";
+// Bố cục theo trang Thêm mới nhiệm vụ của VOffice: thẻ trắng bo 8px, đệm 20px, bóng nhẹ; tiêu đề thẻ 16px đậm.
+const card = "space-y-4 rounded-lg bg-card p-5 shadow-[0_4px_30px_rgba(30,58,138,0.05)]";
+const cardTitle = "text-base font-semibold text-foreground";
+const fieldLabel = "space-y-2 text-sm font-medium text-secondary-foreground";
+/** Chỗ đặt nút Hủy / Lưu / Gửi ở đầu trang (AppShell actions); không có thì hiện ở cuối form. */
+export const EVALUATION_FORM_ACTIONS_ID = "evaluation-form-actions";
+const FORM_ID = "evaluation-form";
 
 export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing }: { existing?: Evaluation; open: boolean; onOpenChange: (open: boolean) => void; onCreated: (evaluation: Evaluation) => void }) {
   const { evaluations, addEvaluation, replaceSelfEvaluation, updateEvaluation } = useEvaluations();
@@ -61,6 +68,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     setNotice("Đã điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá. Bấm Cập nhật để lưu.");
   }
   const weight = Math.round(criteria.reduce((sum, item) => sum + item.weight, 0) * 10000) / 100;
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setActionsSlot(document.getElementById(EVALUATION_FORM_ACTIONS_ID)); }, []);
 
   function reserve() {
     if (!responseNote.trim()) { setError("Vui lòng nhập lý do bảo lưu tại mục Phản hồi CQTT."); return; }
@@ -123,58 +132,61 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     onOpenChange(false);
   }
 
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="flex max-h-[95dvh] w-[calc(100%-2rem)] max-w-[1600px] flex-col overflow-hidden bg-card p-0" aria-describedby={undefined}>
-      <DialogHeader className="border-b px-6 py-5 pr-12"><DialogTitle className="tracking-normal">{existing ? "Cập nhật phiếu đánh giá" : "Tạo phiếu đánh giá"}</DialogTitle></DialogHeader>
-      <form onSubmit={submit} className="flex min-h-0 flex-col">
-        <div className="min-h-0 space-y-6 overflow-y-auto px-6 py-5">
-          <section>
-            <h2 className="mb-4 text-sm font-semibold">1. Thông tin chung</h2>
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <label className="space-y-1.5 text-sm">Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass} value={performerId} onChange={(event) => {
-                setPerformerId(event.target.value);
-                setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
-              }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
-                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-sm">{Object.entries({ employeeId: performer?.employeeId ?? "—", unit: performer?.unit ?? unit, ...personalMetadata(performerId) }).map(([key, value]) => <div key={key}><div className="text-xs text-muted-foreground">{key === "unit" ? "Đơn vị" : key === "employeeId" ? "Mã nhân viên" : key === "jobTitle" ? "Chức danh" : key === "location" ? "Địa điểm làm việc" : "Phiếu giao nhiệm vụ"}</div><div className="mt-1">{value}</div></div>)}</div>
-              </div>
-              <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-                <label className="space-y-1.5 text-sm">Khối <span className="text-primary">*</span><Input className="bg-muted/40 shadow-none" readOnly value={block} /></label>
-                <div className="grid grid-cols-2 gap-2"><label className="space-y-1.5 text-sm">Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className="space-y-1.5 text-sm">Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm"><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
-              </div>
-            </div>
-          </section>
-          <section className="border-t pt-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h2 className="text-sm font-semibold">2. Đánh giá kết quả thực hiện nhiệm vụ, công việc</h2><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
-            <Button type="button" variant="outline" className="mb-4" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
-            <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} />
-            <Button type="button" variant="outline" className="mt-3" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
-          </section>
-          {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
-            <h2 className="mb-3 text-sm font-semibold">3. Phản hồi yêu cầu điều chỉnh của CQTT</h2>
-            <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              <div><span className="font-medium">CQTT yêu cầu:</span> {existing!.note || "—"}</div>
-              <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
-            </div>
-            <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-md border bg-card p-3 text-sm" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
-            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
-              <li><span className="font-medium text-foreground">Cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
-              <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
-              <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
-            </ul>
-          </section>}
-          {error && <p role="alert" className="text-sm text-primary">{error}</p>}
-          {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
-        </div>
-        <div className="flex shrink-0 justify-end gap-2 border-t bg-card px-6 py-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button><Button type="submit" disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Cập nhật" : "Lưu"}</Button>{responding ? <>
-          <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
-          <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
-          <Button type="submit" disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt">Gửi CQTT</Button>
-        </> : <Button type="submit" onClick={() => { submitIntent.current = "send"; }} value="send">Gửi đánh giá</Button>}</div>
-      </form>
-    </DialogContent>
-  </Dialog>;
+  if (!open) return null;
+  const big = "h-[42px] px-[18px] text-base";
+  const actions = <>
+    <Button type="button" variant="outline" className={big} onClick={() => onOpenChange(false)}>Hủy</Button>
+    <Button type="submit" form={FORM_ID} disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline" className={big}>{existing ? "Cập nhật" : "Lưu"}</Button>
+    {responding ? <>
+      <Button type="button" variant="return" className={big} onClick={reserve}><Undo2 />Bảo lưu</Button>
+      <Button type="button" variant="outline" className={big} onClick={acceptCqtt}>Tiếp thu</Button>
+      <Button type="submit" form={FORM_ID} disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt" className={big}>Gửi CQTT</Button>
+    </> : <Button type="submit" form={FORM_ID} onClick={() => { submitIntent.current = "send"; }} value="send" className={big}>Gửi đánh giá</Button>}
+  </>;
+  const title = existing ? "Cập nhật phiếu đánh giá" : "Tạo phiếu đánh giá";
+  return <form id={FORM_ID} onSubmit={submit} aria-label={title} className="space-y-4">
+    <h2 className="sr-only">{title}</h2>
+    <div className="grid items-start gap-4 xl:grid-cols-[430px_minmax(0,1fr)]">
+      <div className="space-y-4">
+        <section className={card}>
+          <h3 className={cardTitle}>Người được đánh giá</h3>
+          <label className={fieldLabel + " block"}>Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass + " font-normal text-foreground"} value={performerId} onChange={(event) => {
+            setPerformerId(event.target.value);
+            setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
+          }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 text-sm">{Object.entries({ employeeId: performer?.employeeId ?? "—", unit: performer?.unit ?? unit, ...personalMetadata(performerId) }).map(([key, value]) => <div key={key}><div className="text-xs text-muted-foreground">{key === "unit" ? "Đơn vị" : key === "employeeId" ? "Mã nhân viên" : key === "jobTitle" ? "Chức danh" : key === "location" ? "Địa điểm làm việc" : "Phiếu giao nhiệm vụ"}</div><div className="mt-1 text-foreground">{value}</div></div>)}</div>
+        </section>
+        <section className={card}>
+          <h3 className={cardTitle}>Kỳ đánh giá</h3>
+          <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
+          <div className="grid grid-cols-2 gap-4"><label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
+          <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
+          <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
+        </section>
+      </div>
+      <div className={card + " min-w-0"}>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
+        <Button type="button" variant="outline" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
+        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} />
+        <Button type="button" variant="outline" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
+        {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
+          <h3 className={cardTitle + " mb-3"}>Phản hồi yêu cầu điều chỉnh của CQTT</h3>
+          <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <div><span className="font-medium">CQTT yêu cầu:</span> {existing!.note || "—"}</div>
+            <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
+          </div>
+          <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm shadow-xs" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
+          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+            <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
+            <li><span className="font-medium text-foreground">Cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
+            <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
+            <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
+          </ul>
+        </section>}
+        {error && <p role="alert" className="text-sm text-primary">{error}</p>}
+        {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
+      </div>
+    </div>
+    {actionsSlot ? createPortal(actions, actionsSlot) : <div className="flex justify-end gap-2">{actions}</div>}
+  </form>;
 }

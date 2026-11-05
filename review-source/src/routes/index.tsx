@@ -1,5 +1,5 @@
+import { EditIcon, FilterIcon } from "@/components/icons";
 import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
 import { cqttStatus, type CqttStatus } from "@/lib/cqtt-filter";
 import { officeAggregationStatus, officeSubmissionSummary, type OfficeStatus } from "@/lib/office-filter";
@@ -7,19 +7,19 @@ import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
+  Check,
   BarChart3,
   ClipboardCheck,
   Eye,
-  Pencil,
   KanbanSquare,
   List,
   Plus,
   RefreshCw,
   Search,
   Settings,
-  SlidersHorizontal,
+  ChevronUp,
 } from "lucide-react";
-import { AppShell, StatusPill } from "@/components/AppShell";
+import { AppShell, StatusPill, toneBoxColor } from "@/components/AppShell";
 import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import {
   ASSIGNING_UNIT,
@@ -46,7 +46,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AggregateForm } from "@/components/AggregateForm";
-import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
 import { useEvaluations } from "@/components/evaluation-context";
 
 // ponytail: tạm ẩn tab Phụ lục Kết quả, đổi thành true khi có nghiệp vụ dùng lại (code vẫn giữ nguyên).
@@ -100,9 +99,6 @@ function Index() {
     previewRole === "office" ? "kpi" : "list",
   );
   const activeView = previewRole === "performer" ? "list" : view;
-  const [editing, setEditing] = useState<Evaluation | undefined>();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [created, setCreated] = useState("");
   const [period, setPeriod] = useState("Quý III/2026");
   const [filter, setFilter] = useState<Set<Step>>(new Set(FILTER_STEPS.map((s) => s.key)));
   const [block, setBlock] = useState<"all" | "Khối Cơ quan" | "Khối Đơn vị">("all");
@@ -115,6 +111,10 @@ function Index() {
   const [unitFilter, setUnitFilter] = useState("");
   const [kiFilter, setKiFilter] = useState("");
   const advancedCount = Number(!!unitFilter) + Number(!!kiFilter);
+  // Tìm kiếm nâng cao theo VOffice: mở ngay trong trang, chọn điều kiện rồi bấm Tìm kiếm mới áp dụng.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [draftUnit, setDraftUnit] = useState("");
+  const [draftKi, setDraftKi] = useState("");
   const [q, setQ] = useState("");
   const officeSummary = officeSubmissionSummary(evaluations, period, block, unitFilter);
   const rows = useMemo(
@@ -151,16 +151,8 @@ function Index() {
           <Button variant="outline" size="icon" className="h-10 w-10" title="Làm mới" aria-label="Làm mới" disabled={refreshing} onClick={refresh}><RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} /></Button>
           {/* Chỉ CQĐV/CQ được tạo phiếu đánh giá. */}
           {previewRole === "performer" && (
-            <Button
-              onClick={() => {
-                setEditing(undefined);
-                setCreated("");
-                setCreateOpen(true);
-              }}
-              className="h-10"
-            >
-              <Plus />
-              Tạo đánh giá
+            <Button className="h-10" asChild>
+              <Link to="/tao-danh-gia"><Plus />Tạo đánh giá</Link>
             </Button>
           )}
           {/* Nút thao tác chính theo vai trò, đặt bên phải cùng các nút khác. */}
@@ -169,29 +161,6 @@ function Index() {
       }
     >
       {refreshMessage && <p role="status" className="mb-3 text-sm text-muted-foreground">{refreshMessage}</p>}
-      {createOpen && previewRole === "performer" && (
-        <CreateEvaluationDialog
-          {...(editing ? { existing: editing } : {})}
-          key={editing?.id ?? "new"}
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          onCreated={(evaluation) => {
-            setCreated(`${editing ? "Đã cập nhật" : "Đã tạo"} phiếu ${evaluation.id}`);
-            setPeriod(evaluation.period);
-            setQ("");
-            setBlock("all");
-            setFilter(new Set(MAIN_STEPS.map((step) => step.key)));
-          }}
-        />
-      )}
-      {created && (
-        <div
-          role="status"
-          className="mb-4 rounded-md border border-success/40 bg-success-soft px-4 py-3 text-sm text-success"
-        >
-          {created}
-        </div>
-      )}
       <div
         className="mb-4 flex flex-wrap gap-1 border-b"
         role="tablist"
@@ -251,15 +220,20 @@ function Index() {
             <div className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && officeAggregationStatus(e) === officeStatus).length} cá nhân</div>
           </div> : previewRole === "cqtt" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái rà soát</div><select aria-label="Trạng thái rà soát" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={cqttFilter} onChange={(e) => { setSelectedBatch(undefined); setCqttFilter(e.target.value as CqttStatus); }}><option value="pending">Chờ CQTT đánh giá</option><option value="report">Đã hoàn tất đánh giá</option><option value="waiting">Chờ CQ/CQĐV phản hồi</option><option value="submitted">Đã trình Hội đồng</option></select></div> : previewRole === "council" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái Hội đồng</div><select aria-label="Trạng thái Hội đồng" value={councilFilter} onChange={(event) => { setSelectedBatch(undefined); setCouncilFilter(event.target.value as CouncilFilter); }} className="h-9 w-full rounded-md border bg-card px-2 text-sm">{COUNCIL_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select><p className="mt-3 text-xs text-muted-foreground">{evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && councilStatus(e.step, !!e.councilReviewed) === councilFilter).length} hồ sơ</p></div> : previewRole === "ceo" ? <div><div className="mb-3 border-b pb-3 font-medium">Trạng thái phê duyệt</div><select aria-label="Trạng thái phê duyệt" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={ceoFilter} onChange={(e) => setCeoFilter(e.target.value as CeoFilter)}>{CEO_FILTERS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}</select></div> : <>
           <div className="mb-3 border-b pb-3 font-medium">{previewRole === "performer" ? "Trạng thái" : "Bước xử lý"}</div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {FILTER_STEPS.map((s) => (
-              <label key={s.key} className="flex cursor-pointer items-center gap-2.5">
-                <input
-                  type="checkbox"
-                  checked={filter.has(s.key)}
-                  onChange={() => toggle(s.key)}
-                  className="h-4 w-4 accent-primary"
-                />
+              <label key={s.key} className="flex cursor-pointer items-center gap-2 text-foreground">
+                {/* Ô tích kiểu VOffice: 20×20, bo 6px; tích thì tô màu của trạng thái, chưa tích viền xám đậm. */}
+                <span className="relative grid size-5 shrink-0 place-items-center">
+                  <input
+                    type="checkbox"
+                    checked={filter.has(s.key)}
+                    onChange={() => toggle(s.key)}
+                    style={{ "--box": toneBoxColor[STATUS[s.key].tone] } as React.CSSProperties}
+                    className="peer size-5 cursor-pointer appearance-none rounded-md border border-body bg-card checked:border-[var(--box)] checked:bg-[var(--box)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  />
+                  <Check aria-hidden strokeWidth={3} className="pointer-events-none absolute size-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                </span>
                 <span>{s.label}</span>
                 <span className="ml-auto text-xs text-muted-foreground">
                   {
@@ -275,27 +249,37 @@ function Index() {
 
         <div className="min-w-0 flex-1">
           <div className={"mb-3 flex flex-wrap items-center gap-3 " + (previewRole === "council" && activeView === "ki" ? "sticky top-0 z-40 bg-card py-2" : "")}>
-            <div className="flex min-w-0 w-80 items-center gap-2 rounded-md border border-primary/30 px-3 py-2">
+            <div className="flex h-9 w-80 min-w-0 items-center gap-2 rounded-md border border-input bg-card px-3 shadow-xs focus-within:border-primary">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Người thực hiện / Đơn vị"
-                className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
-
-            <Popover><PopoverTrigger asChild><Button variant="outline" className={advancedCount ? "border-primary/40 text-primary" : ""}><SlidersHorizontal className="h-4 w-4" />Lọc nâng cao{advancedCount > 0 && <span className="rounded bg-accent px-1.5 text-xs">{advancedCount}</span>}</Button></PopoverTrigger><PopoverContent align="start" className="w-80 space-y-4 bg-card p-4"><h3 className="text-sm font-semibold">Lọc nâng cao</h3><label className="block space-y-2 text-sm">Đơn vị/Cơ quan<select aria-label="Lọc theo đơn vị/cơ quan" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={unitFilter} onChange={(e) => setUnitFilter(e.target.value)}><option value="">Tất cả đơn vị/cơ quan</option>{[...new Set(evaluations.filter((e) => e.period === period && (block === "all" || e.block === block)).map((e) => e.unit))].sort((a, b) => a.localeCompare(b, "vi")).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label><label className="block space-y-2 text-sm">Ki<select aria-label="Lọc theo Ki" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={kiFilter} onChange={(e) => setKiFilter(e.target.value)}><option value="">Tất cả Ki</option>{["A+", "A", "B", "C", "D", "K"].map((ki) => <option key={ki} value={ki}>{ki}</option>)}<option value="unrated">Chưa xếp Ki</option></select></label><div className="flex items-center justify-between border-t pt-3"><span className="text-xs text-muted-foreground">Áp dụng ngay khi chọn</span><Button variant="ghost" size="sm" onClick={() => { setUnitFilter(""); setKiFilter(""); }}>Xóa bộ lọc</Button></div></PopoverContent></Popover>
-            <div className="ml-auto flex rounded-lg bg-muted p-1 text-sm">
+            <span aria-hidden className="h-9 w-px bg-border" />
+            <Button
+              variant="outline"
+              size="icon"
+              title="Tìm kiếm nâng cao"
+              aria-label="Tìm kiếm nâng cao"
+              aria-expanded={advancedOpen}
+              onClick={() => { if (!advancedOpen) { setDraftUnit(unitFilter); setDraftKi(kiFilter); } setAdvancedOpen(!advancedOpen); }}
+              className={cn("relative text-secondary-foreground [&_svg]:size-5", (advancedOpen || advancedCount > 0) && "border-primary")}
+            >
+              <FilterIcon />
+              {advancedCount > 0 && <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">{advancedCount}</span>}
+            </Button>
+            <div className="ml-auto flex rounded-lg bg-muted p-1 text-sm font-semibold">
               {(["all", "Khối Cơ quan", "Khối Đơn vị"] as const).map((b) => (
                 <button
                   key={b}
                   onClick={() => setBlock(b)}
                   className={cn(
-                    "rounded-md px-5 py-1.5",
-                    block === b
-                      ? "bg-card font-medium text-primary shadow-sm"
-                      : "text-muted-foreground",
+                    // Theo nhóm nút Danh sách / Đơn vị thực hiện của VOffice: 160×36, chữ 600, không bóng.
+                    "h-9 min-w-40 rounded-md px-3.5",
+                    block === b ? "bg-card text-primary" : "text-body hover:text-foreground",
                   )}
                 >
                   {b === "all" ? "Tất cả" : b}
@@ -303,6 +287,26 @@ function Index() {
               ))}
             </div>
           </div>
+          {advancedOpen && (
+            <section aria-label="Tìm kiếm nâng cao" className="mb-4 border-b pb-5">
+              <div className="flex items-center justify-between py-3">
+                <h2 className="text-xl font-semibold text-foreground">Tìm kiếm nâng cao</h2>
+                <Button variant="ghost" size="icon" aria-label="Thu gọn tìm kiếm nâng cao" onClick={() => setAdvancedOpen(false)}><ChevronUp className="!size-6" /></Button>
+              </div>
+              <div className="grid gap-x-4 gap-y-4 md:grid-cols-3">
+                <label className="space-y-2 text-sm font-medium text-secondary-foreground">Đơn vị/Cơ quan
+                  <select aria-label="Lọc theo đơn vị/cơ quan" className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftUnit} onChange={(e) => setDraftUnit(e.target.value)}><option value="">-- Tất cả --</option>{[...new Set(evaluations.filter((e) => e.period === period && (block === "all" || e.block === block)).map((e) => e.unit))].sort((a, b) => a.localeCompare(b, "vi")).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select>
+                </label>
+                <label className="space-y-2 text-sm font-medium text-secondary-foreground">Xếp hạng Ki
+                  <select aria-label="Lọc theo Ki" className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftKi} onChange={(e) => setDraftKi(e.target.value)}><option value="">-- Tất cả --</option>{["A+", "A", "B", "C", "D", "K"].map((ki) => <option key={ki} value={ki}>{ki}</option>)}<option value="unrated">Chưa xếp Ki</option></select>
+                </label>
+              </div>
+              <div className="mt-5 flex justify-end gap-3">
+                <Button variant="outline" className="h-[46px] px-7 text-base" onClick={() => { setDraftUnit(""); setDraftKi(""); setUnitFilter(""); setKiFilter(""); }}>Đặt lại</Button>
+                <Button className="h-[46px] px-7 text-base" onClick={() => { setUnitFilter(draftUnit); setKiFilter(draftKi); }}>Tìm kiếm</Button>
+              </div>
+            </section>
+          )}
 
           {previewRole === "office" && !(activeView === "ki" && !rows.some(hasKiData)) && (() => {
             const { unassessed, total } = officeSummary;
@@ -513,9 +517,9 @@ function Index() {
                           })()}
                         </td>
                         <td className="px-3 py-4">
-                          <div className="flex items-center gap-3 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-body">
                             {selfEditable(e, previewRole) && canSubmitEvaluation(e, CURRENT_USER) && (
-                              <Button variant="ghost" size="icon" title={canSubmitEvaluation(e, CURRENT_USER) ? "Cập nhật" : "Chỉ người thực hiện hoặc người cùng đơn vị được cập nhật"} aria-label={`Cập nhật ${e.id}`} disabled={!canSubmitEvaluation(e, CURRENT_USER)} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><Pencil className="h-4 w-4" /></Link></Button>
+                              <Button variant="ghost" size="action" title={canSubmitEvaluation(e, CURRENT_USER) ? "Cập nhật" : "Chỉ người thực hiện hoặc người cùng đơn vị được cập nhật"} aria-label={`Cập nhật ${e.id}`} disabled={!canSubmitEvaluation(e, CURRENT_USER)} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><EditIcon /></Link></Button>
                             )}
                             {previewRole === "cqtt" && e.step === "cqtt_report" && cqttSummarizable(e) && (
                               e.cqttSummarized
@@ -528,9 +532,9 @@ function Index() {
                             {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed && (
                               e.councilSummaryCreated ? <span className="whitespace-nowrap text-xs text-success">Đã tổng hợp KI</span> : <Button variant="outline" size="sm" aria-label={`Tổng hợp KI ${e.id}`} onClick={() => { createCouncilSummary([e.id]); setView("ki"); }}>Tổng hợp KI</Button>
                             )}
-                            <Link to="/danh-gia/$id" params={{ id: e.id }} title="Xem chi tiết">
-                              <Eye className="h-4 w-4 hover:text-primary" />
-                            </Link>
+                            <Button variant="ghost" size="action" asChild>
+                              <Link to="/danh-gia/$id" params={{ id: e.id }} title="Xem chi tiết" aria-label={`Xem chi tiết ${e.id}`}><Eye /></Link>
+                            </Button>
                           </div>
                         </td>
                       </tr>

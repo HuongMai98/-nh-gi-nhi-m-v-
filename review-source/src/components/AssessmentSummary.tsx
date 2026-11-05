@@ -1,7 +1,8 @@
+import { EditIcon } from "@/components/icons";
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download, Save, Undo2, ArrowUpRight, Send, Pencil } from "lucide-react";
+import { Download, Save, Undo2, ArrowUpRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -181,7 +182,7 @@ export function AssessmentSummary({
             <Download />
             Xuất CSV
           </Button>
-          {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><Pencil />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
+          {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><EditIcon />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
           {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
           {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
         </div>
@@ -521,7 +522,7 @@ function AssessmentRow({
         {/* Thao tác: hàng icon Chỉnh sửa · Lưu · Gửi Hội đồng; Gửi điều chỉnh đặt bên dưới. */}
         {canNote && <div className="flex flex-col items-center gap-2">
           <div className="flex items-center justify-center gap-1.5">
-            <Button type="button" variant="outline" size="icon" className={cn("h-8 w-8 shrink-0", editing && "border-primary/40 bg-accent text-primary")} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${e.id}`} aria-pressed={editing} onClick={() => { if (canScore) setAdjusting(true); setNoteEditing(true); }}><Pencil className="h-4 w-4" /></Button>
+            <Button type="button" variant="outline" size="icon" className={cn("h-8 w-8 shrink-0", editing && "border-primary/40 bg-accent text-primary")} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${e.id}`} aria-pressed={editing} onClick={() => { if (canScore) setAdjusting(true); setNoteEditing(true); }}><EditIcon /></Button>
             <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Lưu" aria-label={`Lưu ${e.id}`} disabled={e.step === "cqtt_report" && draft.note === undefined} onClick={saveNote}><Save /></Button>
             {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi Hội đồng" aria-label={`Gửi Hội đồng ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
           </div>

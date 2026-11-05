@@ -1,7 +1,8 @@
+import { EditIcon } from "@/components/icons";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ChevronDown, ClipboardCheck, Copy, Pencil, Download, MessageSquare, Save, Send, Undo2 } from "lucide-react";
+import { Check, ChevronDown, ClipboardCheck, Copy, Download, MessageSquare, Save, Send, Undo2 } from "lucide-react";
 import { AppShell, StatusPill, statusStepClasses } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { AggregateForm, exportCsv, fieldClass, LABOR } from "@/components/AggregateForm";
@@ -30,7 +31,7 @@ import { roleOf, statusLabelOf,
   type Action,
   type Draft,
 } from "@/lib/evaluation";
-import { CreateEvaluationDialog } from "@/components/CreateEvaluationDialog";
+import { CreateEvaluationDialog, EVALUATION_FORM_ACTIONS_ID } from "@/components/CreateEvaluationDialog";
 import { STAGES, handlerFor, returnLabel, slaFor, slaLabel, stageOf, type StageKey } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/danh-gia/$id")({
@@ -56,7 +57,7 @@ function Detail() {
   if (!ev) throw notFound();
   const editAllowed = ev.step !== "done" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   const showView = () => { void navigate({ search: {} }); };
-  if (mode === "edit" && (ev.step === "self" || ev.step === "response") && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<><Link to="/" className="hover:text-foreground">Đánh giá</Link><span>›</span><span>Chỉnh sửa đánh giá</span></>}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
+  if (mode === "edit" && (ev.step === "self" || ev.step === "response") && editAllowed) return <AppShell title="Chỉnh sửa đánh giá" crumbs={<><Link to="/" className="hover:text-foreground">Đánh giá</Link><span>›</span><span>Chỉnh sửa đánh giá</span></>} actions={<div id={EVALUATION_FORM_ACTIONS_ID} className="flex flex-wrap gap-2" />}><CreateEvaluationDialog key={ev.id} existing={ev} open onOpenChange={(open) => { if (!open) showView(); }} onCreated={showView} /></AppShell>;
   return (
     <EvaluationDetail
       key={`${ev.id}-${ev.updated}-${ev.history?.length ?? 0}-${ev.step}-${previewRole}-${mode ?? "view"}`}
@@ -280,11 +281,11 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <Download />
             Xuất template CSV
           </Button>
-          {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><Pencil />Chỉnh sửa</Button>)}
+          {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><EditIcon />Chỉnh sửa</Button>)}
           {readOnly && ev.step === "self" && previewRole === "performer" && canSubmitEvaluation(ev, CURRENT_USER) && <Button onClick={() => run("submit")}><Send />Gửi đánh giá</Button>}
           {canCqttTasks && !cqttEditing && (
             <Button variant="outline" onClick={() => { setCqttEditing(true); setTab("personal"); }}>
-              <Pencil />
+              <EditIcon />
               Chỉnh sửa
             </Button>
           )}

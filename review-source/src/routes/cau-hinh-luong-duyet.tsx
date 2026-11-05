@@ -1,6 +1,7 @@
+import { EditIcon, TrashIcon } from "@/components/icons";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Copy, Eye, Pencil, Plus, RotateCcw, Save, Send, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Copy, Eye, Plus, RotateCcw, Save, Send, Undo2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AppShell, StatusPill } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -115,14 +116,14 @@ function VersionList() {
       actions={<Button asChild><Link to="/cau-hinh-luong-duyet" search={{ id: "new" }}><Plus />Thêm cấu hình</Link></Button>}
     >
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex rounded-lg bg-muted p-1 text-sm" role="tablist" aria-label="Lọc theo khối">
+        <div className="flex rounded-lg bg-muted p-1 text-sm font-semibold" role="tablist" aria-label="Lọc theo khối">
           {(["all", ...BLOCKS] as const).map((b) => (
             <button
               key={b}
               role="tab"
               aria-selected={b === block}
               onClick={() => setBlock(b)}
-              className={cn("rounded-md px-5 py-1.5", b === block ? "bg-card font-medium text-primary shadow-sm" : "text-muted-foreground")}
+              className={cn("h-9 min-w-40 rounded-md px-3.5", b === block ? "bg-card text-primary" : "text-body hover:text-foreground")}
             >
               {b === "all" ? "Tất cả" : b}
             </button>
@@ -156,10 +157,10 @@ function VersionList() {
                   <td className="px-3 py-3 whitespace-nowrap text-xs">{v.updatedAt ?? "—"}</td>
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link to="/cau-hinh-luong-duyet" search={{ id: v.id }} title="Sửa" aria-label={`Sửa ${v.name}`}><Pencil /></Link>
+                      <Button variant="ghost" size="action" asChild>
+                        <Link to="/cau-hinh-luong-duyet" search={{ id: v.id }} title="Sửa" aria-label={`Sửa ${v.name}`}><EditIcon /></Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                      <Button variant="ghost" size="action" asChild>
                         <Link to="/cau-hinh-luong-duyet" search={{ id: "new", from: v.id }} title="Nhân bản" aria-label={`Nhân bản ${v.name}`}><Copy /></Link>
                       </Button>
                       {status !== "active" && (
@@ -169,7 +170,7 @@ function VersionList() {
                             <Button variant="ghost" size="sm" onClick={() => setPendingDelete("")}>Hủy</Button>
                           </>
                         ) : (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Xóa" aria-label={`Xóa ${v.name}`} onClick={() => setPendingDelete(v.id)}><Trash2 /></Button>
+                          <Button variant="ghost" size="action" title="Xóa" aria-label={`Xóa ${v.name}`} onClick={() => setPendingDelete(v.id)}><TrashIcon /></Button>
                         )
                       )}
                     </div>
@@ -466,7 +467,7 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
                           aria-label={`Xóa bước ${cs.name}`}
                           onClick={() => update((c) => { c.customStages = (c.customStages ?? []).filter((x) => x.id !== cs.id); })}
                         >
-                          <Trash2 />
+                          <TrashIcon />
                         </Button>
                       </div>
                     </td>
