@@ -460,6 +460,7 @@ function Index() {
                       "QLTT đánh giá",
                       "Xếp loại",
                       "Trạng thái",
+                      ...(previewRole === "cqtt" ? ["Tổng hợp"] : []),
                       "Thao tác",
                     ].map((h) => (
                       <th key={h} className="whitespace-nowrap px-3 py-3 font-medium">
@@ -471,7 +472,7 @@ function Index() {
                 <tbody>
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={12} className="py-10 text-center text-muted-foreground">
+                      <td colSpan={previewRole === "cqtt" ? 13 : 12} className="py-10 text-center text-muted-foreground">
                         Không có phiếu đánh giá phù hợp
                       </td>
                     </tr>
@@ -516,12 +517,6 @@ function Index() {
                           <StatusPill tone={STATUS[e.step].tone}>
                             {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? "Hội đồng đã đánh giá" : e.step === "custom" ? statusLabelOf(e) : FILTER_STEPS.find((s) => s.key === listStage(e))?.label}
                           </StatusPill>
-                          {/* Trạng thái chung giữ "CQTT đang đánh giá"; phiếu đã hoàn tất (bộ lọc riêng) chỉ ghi trạng thái tổng hợp. */}
-                          {previewRole === "cqtt" && e.step === "cqtt_report" && (
-                            <div className={cn("mt-1 whitespace-nowrap text-xs", e.cqttSummarized ? "text-muted-foreground" : "font-medium text-amber-700")}>
-                              {e.cqttSummarized ? "Đã tổng hợp" : "Chưa tổng hợp"}
-                            </div>
-                          )}
                           {previewRole === "cqtt" && e.step === "cqtt" && cqttScoredCount(e.criteria) > 0 && (
                             <div className="mt-1 text-xs text-muted-foreground">Đã chấm {cqttScoredCount(e.criteria)}/{e.criteria.length} công việc</div>
                           )}
