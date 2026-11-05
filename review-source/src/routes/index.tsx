@@ -543,7 +543,7 @@ function Index() {
                             {previewRole === "cqtt" && e.step === "cqtt_report" && cqttSummarizable(e) && (
                               e.cqttSummarized
                                 ? <span className="whitespace-nowrap text-xs font-medium text-success">Đã tổng hợp</span>
-                                : <Button variant="outline" size="sm" className="h-8 px-2.5" aria-label={`Tổng hợp ${e.id}`} title="Tổng hợp điểm Thường trực đánh giá từ chi tiết" onClick={() => { const issue = summarizeCqtt([e.id]); setCqttError(issue ?? ""); if (!issue) setView("kpi"); }}><KanbanSquare className="h-4 w-4" />Tổng hợp</Button>
+                                : <Button variant="outline" size="icon" className="h-8 w-8" aria-label={`Tổng hợp ${e.id}`} title="Tổng hợp" onClick={() => { const issue = summarizeCqtt([e.id]); setCqttError(issue ?? ""); if (!issue) setView("kpi"); }}><KanbanSquare className="h-4 w-4" /></Button>
                             )}
                             {((previewRole === "cqtt" && e.step === "cqtt") || (previewRole === "council" && ["council", "council_adjust"].includes(e.step))) && (
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Đánh giá" aria-label={`Đánh giá ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>
