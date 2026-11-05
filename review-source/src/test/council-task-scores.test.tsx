@@ -46,13 +46,13 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("CBNV tự đánh giá");
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("QLTT đánh giá");
   expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("—");
-  const inputs=screen.getAllByRole("spinbutton",{name:/Hội đồng đánh giá mục tiêu/});
+  const inputs=screen.getAllByRole("combobox",{name:/Hội đồng đánh giá mục tiêu/});
   expect(inputs).toHaveLength(base.criteria.length);
   fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
   expect((inputs[0] as HTMLInputElement).value).not.toBe("");
   const expected = cqttTaskScores(base.criteria, cqttTotal(base))!;
   inputs.forEach((input, i) => {
-    expect(input).toHaveValue(Math.round(expected[i]! * 100) / 100);
+    expect(input).toHaveValue(String(Math.round(expected[i]! * 100) / 100));
     expect((input as HTMLInputElement).validity.stepMismatch).toBe(false);
   });
   const total = Math.round(base.criteria.reduce((sum,c,i)=>sum+c.weight*(Math.round(expected[i]!*100)/100),0)*100)/100;
@@ -62,10 +62,10 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent(rating(total).label);
   expect(screen.getByTestId("council-task-total")).toHaveClass("text-primary");
   expect(screen.getByTestId("council-task-rating")).toHaveClass("text-primary");
-  fireEvent.change(inputs[0]!,{target:{value:"3.25"}});
+  fireEvent.change(inputs[0]!,{target:{value:"3"}});
   fireEvent.click(screen.getByRole("button",{name:"Lưu"}));
   const saved=JSON.parse(screen.getByTestId("record").textContent!);
-  expect(saved.criteria[0].council).toBe(3.25);
+  expect(saved.criteria[0].council).toBe(3);
   expect(saved.councilReviewed).toBe(false);
   expect(screen.getByTestId("evaluation-ki")).not.toHaveTextContent("—");
   expect(done).not.toHaveBeenCalled();
@@ -83,9 +83,9 @@ it("Ki dự kiến cập nhật theo điểm QLTT và tuân thủ ngay trên phi
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("D");
   fireEvent.change(screen.getByLabelText("Địa điểm làm việc"),{target:{value:"Tuân thủ"}});
   fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:"Tuân thủ"}});
-  screen.getAllByRole("spinbutton",{name:/Hội đồng đánh giá mục tiêu/}).forEach(input=>fireEvent.change(input,{target:{value:"4.8"}}));
+  screen.getAllByRole("combobox",{name:/Hội đồng đánh giá mục tiêu/}).forEach(input=>fireEvent.change(input,{target:{value:"5"}}));
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A+");
-  fireEvent.change(screen.getByRole("spinbutton",{name:"Hội đồng đánh giá mục tiêu 1"}),{target:{value:""}});
+  fireEvent.change(screen.getByRole("combobox",{name:"Hội đồng đánh giá mục tiêu 1"}),{target:{value:""}});
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
   expect(JSON.parse(screen.getByTestId("record").textContent!)).toEqual(before);
 });

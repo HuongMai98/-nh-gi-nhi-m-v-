@@ -34,12 +34,12 @@ describe("workflow forms", () => {
     expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
-    screen.getAllByRole("spinbutton", { name: /Hội đồng đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"4.8"}}));
+    screen.getAllByRole("combobox", { name: /Hội đồng đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"5"}}));
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
     expect(record().step).toBe("council");
-    expect(record().councilScore).toBe(4.8);
+    expect(record().councilScore).toBe(5);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
-    expect(screen.getAllByText("4.80")).toHaveLength(2);
+    expect(screen.getAllByText("5.00")).toHaveLength(2);
     expect(screen.getByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).toBeInTheDocument();
     expect(screen.getAllByLabelText(/^QLTT đánh giá \d/)).toHaveLength(8);
     expect(
@@ -47,7 +47,7 @@ describe("workflow forms", () => {
         (sum: number, c: { weight: number; council: number }) => sum + c.weight * c.council,
         0,
       ),
-    ).toBeCloseTo(4.8, 10);
+    ).toBeCloseTo(5, 10);
   });
   it("office detail directs to batch summary without individual handoff", () => {
     render(

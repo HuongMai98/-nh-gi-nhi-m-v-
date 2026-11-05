@@ -29,9 +29,9 @@ describe("CQTT đánh giá từng công việc", () => {
     const before = record();
     fireEvent.change(screen.getByLabelText("Địa điểm làm việc"), { target: { value: "Tuân thủ" } });
     fireEvent.change(screen.getByLabelText("Nội quy lao động"), { target: { value: "Tuân thủ" } });
-    cqttRecord.criteria.forEach((_, i) => fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: "4.1" } }));
+    cqttRecord.criteria.forEach((_, i) => fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: "4" } }));
     expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A");
-    expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("4.10");
+    expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("4.00");
     fireEvent.change(screen.getByLabelText("Nội quy lao động"), { target: { value: "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" } });
     expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("B");
     fireEvent.change(screen.getByLabelText("Địa điểm làm việc"), { target: { value: "Không tuân thủ" } });
@@ -88,12 +88,12 @@ describe("CQTT đánh giá từng công việc", () => {
     render(<EvaluationProvider><Screen id={cqttRecord.id} onFinished={onFinished} /></EvaluationProvider>);
     fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
     cqttRecord.criteria.forEach((_, i) =>
-      fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: "3.5" } }));
+      fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: "4" } }));
     expect(screen.queryByRole("button", { name: /Gửi điều chỉnh CQ/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
     const r = record();
     expect(r.step).toBe("cqtt_report");
-    expect(r.criteria.every((c: { cqtt: number }) => c.cqtt === 3.5)).toBe(true);
+    expect(r.criteria.every((c: { cqtt: number }) => c.cqtt === 4)).toBe(true);
     expect(onFinished).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("CQTT đánh giá từng công việc", () => {
     fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
     fireEvent.click(screen.getByRole("button", { name: "Sao chép điểm CBNV tự đánh giá" }));
     cqttRecord.criteria.forEach((c, i) =>
-      expect(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`)).toHaveValue(c.self || null));
+      expect(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`)).toHaveValue(c.self ? String(c.self) : ""));
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
     expect(record().criteria.map((c: { cqtt?: number }) => c.cqtt)).toEqual(cqttRecord.criteria.map((c) => c.self || undefined));
   });

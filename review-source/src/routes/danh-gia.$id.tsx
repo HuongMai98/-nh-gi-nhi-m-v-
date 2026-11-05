@@ -940,23 +940,7 @@ function GroupRows({
               </td>
               {canCqtt ? (
                 <td className="px-3">
-                  <input
-                    aria-label={`QLTT đánh giá mục tiêu ${i + 1}`}
-                    type="number"
-                    inputMode="decimal"
-                    min={1}
-                    max={5}
-                    step="0.01"
-                    title="Nhập điểm từ 1 đến 5"
-                    aria-invalid={c.cqtt !== undefined && (c.cqtt < 1 || c.cqtt > 5)}
-                    className={cn(
-                      fieldClass,
-                      "my-2 w-24 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                      c.cqtt !== undefined && (c.cqtt < 1 || c.cqtt > 5) && "border-primary",
-                    )}
-                    value={c.cqtt ?? ""}
-                    onChange={(e) => update(i, { cqtt: e.target.value === "" ? undefined : Number(e.target.value) })}
-                  />
+                  <select aria-label={`QLTT đánh giá mục tiêu ${i + 1}`} className={fieldClass + " my-2 w-28 min-w-28"} value={c.cqtt ?? ""} onChange={event => update(i, { cqtt: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.cqtt !== undefined && !Number.isInteger(c.cqtt) && <option value={c.cqtt}>{c.cqtt}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
                 </td>
               ) : (
                 <td
@@ -968,8 +952,7 @@ function GroupRows({
                 </td>
               )}
               {showCouncil && <td className="px-3">
-                {canCouncil ? <input aria-label={`Hội đồng đánh giá mục tiêu ${i+1}`} type="number" min="1" max="5" step="0.01" className={fieldClass + " my-2 w-24"}
-                  value={c.council ?? ""} onChange={event => update(i, { council: event.target.value === "" ? undefined : Number(event.target.value) })} />
+                {canCouncil ? <select aria-label={`Hội đồng đánh giá mục tiêu ${i+1}`} className={fieldClass + " my-2 w-28 min-w-28"} value={c.council ?? ""} onChange={event => update(i, { council: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.council !== undefined && !Number.isInteger(c.council) && <option value={c.council}>{c.council}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
                   : c.council?.toFixed(2) ?? "—"}
               </td>}
             </>
