@@ -1,3 +1,4 @@
+import { ListPagination } from "@/components/ListPagination";
 import { EditIcon, FilterIcon } from "@/components/icons";
 import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
 import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
@@ -133,6 +134,11 @@ function Index() {
       ),
     [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter],
   );
+  const [pageSize, setPageSize] = useState(10);
+  const scope = JSON.stringify([previewRole, activeView, period, [...filter], block, q, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, pageSize]);
+  const [pagination, setPagination] = useState({ scope, page: 1 });
+  const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(rows.length / pageSize))) : 1;
+  const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
   const toggle = (k: Step) =>
     setFilter((s) => {
       const n = new Set(s);
@@ -457,7 +463,7 @@ function Index() {
                       </td>
                     </tr>
                   )}
-                  {rows.map((e) => {
+                  {pageRows.map((e) => {
                     const result = templateResult(e);
                     return (
                       <tr key={e.id} className="border-b hover:bg-muted/40">
@@ -543,6 +549,7 @@ function Index() {
                 </tbody>
               </table>
             </div>
+            <ListPagination total={rows.length} page={page} pageSize={pageSize} onPageChange={page => setPagination({ scope, page })} onPageSizeChange={setPageSize} />
             </div>
           )}
         </div>
