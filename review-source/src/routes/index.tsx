@@ -295,6 +295,7 @@ function Index() {
           </div>
           {advancedOpen && (
             <section aria-label="Tìm kiếm nâng cao" className="mb-4 border-b pb-5">
+              <div aria-hidden="true" className="mb-2 h-3 w-full bg-gradient-to-b from-slate-400/25 via-slate-300/15 to-transparent" />
               <div className="flex items-center justify-between py-3">
                 <h2 className="text-xl font-semibold text-foreground">Tìm kiếm nâng cao</h2>
                 <Button variant="ghost" size="icon" aria-label="Thu gọn tìm kiếm nâng cao" onClick={() => setAdvancedOpen(false)}><ChevronUp className="!size-6" /></Button>
