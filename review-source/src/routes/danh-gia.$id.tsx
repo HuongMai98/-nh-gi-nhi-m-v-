@@ -751,7 +751,7 @@ function PersonalTable({
                 ? []
                 : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (1-5)"])]),
             ].map((h) => (
-              <th key={h} rowSpan={2} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24", (h.startsWith("CBNV") || h.startsWith("QLTT")) && "border-x border-white/40 bg-primary text-center font-bold text-primary-foreground")}>
+              <th key={h} rowSpan={2} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24", (h.startsWith("CBNV") || h.startsWith("QLTT")) && "text-center")}>
                 {h.startsWith("CBNV") ? <>CBNV tự<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.startsWith("QLTT") ? <>QLTT<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
                 {canCouncil && h.startsWith("QLTT") && (
                   <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
