@@ -1,3 +1,4 @@
+import { matchesAdvancedSearch } from "@/lib/evaluation-search";
 import { ListPagination } from "@/components/ListPagination";
 import { EditIcon, FilterIcon } from "@/components/icons";
 import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
@@ -111,7 +112,10 @@ function Index() {
   const [officeStatus, setOfficeStatus] = useState<OfficeStatus>("pending");
   const [unitFilter, setUnitFilter] = useState("");
   const [kiFilter, setKiFilter] = useState("");
-  const advancedCount = Number(!!unitFilter) + Number(!!kiFilter);
+  const emptyAdvanced = { employeeId: "", owner: "", block: "", status: "", id: "" };
+  const [extraFilter, setExtraFilter] = useState(emptyAdvanced);
+  const [draftExtra, setDraftExtra] = useState(emptyAdvanced);
+  const advancedCount = Number(!!unitFilter) + Number(!!kiFilter) + Object.values(extraFilter).filter(Boolean).length;
   // Tìm kiếm nâng cao theo VOffice: mở ngay trong trang, chọn điều kiện rồi bấm Tìm kiếm mới áp dụng.
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [draftUnit, setDraftUnit] = useState("");
@@ -129,13 +133,14 @@ function Index() {
             : previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e))) &&
           (block === "all" || e.block === block) &&
           (!unitFilter || e.unit === unitFilter) &&
+          matchesAdvancedSearch(e, extraFilter) &&
           (!kiFilter || (kiFilter === "unrated" ? !e.ki : (e.approvedKi ?? e.ki) === kiFilter)) &&
           `${e.unit} ${e.owner} ${ASSIGNING_UNIT.name}`.toLowerCase().includes(q.toLowerCase()),
       ),
-    [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter],
+    [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter],
   );
   const [pageSize, setPageSize] = useState(10);
-  const scope = JSON.stringify([previewRole, activeView, period, [...filter], block, q, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, pageSize]);
+  const scope = JSON.stringify([previewRole, activeView, period, [...filter], block, q, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter, pageSize]);
   const [pagination, setPagination] = useState({ scope, page: 1 });
   const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(rows.length / pageSize))) : 1;
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
@@ -271,7 +276,7 @@ function Index() {
               title="Tìm kiếm nâng cao"
               aria-label="Tìm kiếm nâng cao"
               aria-expanded={advancedOpen}
-              onClick={() => { if (!advancedOpen) { setDraftUnit(unitFilter); setDraftKi(kiFilter); } setAdvancedOpen(!advancedOpen); }}
+              onClick={() => { if (!advancedOpen) { setDraftUnit(unitFilter); setDraftKi(kiFilter); setDraftExtra(extraFilter); } setAdvancedOpen(!advancedOpen); }}
               className={cn("relative text-secondary-foreground [&_svg]:size-5", (advancedOpen || advancedCount > 0) && "border-primary")}
             >
               <FilterIcon />
@@ -301,6 +306,9 @@ function Index() {
                 <Button variant="ghost" size="icon" aria-label="Thu gọn tìm kiếm nâng cao" onClick={() => setAdvancedOpen(false)}><ChevronUp className="!size-6" /></Button>
               </div>
               <div className="grid gap-x-4 gap-y-4 md:grid-cols-3">
+                {([["employeeId", "Mã nhân viên"], ["owner", "Họ và tên"], ["id", "Mã phiếu"]] as const).map(([key, label]) => <label key={key} className="space-y-2 text-sm font-medium text-secondary-foreground">{label}<input aria-label={`Lọc theo ${label.toLowerCase()}`} placeholder={`Nhập ${label.toLowerCase()}`} className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftExtra[key]} onChange={event => setDraftExtra(current => ({ ...current, [key]: event.target.value }))} /></label>)}
+                <label className="space-y-2 text-sm font-medium text-secondary-foreground">Khối<select aria-label="Lọc theo khối" className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftExtra.block} onChange={event => setDraftExtra(current => ({ ...current, block: event.target.value }))}><option value="">-- Tất cả --</option>{["Khối Cơ quan", "Khối Đơn vị"].map(value => <option key={value}>{value}</option>)}</select></label>
+                <label className="space-y-2 text-sm font-medium text-secondary-foreground">Trạng thái<select aria-label="Lọc theo trạng thái" className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftExtra.status} onChange={event => setDraftExtra(current => ({ ...current, status: event.target.value }))}><option value="">-- Tất cả --</option>{FILTER_STEPS.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
                 <label className="space-y-2 text-sm font-medium text-secondary-foreground">Đơn vị/Cơ quan
                   <select aria-label="Lọc theo đơn vị/cơ quan" className="block h-[42px] w-full rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground shadow-xs" value={draftUnit} onChange={(e) => setDraftUnit(e.target.value)}><option value="">-- Tất cả --</option>{[...new Set(evaluations.filter((e) => e.period === period && (block === "all" || e.block === block)).map((e) => e.unit))].sort((a, b) => a.localeCompare(b, "vi")).map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select>
                 </label>
@@ -309,8 +317,8 @@ function Index() {
                 </label>
               </div>
               <div className="mt-5 flex justify-end gap-3">
-                <Button variant="outline" className="h-[46px] px-7 text-base" onClick={() => { setDraftUnit(""); setDraftKi(""); setUnitFilter(""); setKiFilter(""); }}>Đặt lại</Button>
-                <Button className="h-[46px] px-7 text-base" onClick={() => { setUnitFilter(draftUnit); setKiFilter(draftKi); }}>Tìm kiếm</Button>
+                <Button variant="outline" className="h-[46px] px-7 text-base" onClick={() => { setDraftUnit(""); setDraftKi(""); setUnitFilter(""); setKiFilter(""); setDraftExtra(emptyAdvanced); setExtraFilter(emptyAdvanced); }}>Đặt lại</Button>
+                <Button className="h-[46px] px-7 text-base" onClick={() => { setUnitFilter(draftUnit); setKiFilter(draftKi); setExtraFilter(draftExtra); }}>Tìm kiếm</Button>
               </div>
             </section>
           )}
