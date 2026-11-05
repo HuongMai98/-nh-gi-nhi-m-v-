@@ -727,7 +727,7 @@ function PersonalTable({
   const update = (index: number, patch: Partial<Criterion>) =>
     onChange(items.map((c, i) => (i === index ? { ...c, ...patch } : c)));
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="relative isolate overflow-x-auto rounded-lg border">
       <table className="w-full min-w-[1250px] text-left text-sm">
         <thead className="bg-muted text-xs text-foreground">
           <tr>
@@ -740,14 +740,14 @@ function PersonalTable({
               "Đơn vị đo",
               "Tỷ trọng (%)",
             ].map((h) => (
-              <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h === "Tỷ trọng (%)" && "text-center", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>
+              <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h === "STT" && "sticky left-0 z-20 w-12 min-w-12 max-w-12 bg-muted text-center", h === "TT" && "sticky left-12 z-20 w-12 min-w-12 max-w-12 bg-muted text-center", h === "Mục tiêu nhiệm vụ/công việc" && "sticky left-24 z-20 w-72 min-w-72 max-w-72 bg-muted shadow-[2px_0_0_0_var(--color-border)]", h === "Tỷ trọng (%)" && "text-center", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>
                 {h === "Tỷ trọng (%)" ? <span className="inline-flex flex-col items-center justify-center whitespace-nowrap leading-snug"><span>Tỷ trọng</span><span>(%)</span></span> : h}{h === "Mục tiêu nhiệm vụ/công việc" && <span className="block font-normal italic">(Kết quả mong đợi đối với nhiệm vụ/công việc)</span>}{h === "Phương pháp đo" && <span className="block font-normal italic">(công thức hoặc mô tả cách tính)</span>}{h === "Đơn vị đo" && <span className="block font-normal italic">(số, số lượng, %, điểm, ...)</span>}
               </th>
             ))}
             <th colSpan={3} className="border-b px-2 py-2 text-center font-medium">
               Các mức chỉ tiêu
             </th>
-            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h === "Tỷ trọng (%)" && "text-center", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>{h}</th>)}
+            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", h === "STT" && "sticky left-0 z-20 w-12 min-w-12 max-w-12 bg-muted text-center", h === "TT" && "sticky left-12 z-20 w-12 min-w-12 max-w-12 bg-muted text-center", h === "Mục tiêu nhiệm vụ/công việc" && "sticky left-24 z-20 w-72 min-w-72 max-w-72 bg-muted shadow-[2px_0_0_0_var(--color-border)]", h === "Tỷ trọng (%)" && "text-center", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>{h}</th>)}
             {!assignment && <th colSpan={showCouncil ? 4 : 3} className="border-b px-2 py-2 text-center font-medium">Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc</th>}
           </tr>
           <tr>
@@ -868,13 +868,13 @@ function GroupRows({
     <>
       <tr className="bg-accent/50 text-primary">
         <td colSpan={assignment ? 12 : showCouncil ? 16 : 15} className="px-2 py-2 text-xs font-semibold">
-          {label}
+          <div className="sticky left-0 w-fit max-w-[384px]">{label}</div>
         </td>
       </tr>
       {rows.map(({ c, i }, groupIndex) => (
         <tr className="border-t" key={i}>
-          <td className="min-w-12 px-3 py-3 text-center">{i + 1}</td><td className="min-w-12 px-3 py-3 text-center">{groupIndex + 1}</td>
-          <td className="sticky left-0 min-w-56 bg-card px-3 py-3 font-medium">{c.goal}</td>
+          <td className="sticky left-0 z-10 w-12 min-w-12 max-w-12 bg-card px-3 py-3 text-center">{i + 1}</td><td className="sticky left-12 z-10 w-12 min-w-12 max-w-12 bg-card px-3 py-3 text-center">{groupIndex + 1}</td>
+          <td className="sticky left-24 z-10 w-72 min-w-72 max-w-72 break-words bg-card px-3 py-3 font-medium shadow-[2px_0_0_0_var(--color-border)]">{c.goal}</td>
           <td className="px-2">
             <input
               aria-label={`Chỉ số đo lường KPI mục tiêu ${i + 1}`}
