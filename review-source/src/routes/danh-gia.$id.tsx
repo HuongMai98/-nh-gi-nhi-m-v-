@@ -422,7 +422,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
         <div className="min-w-0">
           <details open className="group mb-4 overflow-hidden rounded-lg border">
             <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 bg-muted/40 px-4 py-3 [&::-webkit-details-marker]:hidden">
-              <div><span className="text-sm font-semibold">Thông tin đánh giá</span><span className="ml-3 text-sm text-muted-foreground">{ev.owner} · {ev.period}</span></div>
+              <div><span className="text-sm font-semibold">Thông tin chung</span><span className="ml-3 text-sm text-muted-foreground">{ev.owner} · {ev.period}</span></div>
               <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="group-open:hidden">Mở rộng</span><span className="hidden group-open:inline">Thu gọn</span><ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
             </summary>
             <div className="space-y-4 border-t p-4">
