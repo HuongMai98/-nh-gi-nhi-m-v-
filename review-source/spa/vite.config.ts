@@ -8,7 +8,9 @@ import path from "node:path";
 const inlineAll = (): Plugin => ({
   name: "inline-all",
   enforce: "post",
-  generateBundle(_, bundle) {
+  generateBundle: {
+    order: "post",
+    handler(_, bundle) {
     const html = Object.values(bundle).find((f) => f.fileName.endsWith(".html"));
     if (!html || html.type !== "asset") return;
     let source = String(html.source);
@@ -24,6 +26,7 @@ const inlineAll = (): Plugin => ({
       }
     }
     html.source = source;
+    },
   },
 });
 
