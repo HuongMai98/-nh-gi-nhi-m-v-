@@ -19,7 +19,7 @@ it("blocks incomplete sending and sends complete evaluation with actual sender h
   fireEvent.click(screen.getByRole("button", { name: "Lấy tất cả nhiệm vụ" }));
   fireEvent.click(screen.getByRole("button", { name: "Gửi đánh giá" }));
   expect(onCreated).not.toHaveBeenCalled();
-  screen.getAllByRole("spinbutton", { name: /^Điểm tự đánh giá nhiệm vụ/ }).forEach((input) => fireEvent.change(input, { target: { value: "4" } }));
+  screen.getAllByRole("combobox", { name: /^Điểm tự đánh giá nhiệm vụ/ }).forEach((input) => fireEvent.change(input, { target: { value: "4" } }));
   fireEvent.click(screen.getByRole("button", { name: "Gửi đánh giá" }));
   expect(onCreated).toHaveBeenCalledWith(expect.objectContaining({ step: "office", history: expect.arrayContaining([expect.objectContaining({ actorName: CURRENT_USER.name, actorId: CURRENT_USER.employeeId })]) }));
 });
