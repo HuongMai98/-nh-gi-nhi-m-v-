@@ -93,7 +93,7 @@ export function AggregateForm({
     mode === "kpi"
       ? "Tổng hợp đánh giá"
       : mode === "ki"
-        ? "Tổng hợp KPI — BM01"
+        ? "TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI"
         : "Phụ lục Kết quả";
   const isKpi = mode === "kpi";
   // Tổng hợp KI sử dụng điểm Hội đồng đã chấm ở chi tiết công việc.

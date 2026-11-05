@@ -102,7 +102,7 @@ it("lets CEO adjust totals directly or return to council with a required reason"
   render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
   role("ceo");
   expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001")).toBeEnabled();
-  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp KPI — BM01" })).getByRole("button", { name: "Yêu cầu Hội đồng điều chỉnh" }));
+  fireEvent.click(within(screen.getByRole("region", { name: "TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI" })).getByRole("button", { name: "Yêu cầu Hội đồng điều chỉnh" }));
   expect(screen.getByRole("button", { name: "Gửi điều chỉnh" })).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Yêu cầu điều chỉnh của TGĐ"), { target: { value: "Rà soát căn cứ xếp Ki" } });
   fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh" }));
@@ -112,7 +112,7 @@ it("lets CEO adjust totals directly or return to council with a required reason"
 it("lets CEO save all direct adjustments without approving", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
   role("ceo");
-  const region = within(screen.getByRole("region", { name: "Tổng hợp KPI — BM01" }));
+  const region = within(screen.getByRole("region", { name: "TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI" }));
   fireEvent.click(region.getByRole("button", { name: "Lưu tất cả" }));
   expect(screen.getByText("Chưa có thay đổi để lưu.")).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001"), { target: { value: "4.3" } });
@@ -124,7 +124,7 @@ it("lets CEO save all direct adjustments without approving", () => {
 it("lets CEO approve the council results from the summary", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
   role("ceo");
-  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp KPI — BM01" })).getByRole("button", { name: "Phê duyệt" }));
+  fireEvent.click(within(screen.getByRole("region", { name: "TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI" })).getByRole("button", { name: "Phê duyệt" }));
   expect(record().step).toBe("approved");
   expect(record().approvedScore).toBe(4.1);
 });
