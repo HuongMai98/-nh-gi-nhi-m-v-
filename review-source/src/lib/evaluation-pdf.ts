@@ -71,7 +71,12 @@ function summary(evaluations: Evaluation[], mode: "ki" | "kpi"): Content[] {
   const content: Content[] = [];
   if (isKi) content.push(letterhead([...new Set(evaluations.map(e => e.unit))].length === 1 ? evaluations[0]!.unit : "HỘI ĐỒNG ĐÁNH GIÁ"),
     { text: "PHÊ DUYỆT\n\n\nTỔNG GIÁM ĐỐC", alignment: "center", bold: true, margin: [0, 0, 0, 10] });
-  content.push(...title("TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI CỦA CHỈ HUY CƠ QUAN, ĐƠN VỊ", evaluations), section("I. TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ, XẾP HẠNG"), distribution(evaluations, mode), section("II. DANH SÁCH CHI TIẾT"));
+  if (isKi) content.push(...title("TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI CỦA CHỈ HUY CƠ QUAN, ĐƠN VỊ", evaluations), section("I. TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ, XẾP HẠNG"), distribution(evaluations, mode), section("II. DANH SÁCH CHI TIẾT"));
+  else {
+    const rated = evaluations.filter(e => e.proposedKi && e.proposedKi !== "K");
+    const kiRows: TableCell[][] = [[{ text: "Xếp loại Ki", bold: true }, { text: "Tỷ lệ xếp loại Ki", bold: true }], ...["A+", "A", "B", "C", "D", "K"].map(ki => [ki, ki === "K" ? "—" : `${rated.length ? (evaluations.filter(e => e.proposedKi === ki).length / rated.length * 100).toFixed(2) : "0.00"}%`]), ["Tổng:", rated.length ? "100%" : "0%"]];
+    content.push(...title("TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ VÀ XẾP HẠNG KI CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN", evaluations), section("I. Tổng hợp kết quả đánh giá, xếp loại"), { margin: [20, 6, 0, 10], alignment: "center", table: { widths: [70, 125], body: kiRows }, layout: "noBorders" }, section("II. Danh sách chi tiết"));
+  }
   if (isKi) {
     content.push(table([
       ["TT", "Mã nhân viên", "Họ và tên", "Chức danh", "Đơn vị", "Điểm đánh giá", "Xếp loại kết quả thực hiện mục tiêu nhiệm vụ/công việc", "Tuân thủ địa điểm làm việc", "Tuân thủ nội quy lao động", "Xếp hạng Ki", "Xếp loại mức độ hoàn thành nhiệm vụ/công việc", "Ghi chú"].map(h => header(h)),
@@ -80,11 +85,11 @@ function summary(evaluations: Evaluation[], mode: "ki" | "kpi"): Content[] {
     content.push({ text: "CHÁNH VĂN PHÒNG\n\n\n\n", alignment: "right", bold: true, margin: [0, 12, 30, 0] });
   } else {
     content.push(table([
-      [header("TT", 1, 2), header("Mã số", 1, 2), header("Họ và tên", 1, 2), header("Cơ quan / Đơn vị", 1, 2), header("Điểm CQ tự đánh giá", 3), {}, {}, header("Thường trực đánh giá", 3), {}, {}, header("Lý do", 1, 2), header("Đề xuất xếp hạng Ki", 1, 2), header("Trợ lý", 1, 2), header("Ghi chú", 1, 2)],
-      [{}, {}, {}, {}, header("NV trọng yếu\n(20%)"), header("NV chức năng\n(80%)"), header("Tổng"), header("NV trọng yếu\n(20%)"), header("NV chức năng\n(80%)"), header("Tổng"), {}, {}, {}, {}],
+      [header("TT", 1, 2), header("Mã số", 1, 2), header("Họ và tên", 1, 2), header("Cơ quan"), header("Điểm CQ tự đánh giá", 3), {}, {}, header("Thường trực đánh giá", 3), {}, {}, header("Lý do", 1, 2), header("Đề xuất xếp hạng Ki", 1, 2), header("Trợ lý", 1, 2), header("Ghi chú", 1, 2)],
+      [{}, {}, {}, header("Đơn vị"), header("NV trọng yếu\n(20%)"), header("NV chức năng\n(80%)"), header("Tổng"), header("NV trọng yếu\n(20%)"), header("NV chức năng\n(80%)"), header("Tổng"), {}, {}, {}, {}],
       ...evaluations.map((e, i) => [i + 1, text(e.employeeId), e.owner, e.unit, number(groupScore(e, true)), number(groupScore(e, false)), number(totalScore(e.criteria)), number(e.cqttKey), number(e.cqttFunction), number(cqttTotal(e)), text(e.note), text(e.proposedKi), text(e.reviewAssistant), text(e.reviewRemark)].map(v => ({ text: String(v) }))),
     ], [3, 7, 14, 17, 7, 7, 6, 7, 7, 6, 13, 7, 9, 12], 2, 8));
-    content.push({ text: "CHÁNH VĂN PHÒNG\n\n\n\n", alignment: "center", bold: true, margin: [0, 12, 0, 0] });
+    content.push({ text: "CHÁNH VĂN PHÒNG\n\n\n\n", alignment: "left", bold: true, margin: [80, 12, 0, 0] });
   }
   return content;
 }

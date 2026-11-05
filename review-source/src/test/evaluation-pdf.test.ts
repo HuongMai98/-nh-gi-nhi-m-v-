@@ -16,6 +16,12 @@ it.each(["personal", "kpi", "ki"] as EvaluationPdfMode[])("renders %s as a real 
   expect(content).toContain(e.owner);
   expect(content).toContain(e.employeeId);
   expect(content).not.toContain("Nguyễn Văn A");
+  if (mode === "kpi") {
+    expect(content).toContain("CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN");
+    expect(content).toContain("Tỷ lệ xếp loại Ki");
+    expect(content).not.toContain("Số người");
+    expect(content).not.toContain("PHÊ DUYỆT");
+  }
   const buffer = await new Promise<Buffer>(resolve => pdfMake.createPdf(definition).getBuffer(resolve));
   expect(buffer.subarray(0, 5).toString()).toBe("%PDF-");
   mkdirSync(".test-tmp/pdfs", { recursive: true });
