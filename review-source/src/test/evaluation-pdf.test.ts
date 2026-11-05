@@ -18,7 +18,9 @@ it.each(["personal", "kpi", "ki"] as EvaluationPdfMode[])("renders %s as a real 
   expect(content).not.toContain("Nguyễn Văn A");
   if (mode === "kpi") {
     expect(content).toContain("CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN");
-    expect(content).toContain("Tỷ lệ xếp loại Ki");
+    expect(content).not.toContain("Tỷ lệ xếp loại Ki");
+    expect(content).not.toContain("Danh sách chi tiết");
+    expect(content).not.toContain("CHÁNH VĂN PHÒNG");
     expect(content).not.toContain("Số người");
     expect(content).not.toContain("PHÊ DUYỆT");
   }
