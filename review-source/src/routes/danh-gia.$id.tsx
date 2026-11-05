@@ -731,6 +731,8 @@ function PersonalTable({
         <thead className="bg-muted text-xs">
           <tr>
             {[
+              "STT",
+              "TT",
               "Mục tiêu nhiệm vụ/công việc",
               "Chỉ số đo lường KPI",
               "Phương pháp đo",
@@ -808,7 +810,7 @@ function PersonalTable({
             />
           ))}
           <tr className="bg-muted font-semibold">
-            <td colSpan={4} className="p-3">
+            <td colSpan={6} className="p-3">
               Tổng tỷ trọng
             </td>
             <td>{Math.round(items.reduce((s, c) => s + c.weight, 0) * 100)}%</td>
@@ -823,7 +825,7 @@ function PersonalTable({
           </tr>
           {!assignment && (
             <tr className="border-t">
-              <td colSpan={12} className="px-3 py-3 text-right font-semibold">Xếp loại kết quả thực hiện mục tiêu nhiệm vụ</td>
+              <td colSpan={14} className="px-3 py-3 text-right font-semibold">Xếp loại kết quả thực hiện mục tiêu nhiệm vụ</td>
               <td className="whitespace-nowrap px-3 py-3 font-semibold text-primary" data-testid="qltt-rating">
                 {qlttTotal === null ? "—" : rating(qlttTotal).label}
               </td>
@@ -864,12 +866,13 @@ function GroupRows({
   return (
     <>
       <tr className="bg-accent/50 text-primary">
-        <td colSpan={assignment ? 10 : showCouncil ? 14 : 13} className="px-2 py-2 text-xs font-semibold">
+        <td colSpan={assignment ? 12 : showCouncil ? 16 : 15} className="px-2 py-2 text-xs font-semibold">
           {label}
         </td>
       </tr>
-      {rows.map(({ c, i }) => (
+      {rows.map(({ c, i }, groupIndex) => (
         <tr className="border-t" key={i}>
+          <td className="min-w-12 px-3 py-3 text-center">{i + 1}</td><td className="min-w-12 px-3 py-3 text-center">{groupIndex + 1}</td>
           <td className="sticky left-0 min-w-56 bg-card px-3 py-3 font-medium">{c.goal}</td>
           <td className="px-2">
             <input
