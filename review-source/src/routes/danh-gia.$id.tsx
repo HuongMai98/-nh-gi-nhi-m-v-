@@ -14,7 +14,6 @@ import { roleOf, statusLabelOf,
   ROLES,
   stageRole,
   officeFor,
-  appendixFor,
   selfEditable,
   totalScore,
   allocatedTotal,
@@ -461,7 +460,6 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 ["personal", "Phiếu đánh giá"],
                 ["kpi", "Tổng hợp đánh giá"],
                 ["ki", "Tổng hợp KPI"],
-                ["appendix", appendixFor(ev)],
               ] as const
             )
               .filter(([key]) => ev.step !== "office" || key === "personal" || key === "kpi")
