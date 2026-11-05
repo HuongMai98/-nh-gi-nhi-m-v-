@@ -68,7 +68,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
         </tr>)}
       </Fragment>)}
       </tbody>
-      <tfoot className="border-t bg-muted font-semibold"><tr><td colSpan={7} className="p-3">Tổng tỷ trọng</td><td className="p-2 text-center">{Math.round(items.reduce((sum, c) => sum + c.weight, 0) * 100)}%</td><td colSpan={5} /><td className="whitespace-nowrap p-3 text-right">Tổng điểm (Σ Tỷ trọng × Điểm)</td><td className="p-3 text-center">{items.some((c) => c.self) ? totalScore(items).toFixed(2) : "—"}</td>{showCqtt && <td className="p-3 text-center text-amber-700">{cqttSum?.toFixed(2) ?? "—"}</td>}<td /></tr></tfoot>
+      <tfoot className="border-t bg-muted font-semibold"><tr><td colSpan={7} className="p-3">Tổng tỷ trọng</td><td className="p-2 text-center">{Math.round(items.reduce((sum, c) => sum + c.weight, 0) * 100)}%</td><td colSpan={5} /><td className="whitespace-nowrap p-3 text-right">Tổng điểm (Ʃ Tỷ trọng * Điểm)</td><td className="p-3 text-center">{items.some((c) => c.self) ? totalScore(items).toFixed(2) : "—"}</td>{showCqtt && <td className="p-3 text-center text-amber-700">{cqttSum?.toFixed(2) ?? "—"}</td>}<td /></tr></tfoot>
     </table>
     </div>
   </div>;

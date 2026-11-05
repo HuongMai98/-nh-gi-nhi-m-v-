@@ -814,7 +814,7 @@ function PersonalTable({
               Tổng tỷ trọng
             </td>
             <td className="text-center">{Math.round(items.reduce((s, c) => s + c.weight, 0) * 100)}%</td>
-            <td colSpan={assignment ? 5 : 6} className="whitespace-nowrap px-3 text-right">{!assignment && "Σ Tỷ trọng × Điểm"}</td>
+            <td colSpan={assignment ? 5 : 6} className="whitespace-nowrap px-3 text-right">{!assignment && "Tổng điểm (Ʃ Tỷ trọng * Điểm)"}</td>
             {!assignment && (
               <>
                 <td className="px-3 text-center">{totalScore(items).toFixed(2)}</td>
