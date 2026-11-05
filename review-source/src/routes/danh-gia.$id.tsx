@@ -749,8 +749,8 @@ function PersonalTable({
           </tr>
           <tr>
             {["Tối thiểu (T - Threshold)", "Mong đợi (B - Base)", "Thách thức (S - Stretch)"].map((h) => (
-              <th key={h} className="px-2 py-2 text-center font-medium text-muted-foreground">
-                {h}
+              <th key={h} className="min-w-32 px-2 py-2 text-center align-top font-medium text-muted-foreground">
+                <span className="block whitespace-nowrap">{h.slice(0, h.indexOf(" ("))}</span><span className="mt-1 block whitespace-nowrap font-normal">{h.slice(h.indexOf(" (") + 1)}</span>
               </th>
             ))}
             {[
