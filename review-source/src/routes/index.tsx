@@ -530,6 +530,7 @@ function Index() {
                             ) : null;
                           })()}
                         </td>
+                        {previewRole === "cqtt" && <td className="whitespace-nowrap px-3 py-4">{e.step === "cqtt_report" ? <span className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", e.cqttSummarized ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700")}>{e.cqttSummarized ? "Đã tổng hợp" : "Chưa tổng hợp"}</span> : cqttInSummary(e) ? <span className="inline-flex rounded-md border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Đã tổng hợp</span> : "—"}</td>}
                         <td className="px-3 py-4">
                           <div className="flex items-center gap-2 text-body">
                             {selfEditable(e, previewRole) && canSubmitEvaluation(e, CURRENT_USER) && (
@@ -537,7 +538,7 @@ function Index() {
                             )}
                             {previewRole === "cqtt" && e.step === "cqtt_report" && cqttSummarizable(e) && (
                               e.cqttSummarized
-                                ? <span className="whitespace-nowrap text-xs font-medium text-success">Đã tổng hợp</span>
+                                ? null
                                 : <Button variant="outline" size="icon" className="h-8 w-8" aria-label={`Tổng hợp ${e.id}`} title="Tổng hợp" onClick={() => { const issue = summarizeCqtt([e.id]); setCqttError(issue ?? ""); if (!issue) setView("kpi"); }}><KanbanSquare className="h-4 w-4" /></Button>
                             )}
                             {((previewRole === "cqtt" && e.step === "cqtt") || (previewRole === "council" && ["council", "council_adjust"].includes(e.step))) && (
