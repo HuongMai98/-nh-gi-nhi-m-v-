@@ -484,6 +484,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><AggregateForm evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
           ) : (
             <section className="space-y-4">
+              {tab === "personal" && <h2 className="font-semibold">Phiếu đánh giá kết quả thực hiện nhiệm vụ/công việc</h2>}
               <PersonalTable
                 items={items}
                 assignment={tab === "assignment"}
