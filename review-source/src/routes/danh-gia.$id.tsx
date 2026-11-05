@@ -739,14 +739,14 @@ function PersonalTable({
               "Đơn vị đo",
               "Tỷ trọng (%)",
             ].map((h) => (
-              <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Ngày hoàn thành") && "whitespace-nowrap")}>
+              <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>
                 {h === "Tỷ trọng (%)" ? <>Tỷ trọng<br />(%)</> : h}{h === "Mục tiêu nhiệm vụ/công việc" && <span className="block font-normal italic">(Kết quả mong đợi đối với nhiệm vụ/công việc)</span>}{h === "Phương pháp đo" && <span className="block font-normal italic">(công thức hoặc mô tả cách tính)</span>}{h === "Đơn vị đo" && <span className="block font-normal italic">(số, số lượng, %, điểm, ...)</span>}
               </th>
             ))}
             <th colSpan={3} className="border-b px-2 py-2 text-center font-medium">
               Các mức chỉ tiêu
             </th>
-            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Ngày hoàn thành") && "whitespace-nowrap")}>{h}</th>)}
+            {["Ngày bắt đầu", "Ngày hoàn thành"].map(h => <th key={h} rowSpan={2} className={cn("px-2 py-3 font-medium", (h === "Ngày bắt đầu" || h === "Ngày hoàn thành") && "whitespace-nowrap")}>{h}</th>)}
             {!assignment && <th colSpan={showCouncil ? 4 : 3} className="border-b px-2 py-2 text-center font-medium">Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc</th>}
           </tr>
           <tr>
