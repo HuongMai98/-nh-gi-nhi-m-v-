@@ -1,4 +1,4 @@
-import { assessmentCsvRows } from "@/lib/evaluation-csv";
+import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
 import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
@@ -110,70 +110,7 @@ export function AggregateForm({
   const classified = counts.reduce((sum, c) => sum + c.n, 0);
   const denominator = counts.filter((c) => c.ki !== "K").reduce((n, c) => n + c.n, 0);
   function exportData() {
-    if (isKpi) { exportCsv(title, assessmentCsvRows(summaryRecords)); return; }
-    exportCsv(title, [
-      isKpi
-        ? [
-            "TT",
-            "Mã nhân viên",
-            "Họ và tên",
-            "Đơn vị",
-            "Tự ĐG trọng tâm",
-            "Tự ĐG chức năng",
-            "Tổng tự ĐG",
-            "CQTT trọng tâm",
-            "CQTT chức năng",
-            "Tổng CQTT",
-            "Lý do",
-            "Đề xuất xếp hạng Ki",
-            "Phản hồi",
-          ]
-        : [
-            "Mã nhân viên",
-            "Họ tên",
-            "Chức danh",
-            "Đơn vị",
-            ...(hideCqtt ? [] : ["Điểm CQTT"]),
-            "Điểm đánh giá",
-            "Xếp loại",
-            "Địa điểm làm việc",
-            "Nội quy",
-            "Xếp hạng Ki",
-            "Mức độ hoàn thành",
-          ],
-      ...evaluations.map((e, index) => {
-        const result = templateResult(e);
-        return isKpi
-          ? [
-              index + 1,
-              e.employeeId,
-              e.owner,
-              e.unit,
-              groupScore(e, true),
-              groupScore(e, false),
-              groupScore(e, true) + groupScore(e, false),
-              e.cqttKey,
-              e.cqttFunction,
-              cqttTotal(e),
-              e.note,
-              e.proposedKi,
-              e.responseNote,
-            ]
-          : [
-              e.employeeId,
-              e.owner,
-              e.jobTitle,
-              e.unit,
-              ...(hideCqtt ? [] : [cqttTotal(e)]),
-              result.score,
-              result.rating,
-              e.locationCompliance,
-              e.laborCompliance,
-              result.ki,
-              result.completion,
-            ];
-      }),
-    ]);
+    exportCsv(title, evaluationCsvRows(summaryRecords, isKpi ? "kpi" : "ki"));
   }
   if (isKpi)
     return (

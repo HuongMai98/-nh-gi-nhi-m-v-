@@ -1,3 +1,4 @@
+import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
@@ -210,47 +211,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     ? [{ action: returnAction, label: returnText, outline: true }, ...actions]
     : actions;
   function downloadTemplate() {
-    exportCsv(`Template-${ev.id}`, [
-      ["Phiếu", ev.id],
-      ["Cá nhân", ev.owner],
-      ["Đơn vị", ev.unit],
-      ["Kỳ", ev.period],
-      ["Phiếu GNV", ev.assignmentRef],
-      ["Điểm Hội đồng", result.score],
-      ["Ki", result.ki],
-      ["Mức độ hoàn thành", result.completion],
-      [],
-      [
-        "Mục tiêu",
-        "KPI",
-        "Phương pháp đo",
-        "Đơn vị",
-        "Tỷ trọng (%)",
-        "T",
-        "B",
-        "S",
-        "Ngày bắt đầu",
-        "Ngày hoàn thành",
-        "Kết quả",
-        "CBNV tự đánh giá",
-        "QLTT đánh giá (1-5)",
-      ],
-      ...ev.criteria.map((c) => [
-        c.goal,
-        c.kpi,
-        c.method,
-        c.unit,
-        c.weight,
-        c.target.t,
-        c.target.b,
-        c.target.s,
-        c.startDate,
-        c.endDate,
-        c.result,
-        c.self,
-        c.council,
-      ]),
-    ]);
+    exportCsv(`Danh-gia-${ev.id}`, evaluationCsvRows([{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }], tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"));
   }
   const active: string = ev.step === "custom" ? `custom:${ev.customStageId}` : mainStage(ev.step);
   // Tiến trình theo cấu hình luồng duyệt: chỉ hiện bước đang áp dụng (kèm bước tùy chỉnh); bước đã tắt bị bỏ qua.
@@ -281,7 +242,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           <ExportEvaluationPdf evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
           <Button variant="outline" onClick={downloadTemplate}>
             <Download />
-            Xuất template CSV
+            Xuất CSV
           </Button>
           {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><EditIcon />Chỉnh sửa</Button>)}
           {readOnly && ev.step === "self" && previewRole === "performer" && canSubmitEvaluation(ev, CURRENT_USER) && <Button onClick={() => run("submit")}><Send />Gửi đánh giá</Button>}
