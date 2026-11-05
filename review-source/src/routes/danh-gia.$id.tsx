@@ -813,13 +813,13 @@ function PersonalTable({
             <td colSpan={6} className="p-3">
               Tổng tỷ trọng
             </td>
-            <td>{Math.round(items.reduce((s, c) => s + c.weight, 0) * 100)}%</td>
+            <td className="text-center">{Math.round(items.reduce((s, c) => s + c.weight, 0) * 100)}%</td>
             <td colSpan={assignment ? 5 : 6} className="whitespace-nowrap px-3 text-right">{!assignment && "Σ Tỷ trọng × Điểm"}</td>
             {!assignment && (
               <>
-                <td className="px-3">{totalScore(items).toFixed(2)}</td>
-                <td className="px-3 text-primary" data-testid="qltt-total">{qlttTotal?.toFixed(2) ?? "—"}</td>
-                {showCouncil && <td className="px-3 font-semibold text-primary" data-testid="council-task-total">{allocatedTotal(items)?.toFixed(2) ?? "—"}</td>}
+                <td className="px-3 text-center">{totalScore(items).toFixed(2)}</td>
+                <td className="px-3 text-center text-primary" data-testid="qltt-total">{qlttTotal?.toFixed(2) ?? "—"}</td>
+                {showCouncil && <td className="px-3 text-center font-semibold text-primary" data-testid="council-task-total">{allocatedTotal(items)?.toFixed(2) ?? "—"}</td>}
               </>
             )}
           </tr>
@@ -899,12 +899,12 @@ function GroupRows({
               className={fieldClass + " my-2 w-24"}
             />
           </td>
-          <td className="px-3">{Math.round(c.weight * 100)}%</td>
-          <td className="px-3">{c.target.t}</td>
-          <td className="px-3">{c.target.b}</td>
-          <td className="px-3">{c.target.s}</td>
-          <td className="whitespace-nowrap px-3">{date(c.startDate)}</td>
-          <td className="whitespace-nowrap px-3">{date(c.endDate)}</td>
+          <td className="px-3 text-center">{Math.round(c.weight * 100)}%</td>
+          <td className="px-3 text-center">{c.target.t}</td>
+          <td className="px-3 text-center">{c.target.b}</td>
+          <td className="px-3 text-center">{c.target.s}</td>
+          <td className="whitespace-nowrap px-3 text-center">{date(c.startDate)}</td>
+          <td className="whitespace-nowrap px-3 text-center">{date(c.endDate)}</td>
           {!assignment && (
             <>
               <td className="px-3">
@@ -925,11 +925,11 @@ function GroupRows({
                   />
                 )}
               </td>
-              <td className="px-3">
+              <td className="px-3 text-center">
                 {canSelf ? (
                   <select
                     aria-label={`Tự đánh giá mục tiêu ${i + 1}`}
-                    className={fieldClass}
+                    className={fieldClass + " text-center"}
                     value={c.self}
                     onChange={(e) => update(i, { self: Number(e.target.value) })}
                   >
@@ -944,19 +944,19 @@ function GroupRows({
               </td>
               {canCqtt ? (
                 <td className="px-3">
-                  <select aria-label={`QLTT đánh giá mục tiêu ${i + 1}`} className={fieldClass + " my-2 w-28 min-w-28"} value={c.cqtt ?? ""} onChange={event => update(i, { cqtt: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.cqtt !== undefined && !Number.isInteger(c.cqtt) && <option value={c.cqtt}>{c.cqtt}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
+                  <select aria-label={`QLTT đánh giá mục tiêu ${i + 1}`} className={fieldClass + " my-2 w-28 min-w-28 text-center"} value={c.cqtt ?? ""} onChange={event => update(i, { cqtt: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.cqtt !== undefined && !Number.isInteger(c.cqtt) && <option value={c.cqtt}>{c.cqtt}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
                 </td>
               ) : (
                 <td
-                  className="px-3 font-medium text-primary"
+                  className="px-3 text-center font-medium text-primary"
                   aria-label={cqttRef ? `QLTT đánh giá ${i + 1}` : `Điểm phân bổ mục tiêu ${i + 1}`}
                   title={cqttRef ? "Điểm CQTT đã đánh giá cho công việc (tham chiếu)" : undefined}
                 >
                   {cqttRef ? (cqttRef[i] == null ? "—" : String(Math.round(cqttRef[i]! * 100) / 100)) : (c.council?.toFixed(4) ?? c.cqtt ?? "—")}
                 </td>
               )}
-              {showCouncil && <td className="px-3">
-                {canCouncil ? <select aria-label={`Hội đồng đánh giá mục tiêu ${i+1}`} className={fieldClass + " my-2 w-28 min-w-28"} value={c.council ?? ""} onChange={event => update(i, { council: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.council !== undefined && !Number.isInteger(c.council) && <option value={c.council}>{c.council}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
+              {showCouncil && <td className="px-3 text-center">
+                {canCouncil ? <select aria-label={`Hội đồng đánh giá mục tiêu ${i+1}`} className={fieldClass + " my-2 w-28 min-w-28 text-center"} value={c.council ?? ""} onChange={event => update(i, { council: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.council !== undefined && !Number.isInteger(c.council) && <option value={c.council}>{c.council}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
                   : c.council?.toFixed(2) ?? "—"}
               </td>}
             </>

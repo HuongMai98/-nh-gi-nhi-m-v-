@@ -47,7 +47,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
           <td className="p-2"><Input aria-label={`Chỉ số đo lường KPI ${index + 1}`} readOnly className="min-w-44" value={item.kpi} /></td>
           <td className="p-2"><Input aria-label={`Phương pháp đo ${index + 1}`} readOnly className="min-w-40" value={item.method ?? ""} /></td>
           <td className="p-2"><Input aria-label={`Đơn vị đo ${index + 1}`} readOnly className="w-24" value={item.unit} /></td>
-          <td className="p-2"><Input aria-label={`Tỷ trọng ${index + 1}`} required type="number" className="w-24" min="0.01" max="100" step="0.01" value={item.weight === 0 ? "" : Math.round(item.weight * 10000) / 100} onChange={(e) => {
+          <td className="p-2"><Input aria-label={`Tỷ trọng ${index + 1}`} required type="number" className="w-24 text-center" min="0.01" max="100" step="0.01" value={item.weight === 0 ? "" : Math.round(item.weight * 10000) / 100} onChange={(e) => {
             const value = Number(e.target.value);
             const other = items.reduce((sum, c, i) => sum + (i !== index && c.group !== "A" ? c.weight : 0), 0);
             if (item.group !== "A" && value / 100 + other > 0.8 + 1e-8) {
@@ -60,15 +60,15 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
             update(index, { weight: value / 100 });
           }} /></td>
           {(["t", "b", "s"] as const).map((key) => <td key={key} aria-label={`Chỉ tiêu ${key.toUpperCase()} ${index + 1}`} title="Lấy theo nhiệm vụ đã chọn" className="min-w-20 whitespace-nowrap p-3 text-center tabular-nums">{item.target[key] || "—"}</td>)}
-          <td className="whitespace-nowrap p-3">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
+          <td className="whitespace-nowrap p-3 text-center">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3 text-center">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
-          <td className="p-2">{showCqtt ? <Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24" type="number" min="1" max="5" step="0.01" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /> : <select aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="mx-auto h-9 w-28 min-w-28 rounded-md border bg-card px-2 text-sm" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })}><option value="">Chọn điểm</option>{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>}</td>
+          <td className="p-2">{showCqtt ? <Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24 text-center" type="number" min="1" max="5" step="0.01" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /> : <select aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="mx-auto h-9 w-28 min-w-28 rounded-md border bg-card px-2 text-center text-sm" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })}><option value="">Chọn điểm</option>{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>}</td>
           {showCqtt && <td className="p-3 text-center font-medium text-primary" aria-label={`QLTT đánh giá ${index + 1}`} title="Điểm CQTT đã đánh giá cho công việc — tham chiếu, không chỉnh sửa">{cqttAllocated?.[index] == null ? "—" : String(Math.round(cqttAllocated[index]! * 100) / 100)}</td>}
           <td className="p-2"><Button type="button" variant="ghost" size="icon" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><Trash2 /></Button></td>
         </tr>)}
       </Fragment>)}
       </tbody>
-      <tfoot className="border-t bg-muted font-semibold"><tr><td colSpan={7} className="p-3">Tổng tỷ trọng</td><td className="p-2">{Math.round(items.reduce((sum, c) => sum + c.weight, 0) * 100)}%</td><td colSpan={5} /><td className="whitespace-nowrap p-3 text-right">Tổng điểm (Σ Tỷ trọng × Điểm)</td><td className="p-3 text-center">{items.some((c) => c.self) ? totalScore(items).toFixed(2) : "—"}</td>{showCqtt && <td className="p-3 text-center text-amber-700">{cqttSum?.toFixed(2) ?? "—"}</td>}<td /></tr></tfoot>
+      <tfoot className="border-t bg-muted font-semibold"><tr><td colSpan={7} className="p-3">Tổng tỷ trọng</td><td className="p-2 text-center">{Math.round(items.reduce((sum, c) => sum + c.weight, 0) * 100)}%</td><td colSpan={5} /><td className="whitespace-nowrap p-3 text-right">Tổng điểm (Σ Tỷ trọng × Điểm)</td><td className="p-3 text-center">{items.some((c) => c.self) ? totalScore(items).toFixed(2) : "—"}</td>{showCqtt && <td className="p-3 text-center text-amber-700">{cqttSum?.toFixed(2) ?? "—"}</td>}<td /></tr></tfoot>
     </table>
     </div>
   </div>;
