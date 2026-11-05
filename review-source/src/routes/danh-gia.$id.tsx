@@ -527,7 +527,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             </div>
           </section>
           <section className="rounded-lg border p-4 text-sm">
-            <h2 className="mb-3 font-medium">Đánh giá tuân thủ</h2>
+            <h2 className="mb-3 font-medium">Đánh giá của QLTT</h2>
             {(
               [
                 ["Địa điểm làm việc", "locationCompliance", ["Tuân thủ", "Không tuân thủ"]],
