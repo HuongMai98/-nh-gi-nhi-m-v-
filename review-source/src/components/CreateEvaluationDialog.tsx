@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Undo2 } from "lucide-react";
+import { Plus, Send, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EvaluationDateInput } from "@/components/EvaluationDateInput";
@@ -133,15 +133,15 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   }
 
   if (!open) return null;
-  const big = "h-[42px] px-[18px] text-base";
+
   const actions = <>
-    <Button type="button" variant="outline" className={big} onClick={() => onOpenChange(false)}>Hủy</Button>
-    <Button type="submit" form={FORM_ID} disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline" className={big}>{existing ? "Cập nhật" : "Lưu"}</Button>
+    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
+    <Button type="submit" form={FORM_ID} disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Cập nhật" : "Lưu"}</Button>
     {responding ? <>
-      <Button type="button" variant="return" className={big} onClick={reserve}><Undo2 />Bảo lưu</Button>
-      <Button type="button" variant="outline" className={big} onClick={acceptCqtt}>Tiếp thu</Button>
-      <Button type="submit" form={FORM_ID} disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt" className={big}>Gửi CQTT</Button>
-    </> : <Button type="submit" form={FORM_ID} onClick={() => { submitIntent.current = "send"; }} value="send" className={big}>Gửi đánh giá</Button>}
+      <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
+      <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
+      <Button type="submit" form={FORM_ID} disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt"><Send />Gửi CQTT</Button>
+    </> : <Button type="submit" form={FORM_ID} onClick={() => { submitIntent.current = "send"; }} value="send"><Send />Gửi đánh giá</Button>}
   </>;
   const title = existing ? "Cập nhật phiếu đánh giá" : "Tạo phiếu đánh giá";
   return <form id={FORM_ID} onSubmit={submit} aria-label={title} className="space-y-4">
