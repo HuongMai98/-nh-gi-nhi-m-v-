@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
@@ -28,7 +28,7 @@ it("Tổng hợp KI của Hội đồng chỉ hiển thị dữ liệu, không c
   expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
   expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveTextContent("A");
   expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
-  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("table")).queryByRole("combobox")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Lưu DG-2026-Q3-002" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Lưu tất cả" })).not.toBeInTheDocument();
   expect(screen.getByTestId("reviewed").textContent).toBe("false");

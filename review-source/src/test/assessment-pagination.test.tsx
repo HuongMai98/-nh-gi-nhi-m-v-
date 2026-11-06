@@ -1,3 +1,4 @@
+import { AggregateForm } from "@/components/AggregateForm";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({ Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }));
@@ -19,5 +20,20 @@ it("paginates summary rows, continues numbering and resets after filtering", () 
   expect(screen.getByText("Hiển thị 21–21 / 21")).toBeInTheDocument();
   rerender(view(rows.slice(0, 1)));
   expect(screen.getByText("Hiển thị 1–1 / 1")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Trang sau" })).toBeDisabled();
+});
+it("paginates KI records and resets when the filtered list changes", () => {
+  const rows = EVALUATIONS.slice(0, 21);
+  const view = (filtered = rows) => <EvaluationProvider><AggregateForm mode="ki" evaluations={filtered} /></EvaluationProvider>;
+  const { rerender } = render(view());
+  expect(screen.getByText("Hiển thị 1–10 / 21")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(11);
+  fireEvent.click(screen.getByRole("button", { name: "Trang cuối" }));
+  expect(screen.getByText("Hiển thị 21–21 / 21")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText("Số dòng mỗi trang"), { target: { value: "50" } });
+  expect(screen.getByText("Hiển thị 1–21 / 21")).toBeInTheDocument();
+  rerender(view([]));
+  expect(screen.getByText("Hiển thị 0–0 / 0")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Trang sau" })).toBeDisabled();
 });

@@ -1,3 +1,4 @@
+import { ListPagination } from "@/components/ListPagination";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
@@ -89,6 +90,11 @@ export function AggregateForm({
   const ceoChosen = ceoTargets.includes(ceoReturnStage as StageKey) ? (ceoReturnStage as StageKey) : ceoTargets[0];
   const ceoReturnText = ceoTargets.length === 1 && ceoBlocks[0] ? returnLabel(ceoBlocks[0], "ceo", ceoTargets[0]!) : "Trả về / yêu cầu điều chỉnh";
   const ceoAdjustOn = ceoBlocks.some((b) => workflows[b].branches.ceoDirectAdjust);
+  const [pageSize, setPageSize] = useState(10);
+  const scope = JSON.stringify([previewRole, mode, pageSize, evaluations.map(e => e.id)]);
+  const [pagination, setPagination] = useState({ scope, page: 1 });
+  const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(evaluations.length / pageSize))) : 1;
+  const pageRows = evaluations.slice((page - 1) * pageSize, page * pageSize);
   const [councilDrafts, setCouncilDrafts] = useState<Record<string, Draft>>({});
   const [ceoReturnOpen, setCeoReturnOpen] = useState(false);
   const [ceoReason, setCeoReason] = useState("");
@@ -235,10 +241,11 @@ export function AggregateForm({
             </tr>
           </thead>
           <tbody>
-            {evaluations.map((e) => (
+            {pageRows.map((e) => (
               <AggregateRow
                 key={`${mode}-${e.id}-${e.updated}-${e.step}-${e.history?.length ?? 0}`}
                 evaluation={e}
+                initialDraft={councilDrafts[e.id]}
                 mode={mode}
                 onDraftChange={(draft) => { setCouncilDrafts((current) => ({ ...current, [e.id]: draft })); onDraftChange?.(draft); }}
               />
@@ -253,14 +260,17 @@ export function AggregateForm({
           </tbody>
         </table>
       </div>
+      <ListPagination total={evaluations.length} page={page} pageSize={pageSize} onPageChange={page => setPagination({ scope, page })} onPageSizeChange={setPageSize} />
     </section>
   );
 }
 function AggregateRow({
+  initialDraft,
   evaluation: e,
   mode,
   onDraftChange,
 }: {
+  initialDraft?: Draft | undefined;
   onDraftChange?: ((draft: Draft) => void) | undefined;
   evaluation: Evaluation;
   mode: "kpi" | "ki" | "appendix";
@@ -270,7 +280,7 @@ function AggregateRow({
   const editable = isKpi
     ? previewRole === "cqtt" && e.step === "cqtt"
     : mode === "ki" && previewRole === "ceo" && e.step === "ceo" && workflows[e.block].branches.ceoDirectAdjust;
-  const [draft, setDraft] = useState<Draft>({});
+  const [draft, setDraft] = useState<Draft>(initialDraft ?? {});
   const [error, setError] = useState("");
   const [kiDriven, setKiDriven] = useState(false);
   const change = (patch: Draft) => {
