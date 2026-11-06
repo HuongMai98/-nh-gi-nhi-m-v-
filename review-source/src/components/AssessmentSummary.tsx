@@ -1,10 +1,11 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ListPagination } from "@/components/ListPagination";
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { EditIcon } from "@/components/icons";
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download, Save, Undo2, ArrowUpRight, Send } from "lucide-react";
+import { Download, Save, Undo2, ArrowUpRight, Send, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -401,7 +402,7 @@ function AssessmentRow({
   };
   const self = groupScore(e, true) + groupScore(e, false);
   const returnButton = (workflows[e.block].stages.find((s) => s.key === "cqtt")?.returnTo.length ?? 0) > 0 ? (
-    <Button type="button" variant="return" size="sm" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="h-8 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none" aria-label={`Gửi điều chỉnh ${e.id}`} onClick={() => onRequestReturn?.()}><Undo2 className="h-3.5 w-3.5" />Gửi điều chỉnh</Button>
+    <Button type="button" variant="return" size="icon" title="Gửi điều chỉnh" disabled={cqttTotal(current) === null || Math.abs((cqttTotal(current) ?? 0) - self) < 0.005} className="h-8 w-8 shadow-none" aria-label={`Gửi điều chỉnh ${e.id}`} onClick={() => onRequestReturn?.()}><Undo2 className="h-4 w-4" /></Button>
   ) : null;
   // CQTT đã chấm đủ từng công việc: điểm nhóm lấy theo điểm công việc, không nhập tay.
   const byTask = e.criteria.length > 0 && e.criteria.every((c) => c.cqtt !== undefined);
@@ -526,14 +527,19 @@ function AssessmentRow({
       {showActions && <td
         className={cell + " sticky right-0 z-10 border-l bg-card text-center group-hover:bg-muted"}
       >
-        {/* Thao tác: hàng icon Chỉnh sửa · Lưu · Gửi Hội đồng; Gửi điều chỉnh đặt bên dưới. */}
+        {/* Hai thao tác gửi dùng chung menu icon ba chấm. */}
         {canNote && <div className="flex flex-col items-center gap-2">
           <div className="flex items-center justify-center gap-1.5">
             <Button type="button" variant="outline" size="icon" className={cn("h-8 w-8 shrink-0", editing && "border-primary/40 bg-accent text-primary")} title="Chỉnh sửa" aria-label={`Chỉnh sửa ${e.id}`} aria-pressed={editing} onClick={() => { if (canScore) setAdjusting(true); setNoteEditing(true); }}><EditIcon /></Button>
             <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Lưu" aria-label={`Lưu ${e.id}`} disabled={e.step === "cqtt_report" && draft.note === undefined} onClick={saveNote}><Save /></Button>
-            {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi Hội đồng" aria-label={`Gửi Hội đồng ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
+            <Popover>
+              <PopoverTrigger asChild><Button type="button" variant="outline" size="icon" className="h-8 w-8" title="Thao tác gửi" aria-label={`Thao tác gửi ${e.id}`}><MoreVertical /></Button></PopoverTrigger>
+              <PopoverContent align="end" className="flex w-auto items-center gap-2 p-2" aria-label="Thao tác gửi hồ sơ">
+                {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi Hội đồng" aria-label={`Gửi Hội đồng ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
+                {returnButton}
+              </PopoverContent>
+            </Popover>
           </div>
-          {returnButton}
         </div>}
         {feedback && (
           <p role="status" className="mt-2 text-xs">

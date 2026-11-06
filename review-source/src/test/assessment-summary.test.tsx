@@ -125,14 +125,23 @@ it("saves and requests adjustment from the table toolbar", () => {
 it("enables row adjustment request only when CQTT total differs from self total", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
-  const send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
+  const menu = screen.getByRole("button", { name: "Thao tác gửi DG-2026-Q3-003" });
+  fireEvent.click(menu);
+  let send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
   expect(send).toBeDisabled();
+  fireEvent.click(menu);
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT trọng tâm DG-2026-Q3-003"), { target: { value: "0.9" } });
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.55" } });
+  fireEvent.click(menu);
+  send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
   expect(send).toBeDisabled();
+  fireEvent.click(menu);
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
   fireEvent.change(screen.getByLabelText("Điểm CQTT chức năng DG-2026-Q3-003"), { target: { value: "2.8" } });
+  fireEvent.click(menu);
+  send = screen.getByRole("button", { name: "Gửi điều chỉnh DG-2026-Q3-003" });
+  expect(send).toHaveAttribute("title", "Gửi điều chỉnh");
   expect(send).not.toBeDisabled();
   fireEvent.click(send);
   // Chưa có lý do → hộp nhập lý do (bắt buộc); lý do được lưu vào trường Lý do.
