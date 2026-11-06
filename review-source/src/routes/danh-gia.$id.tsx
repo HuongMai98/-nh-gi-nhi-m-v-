@@ -1,3 +1,4 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
@@ -87,6 +88,9 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [aggregateDraft, setAggregateDraft] = useState<Draft>({});
   const [cqttTouched, setCqttTouched] = useState(false);
   const [note, setNote] = useState("");
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestReason, setRequestReason] = useState("");
+  const [requestError, setRequestError] = useState("");
   const response = "Tiếp thu" as const;
   const [responseNote, setResponseNote] = useState(ev.responseNote ?? "");
   const [message, setMessage] = useState("");
@@ -146,7 +150,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
   const returnText =
     ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
-  const run = (action?: Action) => {
+  const run = (action?: Action, requestReasonOverride?: string) => {
     let patch: Draft =
       own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))
         ? aggregateDraft
@@ -168,6 +172,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     else if (action === "return") patch = { note, ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && action === "request") patch = { ...patch, ...(note.trim() ? { note } : {}), ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && note.trim()) patch = { ...patch, note };
+    if (action === "request" && requestReasonOverride !== undefined) patch = { ...patch, note: requestReasonOverride.trim() };
     const issue = updateEvaluation(ev.id, patch, action);
     setError(issue ?? "");
     setMessage(
@@ -177,6 +182,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     if (!issue && canCouncilTasks && action === "finish") onCouncilSaved?.();
     // CQTT Hoàn tất đánh giá → về Danh sách, bộ lọc Đã hoàn tất đánh giá để tổng hợp.
     if (!issue && action === "finish" && previewRole === "cqtt") onCqttFinished?.();
+    return issue;
   };
   const actions: { action: Action; label: string; outline?: boolean }[] = !own
     ? []
@@ -260,7 +266,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <Button
               key={a.action}
               variant={a.outline ? "return" : "default"}
-              onClick={() => run(a.action)}
+              onClick={() => { if (a.action === "request" && previewRole === "cqtt") { setRequestReason(note.trim() || ev.note || ""); setRequestError(""); setRequestOpen(true); } else run(a.action); }}
             >
               {a.outline ? <Undo2 /> : a.action === "approve" ? <Check /> : <Send />}
               {a.label}
@@ -276,6 +282,23 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
         </>
       }
     >
+      <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <form onSubmit={event => {
+            event.preventDefault();
+            if (!requestReason.trim()) { setRequestError("Vui lòng nhập lý do yêu cầu điều chỉnh."); return; }
+            const issue = run("request", requestReason);
+            if (issue) setRequestError(issue); else setRequestOpen(false);
+          }}>
+            <DialogHeader><DialogTitle>Gửi điều chỉnh</DialogTitle><DialogDescription>Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá.</DialogDescription></DialogHeader>
+            <label className="my-4 block space-y-2 text-sm font-medium">Lý do điều chỉnh <span className="text-primary">*</span>
+              <textarea autoFocus aria-label="Lý do gửi điều chỉnh" className="mt-2 block min-h-28 w-full rounded-md border border-input bg-card p-3 text-sm font-normal" value={requestReason} onChange={event => { setRequestReason(event.target.value); setRequestError(""); }} placeholder="Nhập lý do yêu cầu điều chỉnh..." />
+            </label>
+            {requestError && <p role="alert" className="mb-3 text-sm text-primary">{requestError}</p>}
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />Xác nhận gửi</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       {error && (
         <p role="alert" className="mb-4 rounded-md border border-primary p-3 text-sm text-primary">
           {error}
@@ -547,13 +570,11 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
 
               </label>
             )}
-            {allowedReturns.length > 0 && (
+            {allowedReturns.length > 0 && ev.step !== "cqtt" && (
               <label className="block text-xs">
                 {ev.step === "ceo" && chosenReturn === "council"
                   ? "Chỉ đạo điều chỉnh của TGĐ"
-                  : ev.step === "cqtt" && chosenReturn === "self"
-                    ? "Nội dung yêu cầu phản hồi (để trống để dùng góp ý đã lưu)"
-                    : "Lý do trả về"}
+                  : "Lý do trả về"}
                 <textarea
                   aria-label="Lý do điều chỉnh"
                   className="mt-2 block min-h-20 w-full rounded-md border p-2 text-sm"

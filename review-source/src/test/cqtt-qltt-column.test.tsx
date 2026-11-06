@@ -192,8 +192,13 @@ it("CQTT sends adjustment from detail after all tasks are scored with a differen
   cqttRecord.criteria.forEach((c, i) => fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: String(c.self) } }));
   expect(screen.queryByRole("button", { name: "Gửi điều chỉnh" })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("QLTT đánh giá mục tiêu 1"), { target: { value: "3" } });
-  fireEvent.change(screen.getByLabelText("Lý do điều chỉnh"), { target: { value: "Đề nghị cập nhật điểm và minh chứng" } });
   fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh" }));
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Xác nhận gửi" }));
+  expect(screen.getByText("Vui lòng nhập lý do yêu cầu điều chỉnh.")).toBeInTheDocument();
+  expect(record().step).toBe("cqtt");
+  fireEvent.change(screen.getByLabelText("Lý do gửi điều chỉnh"), { target: { value: "Đề nghị cập nhật điểm và minh chứng" } });
+  fireEvent.click(screen.getByRole("button", { name: "Xác nhận gửi" }));
   expect(record().step).toBe("response");
   expect(record().criteria[0].cqtt).toBe(3);
   expect(record().note).toBe("Đề nghị cập nhật điểm và minh chứng");
