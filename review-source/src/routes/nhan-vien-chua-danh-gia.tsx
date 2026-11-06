@@ -54,7 +54,7 @@ function UnassessedEmployees() {
               <td className="px-3 py-4" title={ASSIGNING_UNIT.name}>{ASSIGNING_UNIT.label}</td>
               <td className="px-3 py-4">{e.unit}</td>
               <td className="px-3 py-4 text-muted-foreground">{e.id}</td>
-              <td className="px-3 py-4"><StatusPill tone="pending">Chưa gửi tự đánh giá</StatusPill></td>
+              <td className="px-3 py-4"><StatusPill tone="pending">Chưa gửi đánh giá</StatusPill></td>
               <td className="px-3 py-4"><Button asChild variant="ghost" size="icon"><Link to="/danh-gia/$id" params={{ id: e.id }} aria-label={`Xem phiếu ${e.id}`} title="Xem phiếu"><Eye className="h-4 w-4" /></Link></Button></td>
             </tr>)}</tbody>
           </table>
