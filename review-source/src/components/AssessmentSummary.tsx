@@ -1,3 +1,4 @@
+import { ListPagination } from "@/components/ListPagination";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
@@ -40,6 +41,11 @@ export function AssessmentSummary({
   const showActions = previewRole === "cqtt" && evaluations.some((e) => e.step === "cqtt" || e.step === "cqtt_report");
   const [cqttReturnStage, setCqttReturnStage] = useState<StageKey | "">("");
   const chosenReturn = cqttTargets.includes(cqttReturnStage as StageKey) ? (cqttReturnStage as StageKey) : cqttTargets[0];
+  const [pageSize, setPageSize] = useState(10);
+  const scope = JSON.stringify([previewRole, pageSize, evaluations.map(e => e.id)]);
+  const [pagination, setPagination] = useState({ scope, page: 1 });
+  const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(evaluations.length / pageSize))) : 1;
+  const pageRows = evaluations.slice((page - 1) * pageSize, page * pageSize);
   const [batchDrafts, setBatchDrafts] = useState<Record<string, Draft>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editAllVersion, setEditAllVersion] = useState(0);
@@ -309,11 +315,11 @@ export function AssessmentSummary({
             </tr>
           </thead>
           <tbody>
-            {evaluations.map((e, index) => (
+            {pageRows.map((e, index) => (
               <AssessmentRow
                 key={`${e.id}-${e.step}-${previewRole}-${e.history?.length ?? 0}`}
                 evaluation={e}
-                index={index}
+                index={(page - 1) * pageSize + index}
                 showActions={showActions}
                 selected={selectedEligible.includes(e.id)}
                 onSelect={() => setSelectedIds((ids) => ids.includes(e.id) ? ids.filter((id) => id !== e.id) : [...ids, e.id])}
@@ -338,6 +344,7 @@ export function AssessmentSummary({
           </tbody>
         </table>
       </div>
+      <ListPagination total={evaluations.length} page={page} pageSize={pageSize} onPageChange={page => setPagination({ scope, page })} onPageSizeChange={setPageSize} />
     </section>
   );
 }

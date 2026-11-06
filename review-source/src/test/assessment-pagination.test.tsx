@@ -1,0 +1,23 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { expect, it, vi } from "vitest";
+vi.mock("@tanstack/react-router", () => ({ Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }));
+import { AssessmentSummary } from "@/components/AssessmentSummary";
+import { EvaluationProvider } from "@/components/EvaluationProvider";
+import { EVALUATIONS } from "@/lib/evaluation";
+it("paginates summary rows, continues numbering and resets after filtering", () => {
+  const rows = EVALUATIONS.slice(0, 21);
+  const view = (filtered = rows) => <EvaluationProvider><AssessmentSummary evaluations={filtered} onExport={() => {}} /></EvaluationProvider>;
+  const { rerender } = render(view());
+  expect(screen.getByText("Hiển thị 1–10 / 21")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(12);
+  fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
+  expect(screen.getByText("Hiển thị 11–20 / 21")).toBeInTheDocument();
+  expect(screen.getByText("11", { selector: "span" })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Số dòng mỗi trang"), { target: { value: "20" } });
+  expect(screen.getByText("Hiển thị 1–20 / 21")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Trang cuối" }));
+  expect(screen.getByText("Hiển thị 21–21 / 21")).toBeInTheDocument();
+  rerender(view(rows.slice(0, 1)));
+  expect(screen.getByText("Hiển thị 1–1 / 1")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Trang sau" })).toBeDisabled();
+});
