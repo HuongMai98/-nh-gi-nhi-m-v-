@@ -1,3 +1,4 @@
+import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
@@ -462,7 +463,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               ))}
           </div>
           {tab === "kpi" || tab === "ki" || tab === "appendix" ? (
-            <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><AggregateForm allowPdfExport={false} evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
+            <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0"><legend className="mb-2 flex w-full justify-end"><EvaluationExportMenu evaluations={[{ ...ev, ...aggregateDraft }]} mode={tab === "kpi" ? "kpi" : "ki"} onCsv={() => exportCsv(`Tong-hop-${ev.id}`, evaluationCsvRows([{ ...ev, ...aggregateDraft }], tab === "kpi" ? "kpi" : "ki"))} /></legend><AggregateForm allowPdfExport={false} evaluations={[ev]} mode={tab} onDraftChange={setAggregateDraft} /></fieldset>
           ) : (
             <section className="space-y-4">
               {tab === "personal" && <h2 className="font-semibold">Phiếu đánh giá kết quả thực hiện nhiệm vụ/công việc</h2>}

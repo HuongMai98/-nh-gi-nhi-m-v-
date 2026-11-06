@@ -1,6 +1,6 @@
 import { ListPagination } from "@/components/ListPagination";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
-import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
+import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
 import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
@@ -139,7 +139,7 @@ export function AggregateForm({
           <h2 className="font-semibold">{title}</h2>
           {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{allowPdfExport && <ExportEvaluationPdf evaluations={summaryRecords} mode="ki" />}<Button variant="outline" onClick={exportData}><Download />Xuất CSV</Button>{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
           const issue = saveCouncilBatch(evaluations.map((e) => e.id), {}, true);
           setBatchMessage(issue ?? "Đã gửi tất cả đánh giá lên TGĐ.");
           if (!issue) setCouncilDrafts({});
@@ -147,7 +147,7 @@ export function AggregateForm({
           const issue = processCeoBatch(evaluations.filter((e) => e.step === "ceo").map((e) => e.id), "save", "", councilDrafts);
           setBatchMessage(issue ?? "Đã lưu tất cả điều chỉnh của TGĐ.");
           if (!issue) setCouncilDrafts({});
-        }}><Save />Lưu tất cả</Button>}{ceoReturnOn && <Button variant="return" disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => setCeoReturnOpen((open) => !open)}><Undo2 />{ceoReturnText}</Button>}<Button disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "approve", "", councilDrafts); setBatchMessage(issue ?? "Đã phê duyệt kết quả."); if (!issue) setCouncilDrafts({}); }}><Check />Phê duyệt</Button></>}</div>
+        }}><Save />Lưu tất cả</Button>}{ceoReturnOn && <Button variant="return" disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => setCeoReturnOpen((open) => !open)}><Undo2 />{ceoReturnText}</Button>}<Button disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "approve", "", councilDrafts); setBatchMessage(issue ?? "Đã phê duyệt kết quả."); if (!issue) setCouncilDrafts({}); }}><Check />Phê duyệt</Button></>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
       </div>
       {previewRole === "ceo" && ceoReturnOpen && <div className="space-y-3 rounded-lg border bg-muted/30 p-4">{ceoTargets.length > 1 && <label className="block space-y-2 text-sm font-medium">Trả về bước<select aria-label="Trả về bước" className="block h-9 w-64 rounded-md border bg-card px-2 text-sm font-normal" value={ceoChosen} onChange={(e) => setCeoReturnStage(e.target.value as StageKey)}>{ceoTargets.map((k) => <option key={k} value={k}>{STAGES[k].name}</option>)}</select></label>}<label className="block space-y-2 text-sm font-medium">{ceoChosen === "council" ? "Nội dung yêu cầu Hội đồng điều chỉnh" : "Lý do trả về"}<textarea aria-label="Yêu cầu điều chỉnh của TGĐ" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm font-normal" value={ceoReason} onChange={(e) => setCeoReason(e.target.value)} /></label><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setCeoReturnOpen(false)}>Hủy</Button><Button disabled={!ceoReason.trim() || !evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "return", ceoReason, undefined, ceoChosen); setBatchMessage(issue ?? "Đã gửi Hội đồng điều chỉnh."); if (!issue) { setCeoReturnOpen(false); setCeoReason(""); } }}>Gửi điều chỉnh</Button></div></div>}
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}

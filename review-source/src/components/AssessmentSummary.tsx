@@ -1,5 +1,5 @@
 import { ListPagination } from "@/components/ListPagination";
-import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
+import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { EditIcon } from "@/components/icons";
 import { STAGES, handlerFor, type StageKey } from "@/lib/workflow";
 import { useEffect, useRef, useState } from "react";
@@ -187,14 +187,10 @@ export function AssessmentSummary({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {allowPdfExport && <ExportEvaluationPdf evaluations={evaluations.map(e => ({ ...e, ...batchDrafts[e.id] }))} mode="kpi" />}
-          <Button variant="outline" onClick={onExport}>
-            <Download />
-            Xuất CSV
-          </Button>
           {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><EditIcon />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
           {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
           {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
+          {allowPdfExport && <EvaluationExportMenu evaluations={evaluations.map(e => ({ ...e, ...batchDrafts[e.id] }))} mode="kpi" onCsv={onExport} />}
         </div>
       </header>
       <Dialog open={returnIds !== null} onOpenChange={(open) => { if (!open) setReturnIds(null); }}>
