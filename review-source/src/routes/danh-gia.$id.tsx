@@ -241,13 +241,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       title={`${readOnly ? "Xem đánh giá" : "Chỉnh sửa đánh giá"} – ${ev.unit}`}
       actions={
         <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="icon" aria-label="Xuất file" title="Xuất file"><MoreVertical /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <ExportEvaluationPdf menuItem evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
-              <DropdownMenuItem className="gap-2" onSelect={downloadTemplate}><Download className="size-4" />Xuất CSV</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
           {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><EditIcon />Chỉnh sửa</Button>)}
           {readOnly && ev.step === "self" && previewRole === "performer" && canSubmitEvaluation(ev, CURRENT_USER) && <Button onClick={() => run("submit")}><Send />Gửi đánh giá</Button>}
           {canCqttTasks && !cqttEditing && (
@@ -272,6 +266,13 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               {a.label}
             </Button>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="icon" aria-label="Xuất file" title="Xuất file"><MoreVertical /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <ExportEvaluationPdf menuItem evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
+              <DropdownMenuItem className="gap-2" onSelect={downloadTemplate}><Download className="size-4" />Xuất CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       }
     >
