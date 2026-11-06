@@ -18,6 +18,7 @@ it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Cập nhậ
   expect(expected.some((v) => !Number.isInteger(v))).toBe(true);
   const selfInputs = screen.getAllByRole("spinbutton", { name: /^Điểm tự đánh giá nhiệm vụ/ });
   expect(selfInputs.map((input) => Number((input as HTMLInputElement).value))).toEqual(expected);
+  selfInputs.forEach((input, i) => expect(input).toHaveAttribute("max", String(expected[i])));
   expect(save).toBeEnabled();
   expect(send).toBeDisabled();
 
@@ -27,7 +28,7 @@ it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Cập nhậ
   expect(send).toBeEnabled();
 
   // Sửa sau khi lưu → phải lưu lại mới được gửi.
-  fireEvent.change(selfInputs[0]!, { target: { value: "5" } });
+  fireEvent.change(selfInputs[0]!, { target: { value: "1" } });
   expect(send).toBeDisabled();
   fireEvent.click(save);
   expect(send).toBeEnabled();

@@ -8,17 +8,18 @@ import type { SourceTask } from "@/lib/source-tasks";
 export type FormCriterion = Criterion & { sourceTaskId?: string | undefined };
 const groups = [["A", "A. Nhiệm vụ trọng tâm, trọng điểm"], ["B-I", "I. Mục tiêu theo chức năng"], ["B-II", "II. Chỉ số kiểm soát ngành dọc"]] as const;
 const field = "h-9 w-full rounded-md border bg-card px-2 text-sm";
-export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = null }: {
+export function CreateEvaluationTable({ items, tasksFor, onChange, cqttLimits, cqttScore = null }: {
   items: FormCriterion[];
   /** Điểm CQTT (khi CQTT gửi điều chỉnh về) — phân bổ theo tỷ lệ tự đánh giá, chỉ để tham chiếu. */
   cqttScore?: number | null;
+  cqttLimits?: (number | null)[];
   tasksFor: (group: Criterion["group"]) => SourceTask[];
   onChange: (items: FormCriterion[]) => void;
 }) {
   const [weightError, setWeightError] = useState("");
   const update = (index: number, patch: Partial<FormCriterion>) => onChange(items.map((c, i) => i === index ? { ...c, ...patch } : c));
   // Lấy trực tiếp điểm CQTT đã chấm từng công việc (hồ sơ cũ: phân bổ từ điểm nhóm).
-  const cqttAllocated = cqttScore === null ? null : cqttTaskScores(items, cqttScore);
+  const cqttAllocated = cqttLimits ?? (cqttScore === null ? null : cqttTaskScores(items, cqttScore));
   const showCqtt = cqttScore !== null;
   const cqttSum = cqttAllocated ? Math.round(items.reduce((s, c, i) => s + c.weight * (cqttAllocated[i] ?? 0), 0) * 100) / 100 : null;
   const span = showCqtt ? 17 : 16;
@@ -62,7 +63,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttScore = n
           {(["t", "b", "s"] as const).map((key) => <td key={key} aria-label={`Chỉ tiêu ${key.toUpperCase()} ${index + 1}`} title="Lấy theo nhiệm vụ đã chọn" className="min-w-20 whitespace-nowrap p-3 text-center tabular-nums">{item.target[key] || "—"}</td>)}
           <td className="whitespace-nowrap p-3 text-center">{item.startDate?.split("-").reverse().join("/") ?? "—"}</td><td className="whitespace-nowrap p-3 text-center">{item.endDate?.split("-").reverse().join("/") ?? "—"}</td>
           <td className="p-2"><textarea aria-label={`Kết quả thực hiện ${index + 1}`} className="min-h-16 w-52 rounded-md border bg-card p-2 text-sm" value={item.result} onChange={(e) => update(index, { result: e.target.value })} /></td>
-          <td className="p-2">{showCqtt ? <Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24 text-center" type="number" min="1" max="5" step="0.01" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /> : <select aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="mx-auto h-9 w-28 min-w-28 rounded-md border bg-card px-2 text-center text-sm" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })}><option value="">Chọn điểm</option>{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>}</td>
+          <td className="p-2">{showCqtt ? <Input aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="w-24 text-center" type="number" min="1" max={cqttLimits?.[index] ?? (cqttLimits ? 0 : 5)} step="0.01" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })} /> : <select aria-label={`Điểm tự đánh giá nhiệm vụ ${index + 1}`} className="mx-auto h-9 w-28 min-w-28 rounded-md border bg-card px-2 text-center text-sm" value={item.self || ""} onChange={(e) => update(index, { self: Number(e.target.value) })}><option value="">Chọn điểm</option>{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>}</td>
           {showCqtt && <td className="p-3 text-center font-medium text-primary" aria-label={`QLTT đánh giá ${index + 1}`} title="Điểm CQTT đã đánh giá cho công việc — tham chiếu, không chỉnh sửa">{cqttAllocated?.[index] == null ? "—" : String(Math.round(cqttAllocated[index]! * 100) / 100)}</td>}
           <td className="p-2"><Button type="button" variant="ghost" size="action" title="Xóa nhiệm vụ" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><TrashIcon /></Button></td>
         </tr>)}

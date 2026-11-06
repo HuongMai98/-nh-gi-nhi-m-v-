@@ -550,7 +550,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                     <option key={k} value={k}>{STAGES[k].name} — {handlerFor(ev.block, k)}</option>
                   ))}
                 </select>
-                {((canCompliance ? compliance[key] : ev[key]) ?? "").length > 25 && <span className="block whitespace-normal break-words leading-5 text-muted-foreground">{canCompliance ? compliance[key] : ev[key]}</span>}
+
               </label>
             )}
             {allowedReturns.length > 0 && (

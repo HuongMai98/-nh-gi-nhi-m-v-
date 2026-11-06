@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EvaluationDateInput } from "@/components/EvaluationDateInput";
 import { useEvaluations } from "@/components/evaluation-context";
-import { statusLabelOf, allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
+import { responseScoreLimits, statusLabelOf, allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
 import { CURRENT_USER, USERS, unitLeaders, canSubmitEvaluation, validateSelfSubmission, personalMetadata } from "@/lib/users";
 
@@ -60,8 +60,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     let allocated: Criterion[];
     try { allocated = criteria.length && criteria.every((c) => c.cqtt !== undefined) ? criteria.map((c) => ({ ...c, council: c.cqtt })) : allocateCouncilScores(criteria, cqttScore ?? undefined); }
     catch (e) { setError(e instanceof Error ? e.message : "Không phân bổ được điểm CQTT."); return; }
-    // Điểm tự đánh giá là số nguyên 1–5 nên làm tròn điểm CQTT phân bổ.
-    setCriteriaState(criteria.map((c, i) => ({ ...c, self: Math.min(5, Math.max(1, Math.round((allocated[i]?.council ?? c.self) * 100) / 100)) })));
+    const limits = responseScoreLimits(existing!, criteria);
+    setCriteriaState(criteria.map((c, i) => ({ ...c, self: Math.min(5, Math.max(1, Math.round((limits[i] ?? allocated[i]?.council ?? c.self) * 100) / 100)) })));
     setError("");
     setAcceptedResponse(true);
     setSavedResponse(false);
@@ -167,7 +167,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       <div className={card + " min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
         <Button type="button" variant="outline" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
-        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} />
+        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria) } : {})} />
         <Button type="button" variant="outline" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
         {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
           <h3 className={cardTitle + " mb-3"}>Phản hồi yêu cầu điều chỉnh của CQTT</h3>

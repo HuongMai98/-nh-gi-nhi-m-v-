@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { EVALUATIONS, cqttTotal, saveDraft, transition, type Evaluation } from "@/lib/evaluation";
+import { EVALUATIONS, responseScoreLimits, cqttTotal, saveDraft, transition, type Evaluation } from "@/lib/evaluation";
 
 const returned = (): Evaluation => {
   let e = structuredClone(EVALUATIONS.find((x) => x.step === "cqtt")!);
@@ -15,10 +15,11 @@ it("CQTT gửi điều chỉnh: lưu bản dữ liệu gốc để bảo lưu", 
 
 it("Tiếp thu: cập nhật toàn bộ dữ liệu và gửi CQTT rà soát, chấm lại", () => {
   const e = returned();
-  const criteria = e.criteria.map((c, i) => (i === 0 ? { ...c, self: 5, result: "Đã bổ sung" } : c));
+  const limits = responseScoreLimits(e);
+  const criteria = e.criteria.map((c, i) => ({ ...c, self: limits[i]!, ...(i === 0 ? { result: "Đã bổ sung" } : {}) }));
   const next = transition(saveDraft(e, "performer", { criteria, response: "Tiếp thu" }, "now"), "performer", "respond", {}, "now");
   expect(next.step).toBe("cqtt");
-  expect(next.criteria[0]).toMatchObject({ self: 5, result: "Đã bổ sung" });
+  expect(next.criteria[0]).toMatchObject({ self: limits[0], result: "Đã bổ sung" });
   expect(next.history?.at(-1)?.action).toBe("Tiếp thu");
 });
 

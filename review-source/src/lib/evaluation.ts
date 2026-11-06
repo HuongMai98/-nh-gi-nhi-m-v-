@@ -240,6 +240,23 @@ export function cqttTaskScores(criteria: Criterion[], total: number | null): (nu
   if (total === null) return null;
   try { return allocateCouncilScores(criteria, total).map((c) => c.council ?? null); } catch { return null; }
 }
+/** Freeze the CQTT reference at the point it was returned, including legacy allocations. */
+export function responseScoreLimits(e: Evaluation, items: Criterion[] = e.criteria): (number | null)[] {
+  const baseline = e.responseBaseline ?? e.criteria;
+  const scores = cqttTaskScores(baseline, cqttTotal(e));
+  return items.map(c => {
+    const index = baseline.findIndex(original => original.group === c.group && original.goal === c.goal);
+    const score = index < 0 ? null : scores?.[index];
+    return score == null ? null : Math.round(score * 100) / 100;
+  });
+}
+function validateResponseScores(e: Evaluation, items: Criterion[]) {
+  const limits = responseScoreLimits(e, items);
+  items.forEach((c, i) => {
+    if (c.self > 0 && (limits[i] == null || c.self > limits[i]! + 0.000001))
+      throw new Error(`Điểm tự đánh giá nhiệm vụ ${i + 1} phải bằng hoặc nhỏ hơn điểm CQTT (${limits[i] ?? "chưa có điểm"}).`);
+  });
+}
 export const cqttTotal = (e: Evaluation) =>
   e.cqttKey === undefined || e.cqttFunction === undefined
     ? null
@@ -439,7 +456,9 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     if (!patch.criteria.length) throw new Error("Phiếu phải có ít nhất một nhiệm vụ.");
     if (patch.criteria.some((c) => !Number.isFinite(c.self) || c.self < 0 || c.self > 5))
       throw new Error("Điểm tự đánh giá từ 1–5.");
-    next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined }));
+    validateResponseScores(e, patch.criteria);
+    next.responseBaseline = e.responseBaseline ?? e.criteria.map(c => ({ ...c, target: { ...c.target } }));
+    next.criteria = patch.criteria.map((c) => ({ ...c, target: { ...c.target }, council: undefined, cqtt: (e.responseBaseline ?? e.criteria).find(original => original.group === c.group && original.goal === c.goal)?.cqtt }));
   } else if (patch.criteria && role === "council") {
     if (patch.criteria.length !== e.criteria.length) throw new Error("Không được thay đổi mục tiêu gốc.");
     next.criteria = e.criteria.map((c, i) => {
@@ -650,6 +669,7 @@ export function transition(
         step: "cqtt_report",
       };
     } else if (next.response === "Tiếp thu") {
+      validateResponseScores(e, next.criteria);
       // Tiếp thu: cá nhân cập nhật lại dữ liệu và gửi CQTT rà soát, chấm điểm lại.
       if (
         !scoresComplete(next.criteria, true) ||
