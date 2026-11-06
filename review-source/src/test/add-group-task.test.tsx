@@ -10,6 +10,9 @@ function Probe() {
 it.each(["A", "B-I", "B-II"] as const)("adds a blank task in group %s without changing existing weights", group => {
   render(<Probe />);
   const before = EVALUATIONS[0]!.criteria;
+  expect(screen.queryByRole("columnheader", { name: "Nhóm mục tiêu" })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/^Nhóm mục tiêu/)).not.toBeInTheDocument();
+  expect(screen.getAllByRole("button", { name: /^Thêm nhiệm vụ nhóm/ })).toHaveLength(3);
   fireEvent.click(screen.getByRole("button", { name: `Thêm nhiệm vụ nhóm ${group}` }));
   const items: FormCriterion[] = JSON.parse(screen.getByTestId("items").textContent!);
   expect(items).toHaveLength(before.length + 1);
