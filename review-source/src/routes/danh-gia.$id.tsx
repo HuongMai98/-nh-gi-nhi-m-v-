@@ -86,7 +86,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [aggregateDraft, setAggregateDraft] = useState<Draft>({});
   const [cqttTouched, setCqttTouched] = useState(false);
   const [note, setNote] = useState("");
-  const [response, setResponse] = useState<"Tiếp thu" | "Bảo lưu">(ev.response ?? "Tiếp thu");
+  const response = "Tiếp thu" as const;
   const [responseNote, setResponseNote] = useState(ev.responseNote ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -350,24 +350,13 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       {canRespond && (
         <section className="mb-5 space-y-3 rounded-lg border p-4">
           <h2 className="font-semibold">Phản hồi CQTT</h2>
-          <label className="block text-sm">
-            Hình thức phản hồi{" "}
-            <select
-              aria-label="Hình thức phản hồi"
-              className={fieldClass}
-              value={response}
-              onChange={(e) => setResponse(e.target.value as "Tiếp thu" | "Bảo lưu")}
-            >
-              <option>Tiếp thu</option>
-              <option>Bảo lưu</option>
-            </select>
-          </label>
+          <p className="text-sm">Hình thức phản hồi: Tiếp thu</p>
           <textarea
             aria-label="Nội dung phản hồi"
             className="min-h-24 w-full rounded-md border p-3 text-sm"
             value={responseNote}
             onChange={(e) => setResponseNote(e.target.value)}
-            placeholder="Nội dung tiếp thu hoặc giải trình bảo lưu..."
+            placeholder="Nội dung tiếp thu..."
           />
           <p className="text-xs text-muted-foreground">
             Bổ sung kết quả thực hiện tại tab Phiếu đánh giá. Điểm tự đánh giá và điểm CQTT giữ
@@ -380,7 +369,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           Thay đổi trên bảng tổng hợp được lưu khi chọn Lưu hoặc chuyển bước/trình duyệt.
         </p>
       )}
-      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV bấm Chỉnh sửa đánh giá để Tiếp thu (cập nhật dữ liệu, gửi CQTT chấm lại) hoặc Bảo lưu (CQTT ghi nhận, giữ nguyên điểm chấm)." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
+      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV bấm Chỉnh sửa đánh giá để Tiếp thu, cập nhật dữ liệu và gửi CQTT chấm lại." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <details open className="group mb-4 overflow-hidden rounded-lg border">

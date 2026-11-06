@@ -8,6 +8,7 @@ it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Cập nhậ
   const existing = EVALUATIONS.find((e) => e.id === "DG-2026-Q3-009")!;
   const onCreated = vi.fn();
   render(<EvaluationProvider><CreateEvaluationDialog existing={existing} open onOpenChange={vi.fn()} onCreated={onCreated} /></EvaluationProvider>);
+  expect(screen.queryByRole("button", { name: "Bảo lưu" })).not.toBeInTheDocument();
   const save = screen.getByRole("button", { name: "Cập nhật" });
   const send = screen.getByRole("button", { name: "Gửi CQTT" });
   expect(save).toBeDisabled();

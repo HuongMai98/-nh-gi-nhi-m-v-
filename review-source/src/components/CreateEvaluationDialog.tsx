@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Send, Undo2 } from "lucide-react";
+import { Plus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EvaluationDateInput } from "@/components/EvaluationDateInput";
@@ -71,13 +71,6 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { setActionsSlot(document.getElementById(EVALUATION_FORM_ACTIONS_ID)); }, []);
 
-  function reserve() {
-    if (!responseNote.trim()) { setError("Vui lòng nhập lý do bảo lưu tại mục Phản hồi CQTT."); return; }
-    const issue = updateEvaluation(existing!.id, { response: "Bảo lưu", responseNote: responseNote.trim() }, "respond");
-    if (issue) { setError(issue); return; }
-    onCreated(existing!);
-    onOpenChange(false);
-  }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!unit.trim() || !performer || criteria.some((item) => !item.goal.trim() || !item.kpi.trim())) {
@@ -138,7 +131,6 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
     <Button type="submit" form={FORM_ID} disabled={responding && !acceptedResponse} onClick={() => { submitIntent.current = "draft"; }} value="draft" variant="outline">{existing ? "Cập nhật" : "Lưu"}</Button>
     {responding ? <>
-      <Button type="button" variant="return" onClick={reserve}><Undo2 />Bảo lưu</Button>
       <Button type="button" variant="outline" onClick={acceptCqtt}>Tiếp thu</Button>
       <Button type="submit" form={FORM_ID} disabled={!acceptedResponse || !savedResponse} onClick={() => { submitIntent.current = "send_cqtt"; }} value="send_cqtt"><Send />Gửi CQTT</Button>
     </> : <Button type="submit" form={FORM_ID} onClick={() => { submitIntent.current = "send"; }} value="send"><Send />Gửi đánh giá</Button>}
@@ -175,12 +167,11 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             <div><span className="font-medium">CQTT yêu cầu:</span> {existing!.note || "—"}</div>
             <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
           </div>
-          <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm shadow-xs" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu hoặc lý do bảo lưu..." />
+          <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm shadow-xs" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu..." />
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
             <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
             <li><span className="font-medium text-foreground">Cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
             <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
-            <li><span className="font-medium text-foreground">Bảo lưu:</span> giữ nguyên dữ liệu đã chấm trước khi CQTT trả về (bỏ qua chỉnh sửa trên bảng); CQTT ghi nhận và giữ nguyên điểm chấm. Bắt buộc nhập lý do.</li>
           </ul>
         </section>}
         {error && <p role="alert" className="text-sm text-primary">{error}</p>}
