@@ -23,7 +23,7 @@ export const EVALUATION_FORM_ACTIONS_ID = "evaluation-form-actions";
 const FORM_ID = "evaluation-form";
 
 export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing }: { existing?: Evaluation; open: boolean; onOpenChange: (open: boolean) => void; onCreated: (evaluation: Evaluation) => void }) {
-  const { evaluations, addEvaluation, replaceSelfEvaluation, updateEvaluation } = useEvaluations();
+  const { previewRole, evaluations, addEvaluation, replaceSelfEvaluation, updateEvaluation } = useEvaluations();
   // Phiếu CQTT gửi điều chỉnh về: cập nhật tại đây, gửi phản hồi CQTT ở màn chi tiết.
   const responding = existing?.step === "response";
   const cqttScore = responding ? (cqttTotal(existing!) ?? (existing!.criteria.every((c) => c.cqtt !== undefined) ? cqttTaskTotal(existing!.criteria) : null)) : null;
@@ -159,7 +159,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       <div className={card + " min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
         <Button type="button" variant="outline" onClick={() => setCriteria(quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })))}>Lấy tất cả nhiệm vụ</Button>
-        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria) } : {})} />
+        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
         <Button type="button" variant="outline" onClick={() => setCriteria((current) => [...current, { ...blankCriterion(), weight: 0 }])}><Plus />Thêm nhiệm vụ</Button>
         {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
           <h3 className={cardTitle + " mb-3"}>Phản hồi yêu cầu điều chỉnh của CQTT</h3>

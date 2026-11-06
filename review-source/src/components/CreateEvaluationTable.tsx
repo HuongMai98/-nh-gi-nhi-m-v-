@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import { TrashIcon } from "@/components/icons";
 import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,12 @@ import type { SourceTask } from "@/lib/source-tasks";
 export type FormCriterion = Criterion & { sourceTaskId?: string | undefined };
 const groups = [["A", "A. Nhiệm vụ trọng tâm, trọng điểm"], ["B-I", "I. Mục tiêu theo chức năng"], ["B-II", "II. Chỉ số kiểm soát ngành dọc"]] as const;
 const field = "h-9 w-full rounded-md border bg-card px-2 text-sm";
-export function CreateEvaluationTable({ items, tasksFor, onChange, cqttLimits, cqttScore = null }: {
+export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, cqttLimits, cqttScore = null }: {
   items: FormCriterion[];
   /** Điểm CQTT (khi CQTT gửi điều chỉnh về) — phân bổ theo tỷ lệ tự đánh giá, chỉ để tham chiếu. */
   cqttScore?: number | null;
   cqttLimits?: (number | null)[];
+  onCopyQltt?: (() => void) | undefined;
   tasksFor: (group: Criterion["group"]) => SourceTask[];
   onChange: (items: FormCriterion[]) => void;
 }) {
@@ -33,7 +35,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, cqttLimits, c
           <th rowSpan={2} className="whitespace-nowrap px-3 font-medium">Ngày bắt đầu</th><th rowSpan={2} className="whitespace-nowrap px-3 font-medium">Ngày hoàn thành</th>
           <th colSpan={2} className="border-b p-2 text-center font-medium">Đánh giá kết quả thực hiện mục tiêu nhiệm vụ/công việc</th>{showCqtt && <th rowSpan={2} className="p-3 text-center font-medium">QLTT<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></th>}<th rowSpan={2} className="p-3">Thao tác</th>
         </tr>
-        <tr>{["Tối thiểu (T - Threshold)", "Mong đợi (B - Base)", "Thách thức (S - Stretch)", "Kết quả thực hiện", "CBNV tự đánh giá (1–5)"].map((h) => <th key={h} className={"p-2 text-center align-top font-medium" + (h.includes(" - ") ? " min-w-32" : "")}>{h === "CBNV tự đánh giá (1–5)" ? <>CBNV tự<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.includes(" - ") ? <><span className="block whitespace-nowrap">{h.slice(0, h.indexOf(" ("))}</span><span className="mt-1 block whitespace-nowrap font-normal">{h.slice(h.indexOf(" (") + 1)}</span></> : h}</th>)}</tr>
+        <tr>{["Tối thiểu (T - Threshold)", "Mong đợi (B - Base)", "Thách thức (S - Stretch)", "Kết quả thực hiện", "CBNV tự đánh giá (1–5)"].map((h) => <th key={h} className={"p-2 text-center align-top font-medium" + (h.includes(" - ") ? " min-w-32" : "")}>{h === "CBNV tự đánh giá (1–5)" ? <>CBNV tự<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span>{onCopyQltt && <Button type="button" variant="outline" size="icon" className="mx-auto mt-1 h-7 w-7" title="Sao chép điểm QLTT vào CBNV tự đánh giá" aria-label="Sao chép điểm QLTT vào CBNV tự đánh giá" disabled={!cqttAllocated?.length || cqttAllocated.some(score => score == null)} onClick={onCopyQltt}><Copy className="h-3.5 w-3.5" /></Button>}</> : h.includes(" - ") ? <><span className="block whitespace-nowrap">{h.slice(0, h.indexOf(" ("))}</span><span className="mt-1 block whitespace-nowrap font-normal">{h.slice(h.indexOf(" (") + 1)}</span></> : h}</th>)}</tr>
       </thead>
       <tbody>{groups.map(([group, label]) => <Fragment key={group}>
         {group === "B-I" && <tr className="bg-accent/50"><th colSpan={span} className="py-2 font-semibold text-primary"><div className="sticky left-0 w-fit max-w-[calc(100vw-6rem)] px-3">B. Nhóm mục tiêu theo chức năng <span className="ml-3 font-normal text-muted-foreground">{Math.round(items.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% / 80%</span></div></th></tr>}

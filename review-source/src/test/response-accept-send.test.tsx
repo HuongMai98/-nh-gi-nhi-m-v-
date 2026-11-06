@@ -14,7 +14,7 @@ it("Chờ CQ/CQĐV phản hồi: Tiếp thu điền điểm CQTT → Cập nhậ
   expect(save).toBeDisabled();
   expect(send).toBeDisabled();
 
-  fireEvent.click(screen.getByRole("button", { name: "Tiếp thu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Sao chép điểm QLTT vào CBNV tự đánh giá" }));
   const expected = allocateCouncilScores(existing.criteria, cqttTotal(existing)!).map((c) => Math.round(c.council! * 100) / 100);
   expect(expected.some((v) => !Number.isInteger(v))).toBe(true);
   const selfInputs = screen.getAllByRole("spinbutton", { name: /^Điểm tự đánh giá nhiệm vụ/ });
