@@ -131,19 +131,20 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const flow = workflows[ev.block];
   const fromStage = stageOf(ev.step);
   const currentCustom = ev.step === "custom" ? flow.customStages?.find((s) => s.id === ev.customStageId) : undefined;
+  const cqttCanRequest = ev.step === "cqtt" && !!cqttGroupsFromTasks(items) && items.some(c => Math.abs((c.cqtt ?? c.self) - c.self) > 0.000001);
   const allowedReturns: StageKey[] = !own
     ? []
     : ev.step === "custom"
       ? (currentCustom?.returnTo ?? [])
-      // CQTT gửi điều chỉnh ở màn Tổng hợp đánh giá (kèm lý do), không gửi từ phiếu.
-      : ["office", "council", "council_adjust", "ceo"].includes(ev.step)
+      // CQTT chấm đủ và lệch điểm tự đánh giá thì được gửi điều chỉnh ngay từ phiếu.
+      : (cqttCanRequest || ["office", "council", "council_adjust", "ceo"].includes(ev.step))
         ? (flow.stages.find((s) => s.key === fromStage)?.returnTo ?? [])
         : [];
   const [returnStage, setReturnStage] = useState<StageKey | "">("");
   const chosenReturn = allowedReturns.includes(returnStage as StageKey) ? (returnStage as StageKey) : allowedReturns[0];
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
   const returnText =
-    allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
+    ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
   const run = (action?: Action) => {
     let patch: Draft =
       own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))

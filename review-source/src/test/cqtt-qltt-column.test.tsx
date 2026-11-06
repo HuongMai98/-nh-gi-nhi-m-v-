@@ -184,3 +184,17 @@ it.each(["self", "office", "cqtt", "response", "cqtt_report", "council", "counci
     }
   },
 );
+
+it("CQTT sends adjustment from detail after all tasks are scored with a difference", () => {
+  render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
+  fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
+  expect(screen.queryByRole("button", { name: "Gửi điều chỉnh" })).not.toBeInTheDocument();
+  cqttRecord.criteria.forEach((c, i) => fireEvent.change(screen.getByLabelText(`QLTT đánh giá mục tiêu ${i + 1}`), { target: { value: String(c.self) } }));
+  expect(screen.queryByRole("button", { name: "Gửi điều chỉnh" })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("QLTT đánh giá mục tiêu 1"), { target: { value: "3" } });
+  fireEvent.change(screen.getByLabelText("Lý do điều chỉnh"), { target: { value: "Đề nghị cập nhật điểm và minh chứng" } });
+  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh" }));
+  expect(record().step).toBe("response");
+  expect(record().criteria[0].cqtt).toBe(3);
+  expect(record().note).toBe("Đề nghị cập nhật điểm và minh chứng");
+});
