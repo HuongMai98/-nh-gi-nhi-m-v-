@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Copy, Plus } from "lucide-react";
 import { TrashIcon } from "@/components/icons";
 import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,13 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, c
   onChange: (items: FormCriterion[]) => void;
 }) {
   const [weightError, setWeightError] = useState("");
+  const addToGroup = (group: Criterion["group"]) => {
+    const rank = groups.findIndex(([key]) => key === group);
+    const after = items.findIndex(c => groups.findIndex(([key]) => key === c.group) > rank);
+    const next = [...items];
+    next.splice(after < 0 ? items.length : after, 0, { group, goal: "", kpi: "", unit: "", weight: 0, target: { t: "", b: "", s: "" }, result: "", self: 0 });
+    onChange(next);
+  };
   const update = (index: number, patch: Partial<FormCriterion>) => onChange(items.map((c, i) => i === index ? { ...c, ...patch } : c));
   // Lấy trực tiếp điểm CQTT đã chấm từng công việc (hồ sơ cũ: phân bổ từ điểm nhóm).
   const cqttAllocated = cqttLimits ?? (cqttScore === null ? null : cqttTaskScores(items, cqttScore));
@@ -69,6 +76,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, c
           {showCqtt && <td className="p-3 text-center font-medium text-primary" aria-label={`QLTT đánh giá ${index + 1}`} title="Điểm CQTT đã đánh giá cho công việc — tham chiếu, không chỉnh sửa">{cqttAllocated?.[index] == null ? "—" : String(Math.round(cqttAllocated[index]! * 100) / 100)}</td>}
           <td className="p-2"><Button type="button" variant="ghost" size="action" title="Xóa nhiệm vụ" aria-label={`Xóa nhiệm vụ ${index + 1}`} disabled={items.length === 1} onClick={() => onChange(items.filter((_, i) => i !== index))}><TrashIcon /></Button></td>
         </tr>)}
+        <tr><td colSpan={span} className="border-t bg-card py-2"><div className="sticky left-0 w-fit px-3"><Button type="button" variant="outline" size="sm" aria-label={`Thêm nhiệm vụ nhóm ${group}`} onClick={() => addToGroup(group)}><Plus />Thêm nhiệm vụ</Button></div></td></tr>
       </Fragment>)}
       </tbody>
       <tfoot className="border-t bg-muted font-semibold"><tr><td colSpan={7} className="p-3">Tổng tỷ trọng</td><td className="p-2 text-center">{Math.round(items.reduce((sum, c) => sum + c.weight, 0) * 100)}%</td><td colSpan={5} /><td className="whitespace-nowrap p-3 text-right">Tổng điểm (Ʃ Tỷ trọng * Điểm)</td><td className="p-3 text-center">{items.some((c) => c.self) ? totalScore(items).toFixed(2) : "—"}</td>{showCqtt && <td className="p-3 text-center text-amber-700">{cqttSum?.toFixed(2) ?? "—"}</td>}<td /></tr></tfoot>
