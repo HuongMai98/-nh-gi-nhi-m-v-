@@ -498,20 +498,21 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 ["Văn hoá Viettel", "cultureCompliance", ["Tuân thủ", "Không tuân thủ"]],
               ] as const
             ).map(([label, key, options]) => (
-              <label key={label} className="mb-2 flex items-start justify-between gap-2 text-xs">
-                <span className="pt-1">{label}</span>
+              <label key={label} className="mb-3 block space-y-1.5 text-xs">
+                <span className="block">{label}</span>
                 <select
                   aria-label={label}
                   disabled={!canCompliance}
                   value={canCompliance ? compliance[key] : (ev[key] ?? "")}
                   onChange={(e) => { setCompliance((c) => ({ ...c, [key]: e.target.value })); setComplianceTouched(true); }}
-                  className={cn("max-w-36 rounded border bg-card px-2 py-1 text-xs", canCompliance && "h-8 border-input")}
+                  className={cn("w-full min-w-0 rounded border bg-card px-2 py-1 text-xs", canCompliance && "h-8 border-input")}
                 >
                   <option value="">—</option>
                   {[...new Set<string>([...options, ...(ev[key] ? [ev[key]!] : [])])].map((v) => (
                     <option key={v}>{v}</option>
                   ))}
                 </select>
+                {((canCompliance ? compliance[key] : ev[key]) ?? "").length > 25 && <span className="block whitespace-normal break-words leading-5 text-muted-foreground">{canCompliance ? compliance[key] : ev[key]}</span>}
               </label>
             ))}
           </section>
@@ -549,6 +550,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                     <option key={k} value={k}>{STAGES[k].name} — {handlerFor(ev.block, k)}</option>
                   ))}
                 </select>
+                {((canCompliance ? compliance[key] : ev[key]) ?? "").length > 25 && <span className="block whitespace-normal break-words leading-5 text-muted-foreground">{canCompliance ? compliance[key] : ev[key]}</span>}
               </label>
             )}
             {allowedReturns.length > 0 && (
