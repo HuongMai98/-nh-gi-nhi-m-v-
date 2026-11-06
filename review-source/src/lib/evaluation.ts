@@ -39,13 +39,13 @@ export const officeFor = (e: Evaluation) =>
   handlerFor(e.block, stageOf(e.step) === "dispatch" ? "dispatch" : "office");
 export const appendixFor = (_e: Evaluation) => "Phụ lục Kết quả";
 export const STEPS: { key: Step; label: string; actor: string }[] = [
-  { key: "self", label: "Tự đánh giá", actor: "CQĐV/CQ" },
+  { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Đang tổng hợp", actor: "VP / Ban CL" },
   { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
   { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
   { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
-  { key: "ceo", label: "Phê duyệt kết quả", actor: "TGĐ" },
+  { key: "ceo", label: "Chờ TGĐ phê duyệt", actor: "TGĐ" },
   { key: "council_adjust", label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" },
   { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
