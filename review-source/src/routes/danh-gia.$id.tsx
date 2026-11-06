@@ -1,10 +1,11 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ChevronDown, ClipboardCheck, Copy, Download, MessageSquare, Save, Send, Undo2 } from "lucide-react";
+import { Check, ChevronDown, ClipboardCheck, Copy, Download, MessageSquare, MoreVertical, Save, Send, Undo2 } from "lucide-react";
 import { AppShell, StatusPill, statusStepClasses } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { AggregateForm, exportCsv, fieldClass, LABOR } from "@/components/AggregateForm";
@@ -240,11 +241,13 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       title={`${readOnly ? "Xem đánh giá" : "Chỉnh sửa đánh giá"} – ${ev.unit}`}
       actions={
         <>
-          <ExportEvaluationPdf evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
-          <Button variant="outline" onClick={downloadTemplate}>
-            <Download />
-            Xuất CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="icon" aria-label="Xuất file" title="Xuất file"><MoreVertical /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <ExportEvaluationPdf menuItem evaluations={[{ ...ev, ...aggregateDraft, ...compliance, criteria: items, ...((councilPreview || cqttPreview) ? { councilScore: preview.councilScore, ki: preview.ki, councilReviewed: preview.councilReviewed } : {}) }]} mode={tab === "kpi" ? "kpi" : tab === "ki" ? "ki" : "personal"} />
+              <DropdownMenuItem className="gap-2" onSelect={downloadTemplate}><Download className="size-4" />Xuất CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {readOnly && onEdit && ((previewRole === "cqtt" && ev.step === "cqtt" || previewRole === "council" && ["council", "council_adjust"].includes(ev.step)) ? <Button onClick={onEdit}><ClipboardCheck />Đánh giá</Button> : <Button variant="outline" onClick={onEdit}><EditIcon />Chỉnh sửa</Button>)}
           {readOnly && ev.step === "self" && previewRole === "performer" && canSubmitEvaluation(ev, CURRENT_USER) && <Button onClick={() => run("submit")}><Send />Gửi đánh giá</Button>}
           {canCqttTasks && !cqttEditing && (

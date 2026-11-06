@@ -1,10 +1,11 @@
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildEvaluationPdf, type EvaluationPdfMode } from "@/lib/evaluation-pdf";
 import type { Evaluation } from "@/lib/evaluation";
 
-export function ExportEvaluationPdf({ evaluations, mode }: { evaluations: Evaluation[]; mode: EvaluationPdfMode }) {
+export function ExportEvaluationPdf({ evaluations, mode, menuItem = false }: { evaluations: Evaluation[]; mode: EvaluationPdfMode; menuItem?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function download() {
@@ -27,5 +28,6 @@ export function ExportEvaluationPdf({ evaluations, mode }: { evaluations: Evalua
     } catch (issue) { setError(issue instanceof Error ? issue.message : "Không xuất được PDF."); }
     finally { setBusy(false); }
   }
+  if (menuItem) return <><DropdownMenuItem disabled={busy || !evaluations.length} onSelect={event => { event.preventDefault(); void download(); }} className="gap-2"><FileDown className="size-4" />{busy ? "Đang xuất PDF…" : "Xuất PDF"}</DropdownMenuItem>{error && <p role="alert" className="max-w-64 px-2 py-1 text-xs text-primary">{error}</p>}</>;
   return <span className="inline-flex flex-wrap items-center gap-2"><Button type="button" variant="outline" disabled={busy || !evaluations.length} onClick={() => void download()}><FileDown />{busy ? "Đang xuất PDF…" : "Xuất PDF"}</Button>{error && <span role="alert" className="text-xs text-primary">{error}</span>}</span>;
 }

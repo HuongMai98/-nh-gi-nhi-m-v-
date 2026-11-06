@@ -198,3 +198,11 @@ it("CQTT sends adjustment from detail after all tasks are scored with a differen
   expect(record().criteria[0].cqtt).toBe(3);
   expect(record().note).toBe("Đề nghị cập nhật điểm và minh chứng");
 });
+it("keeps PDF and CSV inside the export menu", async () => {
+  render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
+  expect(screen.queryByRole("button", { name: "Xuất PDF" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("menuitem", { name: "Xuất CSV" })).not.toBeInTheDocument();
+  fireEvent.keyDown(screen.getByRole("button", { name: "Xuất file" }), { key: "ArrowDown" });
+  expect(await screen.findByRole("menuitem", { name: "Xuất PDF" })).toBeInTheDocument();
+  expect(screen.getByRole("menuitem", { name: "Xuất CSV" })).toBeInTheDocument();
+});
