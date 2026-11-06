@@ -168,11 +168,6 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             <div className="mt-1"><span className="font-medium">Điểm CQTT:</span> {cqttScore?.toFixed(2) ?? "—"}</div>
           </div>
           <textarea aria-label="Ý kiến phản hồi CQTT" className="min-h-20 w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm shadow-xs" value={responseNote} onChange={(e) => { setResponseNote(e.target.value); setSavedResponse(false); }} placeholder="Nội dung tiếp thu..." />
-          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            <li><span className="font-medium text-foreground">Tiếp thu:</span> điền điểm QLTT đánh giá (1-5) vào cột tự đánh giá (giữ 2 chữ số thập phân), sau đó có thể chỉnh sửa bảng.</li>
-            <li><span className="font-medium text-foreground">Cập nhật:</span> lưu dữ liệu đã cập nhật, phiếu vẫn chờ phản hồi.</li>
-            <li><span className="font-medium text-foreground">Gửi CQTT:</span> sau khi Cập nhật, gửi CQTT rà soát, chấm điểm lại.</li>
-          </ul>
         </section>}
         {error && <p role="alert" className="text-sm text-primary">{error}</p>}
         {notice && !error && <p role="status" className="text-sm text-success">{notice}</p>}
