@@ -1,3 +1,4 @@
+import { AggregateForm } from "@/components/AggregateForm";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({ Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }));
@@ -15,4 +16,14 @@ it.each(["performer", "office", "cqtt", "council", "ceo", "admin"] as PreviewRol
   fireEvent.keyDown(screen.getByRole("button", { name: "Xuất file tổng hợp" }), { key: "ArrowDown" });
   expect(await screen.findByRole("menuitem", { name: "Xuất PDF" })).toBeEnabled();
   expect(screen.getByRole("menuitem", { name: "Xuất CSV" })).toBeEnabled();
+});
+it.each([true, false])("KI has no standalone CSV button (exports enabled: %s)", async enabled => {
+  render(<EvaluationProvider><AggregateForm mode="ki" allowPdfExport={enabled} evaluations={[EVALUATIONS[0]!]} /></EvaluationProvider>);
+  expect(screen.queryByRole("button", { name: "Xuất CSV" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Xuất PDF" })).not.toBeInTheDocument();
+  if (enabled) {
+    fireEvent.keyDown(screen.getByRole("button", { name: "Xuất file tổng hợp" }), { key: "ArrowDown" });
+    expect(await screen.findByRole("menuitem", { name: "Xuất CSV" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Xuất PDF" })).toBeInTheDocument();
+  } else expect(screen.queryByRole("button", { name: "Xuất file tổng hợp" })).not.toBeInTheDocument();
 });
