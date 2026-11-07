@@ -1,4 +1,4 @@
-import { branches, customStageOf, handlerFor, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
+import { customStageOf, handlerFor, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
 export type Step =
   | "self"
   | "office"
@@ -21,7 +21,7 @@ export const ROLES: Record<PreviewRole, string> = {
   office: "Văn phòng / Ban Chiến lược",
   cqtt: "CQTT",
   council: "Hội đồng",
-  ceo: "TGĐ",
+  ceo: "GĐ (trình ký)",
   admin: "Quản trị hệ thống",
 };
 /** Chỉ Quản trị hệ thống được cấu hình luồng duyệt. */
@@ -45,7 +45,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
   { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
-  { key: "ceo", label: "Chờ TGĐ phê duyệt", actor: "TGĐ" },
+  { key: "ceo", label: "Đang trình ký", actor: "GĐ" },
   { key: "council_adjust", label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" },
   { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
@@ -58,7 +58,7 @@ export const MAIN_STEPS = [
   { key: "office", label: "Đang tổng hợp", actor: "VP / Ban CL" },
   { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
   { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
-  { key: "ceo", label: "Chờ TGĐ phê duyệt", actor: "TGĐ" },
+  { key: "ceo", label: "Đang trình ký", actor: "GĐ" },
   { key: "approved", label: "Đã phê duyệt", actor: "Hội đồng → VP/Ban CL → CQĐV/CQ" },
 ] as const;
 export type MainStage = (typeof MAIN_STEPS)[number]["key"];
@@ -172,11 +172,13 @@ export type Evaluation = {
   customAfter?: StageKey | undefined;
   /** Thời điểm hồ sơ vào bước hiện tại (ISO) — dùng tính hạn xử lý. */
   stageEnteredAt?: string;
-  /** TGĐ đã điều chỉnh trực tiếp điểm/Ki của Hội đồng trước khi phê duyệt. */
+  /** GĐ đã điều chỉnh trực tiếp điểm/Ki của Hội đồng trước khi phê duyệt. */
   ceoAdjusted?: boolean;
   approvedScore?: number | undefined;
   approvedKi?: Ki | undefined;
   submittedForSignatureAt?: string;
+  directorSigningId?: string;
+  directorSigningStatus?: "pending" | "approved" | "returned";
 };
 export type Draft = { /** Bước đích người xử lý chọn khi trả về (không lưu vào hồ sơ). */ returnStage?: StageKey } & Partial<
   Pick<
@@ -420,6 +422,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     ["approved", "dispatch", "sign", "done"].includes(e.step)
   )
     throw new Error("Vai trò hoặc trạng thái không cho phép sửa hồ sơ.");
+  if (e.step === "ceo") throw new Error("Hồ sơ đang trình ký; không được sửa điểm trên màn Đánh giá.");
   let next = { ...e };
   const allowed =
     role === "office" && e.step === "office"
@@ -429,7 +432,8 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
         : role === "cqtt" && e.step === "cqtt"
           ? ["criteria", "cqttKey", "cqttFunction", "cqttAdjustmentPercent", "note", "proposedKi", "reviewAssistant", "reviewRemark", "locationCompliance", "laborCompliance", "cultureCompliance"]
           : role === "cqtt" && e.step === "cqtt_report"
-            ? ["note"]
+            // Đánh giá lại phiếu đã Hoàn tất: sửa điểm QLTT từng công việc (phải tổng hợp lại) và tuân thủ.
+            ? ["criteria", "note", "locationCompliance", "laborCompliance", "cultureCompliance"]
           : role === "council"
             ? [
                 "criteria",
@@ -440,10 +444,6 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
                 "cultureCompliance",
                 "note",
               ]
-            : role === "ceo" && e.step === "ceo"
-              ? branches(e.block).ceoDirectAdjust
-                ? ["councilScore", "ki", "locationCompliance", "laborCompliance", "cultureCompliance"]
-                : ["locationCompliance", "laborCompliance", "cultureCompliance"]
             : role === "performer" && e.step === "response"
               ? ["response", "responseNote", "criteria"]
               : [];
@@ -542,26 +542,11 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
       }
     }
   }
-  if (role === "ceo") {
-    // TGĐ điều chỉnh trực tiếp: kiểm tra điều kiện Ki và phân bổ lại điểm xuống từng mục tiêu.
-    const issue = kiError(next);
-    if (issue) throw new Error(issue);
-    next.criteria = allocateCouncilScores(next.criteria, next.councilScore);
-    if (next.councilScore !== e.councilScore || next.ki !== e.ki) next.ceoAdjusted = true;
-  }
-  if (role === "ceo") {
-    const changes = [
-      next.councilScore !== e.councilScore && `Điểm ${e.councilScore?.toFixed(2) ?? "—"} → ${next.councilScore?.toFixed(2) ?? "—"}`,
-      next.ki !== e.ki && `Ki ${e.ki ?? "—"} → ${next.ki ?? "—"}`,
-    ].filter(Boolean).join("; ");
-    if (!changes) return record(e, next, role, "TGĐ đánh giá tuân thủ", "", at);
-    return record(e, next, role, "TGĐ điều chỉnh trực tiếp", changes, at);
-  }
   return record(e, next, role, "Lưu nháp", patch.note ?? patch.responseNote ?? "", at);
 }
 /**
  * Đưa hồ sơ vào bước `key` theo cấu hình luồng duyệt, khởi tạo dữ liệu còn thiếu khi bỏ qua bước
- * (vd. tắt CQTT → Hội đồng kế thừa điểm tự đánh giá; tắt TGĐ → kết quả Hội đồng là kết quả phê duyệt).
+ * (vd. tắt CQTT → Hội đồng kế thừa điểm tự đánh giá).
  */
 export function enterStage(e: Evaluation, key: StageKey): Evaluation {
   const withScore = (x: Evaluation): Evaluation => {
@@ -700,22 +685,14 @@ export function transition(
     if (kiError(e)) throw new Error(kiError(e));
     return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách Hội đồng đã đánh giá.", at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
-    if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình TGĐ.");
+    if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình GĐ.");
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
-    next = advance({ ...e, councilReviewed: true, criteria: e.councilTaskScored ? e.criteria : allocateCouncilScores(e.criteria, e.councilScore) }, { kind: "fixed", key: "council" });
+    next = { ...advance({ ...e, councilReviewed: true, criteria: e.councilTaskScored ? e.criteria : allocateCouncilScores(e.criteria, e.councilScore) }, { kind: "fixed", key: "council" }), submittedForSignatureAt: at, directorSigningStatus: "pending", directorSigningId: `${e.id}-${at}` };
   } else if (e.step === "ceo") {
-    if (action === "return") {
-      const ceoTarget = resolveReturn(e.block, "ceo", patch.returnStage);
-      if (!ceoTarget) throw new Error("Luồng duyệt của khối không cho phép TGĐ trả về.");
-      if (ceoTarget !== "council") return returnTo(e, role, "ceo", ceoTarget, reason, at);
-      requireReason();
-      next = { ...e, step: "council_adjust", note: reason };
-    } else if (action === "approve") {
-      if (kiError(e)) throw new Error(kiError(e));
-      next = advance({ ...e, approvedScore: e.councilScore, approvedKi: e.ki }, { kind: "fixed", key: "ceo" });
-    } else throw new Error("Thao tác không hợp lệ.");
+    if (action !== "approve" && action !== "return") throw new Error("Chờ kết quả từ luồng trình ký GĐ.");
+    return receiveDirectorSigningResult(e, action === "approve" ? "approved" : "returned", reason, at);
   } else if (e.step === "approved" && action === "send") next = { ...e, step: "dispatch" };
   else if (e.step === "dispatch" && action === "send") next = advance(e, { kind: "fixed", key: "dispatch" });
   else if (e.step === "custom" && action === "send") {
@@ -731,6 +708,17 @@ export function transition(
     return record(e, next, role, "Gửi điều chỉnh cho CQĐV/CQ", `Gửi đến: ${e.owner}${e.employeeId ? ` (${e.employeeId})` : ""} · ${e.unit} — Lý do: ${reason}`, at);
   return record(e, next, role, action, patch.responseNote ?? reason, at);
 }
+/** Signing adapter: call only after receiving an authenticated signing result. */
+export function receiveDirectorSigningResult(e: Evaluation, outcome: "approved" | "returned", reason: string, at: string, requestId = e.directorSigningId): Evaluation {
+  if (e.step !== "ceo" || requestId !== e.directorSigningId) throw new Error("Hồ sơ không còn chờ kết quả trình ký này.");
+  if (outcome === "returned" && !reason.trim()) throw new Error("Vui lòng nhập lý do GĐ trả lại.");
+  if (outcome === "approved" && kiError(e)) throw new Error(kiError(e));
+  const next: Evaluation = outcome === "approved"
+    ? { ...e, step: "done", directorSigningStatus: "approved", approvedScore: e.councilScore, approvedKi: e.ki }
+    : { ...e, step: "council_adjust", directorSigningStatus: "returned", councilReviewed: false, councilSummaryCreated: false, note: reason.trim(), approvedScore: undefined, approvedKi: undefined };
+  return record(e, next, "ceo", outcome === "approved" ? "GĐ phê duyệt trình ký" : "GĐ trả lại trình ký", reason.trim(), at);
+}
+
 export function forwardOfficeBatch(
   evaluations: Evaluation[],
   role: PreviewRole,
@@ -926,7 +914,7 @@ extraSamples.forEach(([owner, unit, block, step], index) => {
   const council = ["council", "ceo", "council_adjust", "approved", "dispatch", "sign", "done"].includes(step);
   const approved = ["approved", "dispatch", "sign", "done"].includes(step);
   const criteria = EVALUATIONS[3]!.criteria.map((c) => ({ ...c, target: { ...c.target } }));
-  const note = step === "response" ? "CQTT yêu cầu bổ sung minh chứng và phản hồi về điểm đánh giá." : step === "council_adjust" ? "TGĐ yêu cầu Hội đồng rà soát lại điểm và căn cứ xếp Ki." : "";
+  const note = step === "response" ? "CQTT yêu cầu bổ sung minh chứng và phản hồi về điểm đánh giá." : step === "council_adjust" ? "GĐ yêu cầu Hội đồng rà soát lại điểm và căn cứ xếp Ki." : "";
   EVALUATIONS.push({
     id: "DG-2026-Q3-" + sequence, owner, unit, block, step,
     period: "Quý III/2026", employeeId: String(92000 + index), jobTitle: "Chỉ huy cơ quan/đơn vị", location: "Hà Nội",

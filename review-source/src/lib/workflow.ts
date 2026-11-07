@@ -19,7 +19,7 @@ export type StageConfig = {
   returnTo: StageKey[];
 };
 export type BranchConfig = {
-  /** TGĐ điều chỉnh trực tiếp điểm/Ki trước khi phê duyệt. */
+  /** GĐ điều chỉnh trực tiếp điểm/Ki trước khi phê duyệt. */
   ceoDirectAdjust: boolean;
 };
 /** Bước có thể cấu hình trả về, và các bước có thể là đích trả về. */
@@ -97,11 +97,11 @@ export const STAGES: Record<
     steps: ["council", "council_adjust"],
   },
   ceo: {
-    name: "Phê duyệt kết quả",
+    name: "Trình ký GĐ",
     role: "ceo",
-    required: false,
-    description: "Phê duyệt, điều chỉnh trực tiếp hoặc yêu cầu Hội đồng điều chỉnh.",
-    handlers: ["TGĐ", "Phó TGĐ phụ trách"],
+    required: true,
+    description: "Hội đồng trình ký hồ sơ và tài liệu đính kèm; nhận kết quả GĐ duyệt hoặc trả lại.",
+    handlers: ["GĐ"],
     steps: ["ceo"],
   },
   dispatch: {
@@ -139,7 +139,7 @@ export function defaultWorkflow(block: Block): WorkflowConfig {
       slaDays: sla[key],
       returnTo: [...(DEFAULT_RETURN[key] ?? [])],
     })),
-    branches: { ceoDirectAdjust: true },
+    branches: { ceoDirectAdjust: false },
     customStages: [],
     notifications: { ...DEFAULT_NOTIFICATIONS },
   };
@@ -168,9 +168,9 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
           : stored === null || legacy === false
             ? []
             : [...(DEFAULT_RETURN[key] ?? [])];
-      return { ...s, returnTo };
+      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo };
     }),
-    branches: { ceoDirectAdjust: raw.branches.ceoDirectAdjust ?? true },
+    branches: { ceoDirectAdjust: false },
     customStages: (raw.customStages ?? []).map((s) => ({ ...s, returnTo: [...(s.returnTo ?? [])] })),
     notifications: { ...DEFAULT_NOTIFICATIONS, ...(raw.notifications ?? {}) },
   };
@@ -204,11 +204,11 @@ export function validateWorkflow(c: WorkflowConfig): string[] {
     }
   }
   if (!on("cqtt") && !on("council") && !on("ceo"))
-    errors.push("Cần bật ít nhất một bước chấm điểm/phê duyệt (CQTT, Hội đồng hoặc TGĐ).");
+    errors.push("Cần bật ít nhất một bước chấm điểm/phê duyệt (CQTT, Hội đồng hoặc GĐ).");
   for (const s of c.stages)
     if (s.enabled && s.returnTo.some((t) => !returnOptions(c, s.key).includes(t)))
       errors.push(`Bước "${STAGES[s.key].name}" chỉ được trả về bước đứng trước và đang bật.`);
-  if (c.branches.ceoDirectAdjust && !on("ceo")) errors.push("TGĐ điều chỉnh trực tiếp cần bật bước Phê duyệt kết quả.");
+  if (c.branches.ceoDirectAdjust && !on("ceo")) errors.push("GĐ điều chỉnh trực tiếp cần bật bước Phê duyệt kết quả.");
   for (const cs of c.customStages ?? []) {
     const label = cs.name.trim() || "Bước bổ sung";
     if (!cs.name.trim()) errors.push("Nhập tên cho bước bổ sung.");
@@ -235,7 +235,7 @@ export function normalizeBranches(c: WorkflowConfig): WorkflowConfig {
       handler: s.key === "dispatch" ? (c.stages.find((x) => x.key === "office")?.handler ?? s.handler) : s.handler,
       returnTo: s.returnTo.filter((t) => returnOptions(c, s.key).includes(t)),
     })),
-    branches: { ceoDirectAdjust: c.branches.ceoDirectAdjust && on("ceo") },
+    branches: { ceoDirectAdjust: false },
     customStages: (c.customStages ?? []).map((cs) => ({ ...cs, returnTo: cs.returnTo.filter((t) => customReturnOptions(c, cs).includes(t)) })),
   };
 }

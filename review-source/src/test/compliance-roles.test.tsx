@@ -25,7 +25,7 @@ function Screen({ id }: { id: string }) {
 }
 
 describe("Đánh giá tuân thủ: CQTT, Hội đồng, TGĐ", () => {
-  it("CQTT, Hội đồng và TGĐ đều lưu được đánh giá tuân thủ ở bước của mình", () => {
+  it("CQTT và Hội đồng lưu tuân thủ; hồ sơ trình ký không cho GĐ sửa điểm", () => {
     const cqtt = saveDraft(structuredClone(cqttRecord), "cqtt", { laborCompliance: "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" }, "now");
     expect(cqtt.laborCompliance).toBe("Vi phạm nhưng chưa đến mức bị xử lý kỷ luật");
     const council = structuredClone(EVALUATIONS.find((e) => e.step === "council")!);
@@ -34,9 +34,7 @@ describe("Đánh giá tuân thủ: CQTT, Hội đồng, TGĐ", () => {
     const c = defaultWorkflow(ceo.block);
     c.branches.ceoDirectAdjust = false;
     setWorkflows([c]);
-    const saved = saveDraft(ceo, "ceo", { cultureCompliance: "Tuân thủ" }, "now");
-    expect(saved.cultureCompliance).toBe("Tuân thủ");
-    expect(saved.ceoAdjusted).toBeFalsy();
+    expect(() => saveDraft(ceo, "ceo", { cultureCompliance: "Tuân thủ" }, "now")).toThrow(/đang trình ký/);
     expect(() => saveDraft(ceo, "ceo", { councilScore: 4.2 }, "now")).toThrow();
   });
 

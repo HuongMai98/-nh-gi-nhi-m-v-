@@ -96,11 +96,11 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [responseNote, setResponseNote] = useState(ev.responseNote ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const own = !readOnly && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
+  const own = !readOnly && ev.step !== "ceo" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   const canSelf = own && selfEditable(ev, previewRole);
   const canRespond = own && ev.step === "response";
   // CQTT chấm từng công việc ngay trên form Phiếu đánh giá, cột QLTT đánh giá.
-  const canCqttTasks = own && ev.step === "cqtt";
+  const canCqttTasks = own && (ev.step === "cqtt" || ev.step === "cqtt_report");
   const canCouncilTasks = own && previewRole === "council" && ["council", "council_adjust"].includes(ev.step);
   const showCouncilTasks = previewRole !== "performer" && (previewRole === "council" || !!ev.councilTaskScored);
   const qlttSummaryScore = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"].includes(ev.step)
@@ -109,8 +109,8 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   // Điểm QLTT đã lưu hiển thị chỉ đọc; bấm Chỉnh sửa để sửa tiếp trước khi Hoàn tất đánh giá.
   const [cqttEditing, setCqttEditing] = useState(!ev.criteria.some((c) => c.cqtt !== undefined));
   const cqttInputs = canCqttTasks && cqttEditing;
-  // Đánh giá tuân thủ: CQTT, Hội đồng, TGĐ đều được đánh giá ở bước của mình.
-  const canCompliance = own && ["cqtt", "council", "council_adjust", "ceo"].includes(ev.step);
+  // Đánh giá tuân thủ: CQTT, Hội đồng, GĐ đều được đánh giá ở bước của mình.
+  const canCompliance = own && ["cqtt", "cqtt_report", "council", "council_adjust", "ceo"].includes(ev.step);
   const [compliance, setCompliance] = useState({
     locationCompliance: ev.locationCompliance ?? "",
     laborCompliance: ev.laborCompliance ?? "",
@@ -398,7 +398,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           Thay đổi trên bảng tổng hợp được lưu khi chọn Lưu hoặc chuyển bước/trình duyệt.
         </p>
       )}
-      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV bấm Chỉnh sửa đánh giá để Tiếp thu, cập nhật dữ liệu và gửi CQTT chấm lại." : "TGĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại TGĐ."}</p>}
+      {(ev.step === "response" || ev.step === "council_adjust") && <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ev.step === "response" ? "CQTT yêu cầu phản hồi. CQ/CQĐV bấm Chỉnh sửa đánh giá để Tiếp thu, cập nhật dữ liệu và gửi CQTT chấm lại." : "GĐ yêu cầu điều chỉnh. Hội đồng cập nhật đánh giá và trình lại GĐ."}</p>}
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <details open className="group mb-4 overflow-hidden rounded-lg border">
@@ -574,7 +574,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             {allowedReturns.length > 0 && ev.step !== "cqtt" && (
               <label className="block text-xs">
                 {ev.step === "ceo" && chosenReturn === "council"
-                  ? "Chỉ đạo điều chỉnh của TGĐ"
+                  ? "Chỉ đạo điều chỉnh của GĐ"
                   : "Lý do trả về"}
                 <textarea
                   aria-label="Lý do điều chỉnh"
@@ -742,10 +742,10 @@ function PersonalTable({
                 ? []
                 : ["Kết quả thực hiện", "CBNV tự đánh giá (1-5)", ...(showCouncil ? ["CQTT đánh giá (1-5)", "QLTT đánh giá (1-5)"] : [cqttRef ? "QLTT đánh giá (1-5)" : canCqtt || (cqttScored && allocatedTotal(items) === null) ? "QLTT đánh giá (1-5)" : "QLTT đánh giá (1-5)"])]),
             ].map((h) => (
-              <th key={h} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "min-w-24", (h.startsWith("CBNV") || h.startsWith("QLTT") || h === "Kết quả thực hiện") && "text-center")}>
-                {h.startsWith("CBNV") ? <>CBNV tự<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.startsWith("QLTT") ? <>QLTT<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></> : h.endsWith("(1-5)") ? <>{h.slice(0, -6)} <span className="whitespace-nowrap">(1-5)</span></> : h}
+              <th key={h} aria-label={h} className={cn("px-2 py-3 font-medium", h.endsWith("(1-5)") && "relative w-32 min-w-32 text-center", (canCouncil || canCqtt) && h.startsWith("QLTT") && "w-40 min-w-40", h === "Kết quả thực hiện" && "text-center")}>
+                {h.endsWith("(1-5)") ? <span className="block">{h.startsWith("CBNV") ? "CBNV tự" : h.split(" ")[0]}<br />đánh giá<br /><span className="whitespace-nowrap">(Điểm 1-5)</span></span> : h}
                 {canCouncil && h.startsWith("QLTT") && (
-                  <Button type="button" variant="outline" size="icon" className="ml-1 h-7 w-7" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
+                  <Button type="button" variant="outline" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2" title="Sao chép điểm CQTT" aria-label="Sao chép điểm CQTT từng công việc"
                     onClick={() => onChange(items.map((c,i) => {
                       const score = cqttRef?.[i];
                       return { ...c, council: score == null ? undefined : Math.round(score * 100) / 100 };
@@ -756,7 +756,7 @@ function PersonalTable({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="ml-1 h-7 w-7 align-middle"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                     title="Sao chép điểm CBNV tự đánh giá"
                     aria-label="Sao chép điểm CBNV tự đánh giá"
                     onClick={() => onChange(items.map((c) => ({ ...c, cqtt: c.self || undefined })))}
@@ -925,7 +925,7 @@ function GroupRows({
                 )}
               </td>
               {canCqtt ? (
-                <td className="px-3">
+                <td className="px-3 text-center">
                   <select aria-label={`QLTT đánh giá mục tiêu ${i + 1}`} className={fieldClass + " my-2 w-28 min-w-28 text-center"} value={c.cqtt ?? ""} onChange={event => update(i, { cqtt: event.target.value === "" ? undefined : Number(event.target.value) })}><option value="">Chọn điểm</option>{c.cqtt !== undefined && !Number.isInteger(c.cqtt) && <option value={c.cqtt}>{c.cqtt}</option>}{[1, 2, 3, 4, 5].map(score => <option key={score} value={score}>{score}</option>)}</select>
                 </td>
               ) : (

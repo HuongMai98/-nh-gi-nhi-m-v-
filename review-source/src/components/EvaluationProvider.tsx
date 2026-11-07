@@ -1,5 +1,6 @@
+import { prepareSigningAttachments, type SigningAttachment } from "@/lib/director-signing";
 import { CURRENT_USER, canSubmitEvaluation, validateSelfSubmission } from "@/lib/users";
-import { useState, type ReactNode } from "react";
+import { useState, useRef, type ReactNode } from "react";
 import {
   EVALUATIONS,
   allocatedTotal,
@@ -58,6 +59,9 @@ function loadVersions(): WorkflowVersion[] {
 }
 export function EvaluationProvider({ children }: { children: ReactNode }) {
   const [evaluations, setEvaluations] = useState(EVALUATIONS);
+  const latestEvaluations = useRef(evaluations); latestEvaluations.current = evaluations;
+  const signingInFlight = useRef(false);
+  const [signingFiles, setSigningFiles] = useState<Record<string, SigningAttachment[]>>({});
   const [workflowVersions, setVersionState] = useState(() => { const v = loadVersions(); setWorkflowVersions(v); return v; });
   const today = todayIso();
   // Phiên bản đang áp dụng hôm nay của từng khối — các màn xử lý hồ sơ dùng cấu hình này.
@@ -149,26 +153,45 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
     <EvaluationContext.Provider
       value={{
         evaluations,
-        processCeoBatch: (ids, action, note, drafts = {}, returnStage) => {
-          if (previewRole !== "ceo") return "Chỉ TGĐ được phê duyệt hoặc yêu cầu Hội đồng điều chỉnh.";
+        signingFiles,
+        submitDirectorSigning: async (ids, options = {}) => {
+          if (previewRole !== "council") return "Chỉ Hội đồng được trình ký GĐ.";
+          if (signingInFlight.current) return "Đang tạo hồ sơ trình ký, vui lòng chờ.";
+          signingInFlight.current = true;
           try {
+            if (!ids.length) throw new Error("Không có hồ sơ để trình ký.");
+            const source = ids.map(id => {
+              const e = evaluations.find(e => e.id === id);
+              if (!e || !["council", "council_adjust"].includes(e.step) || !e.councilReviewed || !e.councilSummaryCreated) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI trước khi trình ký.");
+              return e;
+            });
+            const at = new Date().toLocaleString("vi-VN");
+            const requestId = crypto.randomUUID();
+            const updates = new Map(source.map(e => [e.id, { ...transition(e, "council", "submit", options.note ? { note: options.note } : {}, at), directorSigningId: requestId }]));
+            const files = options.files?.length ? options.files : await prepareSigningAttachments(source);
+            if (source.some(e => JSON.stringify(latestEvaluations.current.find(x => x.id === e.id)) !== JSON.stringify(e))) throw new Error("Dữ liệu phiếu đã thay đổi, vui lòng trình ký lại.");
+            setSigningFiles(current => ({ ...current, [requestId]: files }));
+            setEvaluations(current => current.map(e => updates.get(e.id) ?? e));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không tạo được hồ sơ trình ký."; } finally { signingInFlight.current = false; }
+        },
+        processCeoBatch: (ids, action, note, drafts = {}, returnStage) => {
+          if (previewRole !== "ceo") return "Chỉ GĐ được phê duyệt hoặc yêu cầu Hội đồng điều chỉnh.";
+          try {
+            if (action === "save" || Object.values(drafts).some(d => Object.keys(d).length)) throw new Error("Chỉ nhận kết quả trình ký, không sửa điểm tại bước này.");
             if (!ids.length) throw new Error("Không có hồ sơ chờ phê duyệt.");
-            if (action === "save" && !ids.some((id) => Object.keys(drafts[id] ?? {}).length)) throw new Error("Chưa có thay đổi để lưu.");
             const updates = new Map(ids.map((id) => {
               const e = evaluations.find((e) => e.id === id);
-              if (!e || e.step !== "ceo") throw new Error("Hồ sơ không còn chờ TGĐ phê duyệt.");
+              if (!e || e.step !== "ceo") throw new Error("Hồ sơ không còn chờ GĐ phê duyệt.");
               const now = new Date().toLocaleString("vi-VN");
-              const draft = drafts[id] ?? {};
-              // Phê duyệt: áp điều chỉnh trực tiếp của TGĐ (nếu có) rồi phê duyệt.
-              const adjusted = action !== "return" && Object.keys(draft).length ? saveDraft(e, "ceo", draft, now) : e;
-              // Lưu tất cả: chỉ lưu điều chỉnh trực tiếp, hồ sơ vẫn chờ TGĐ phê duyệt.
-              return [id, action === "save" ? adjusted : transition(adjusted, "ceo", action, { note, ...(returnStage ? { returnStage } : {}) }, now)] as const;
+              return [id, transition(e, "ceo", action, { note, ...(returnStage ? { returnStage } : {}) }, now)] as const;
             }));
             setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
             return null;
           } catch (error) { return error instanceof Error ? error.message : "Không thể xử lý hồ sơ."; }
         },
         saveCouncilBatch: (ids, drafts, submit = false) => {
+          if (submit) return "Vui lòng dùng Trình ký GĐ để lập đủ tài liệu đính kèm.";
           if (previewRole !== "council") return "Chỉ Hội đồng được lưu đánh giá.";
           try {
             if (!ids.length) throw new Error("Không có hồ sơ để lưu.");
@@ -176,10 +199,10 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
               const e = evaluations.find((e) => e.id === id);
               if (!e || !["council", "council_adjust"].includes(e.step)) throw new Error("Hồ sơ không còn ở bước Hội đồng đánh giá.");
               const at = new Date().toLocaleString("vi-VN");
-              const next = submit && !Object.keys(drafts[id] ?? {}).length ? e : saveDraft(e, "council", drafts[id] ?? {}, at);
+              const next = saveDraft(e, "council", drafts[id] ?? {}, at);
               const issue = kiError(next);
               if (issue) throw new Error(e.owner + ": " + issue);
-              return [id, submit ? transition(next, "council", "submit", {}, at) : next] as const;
+              return [id, next] as const;
             }));
             setEvaluations((current) => current.map((e) => updates.get(e.id) ?? e));
             return null;

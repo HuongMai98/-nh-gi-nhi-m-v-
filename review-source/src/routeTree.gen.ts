@@ -66,16 +66,27 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/cau-hinh-luong-duyet' | '/nhan-vien-chua-danh-gia' | '/tao-danh-gia' | '/danh-gia/$id'
+    | '/'
+    | '/cau-hinh-luong-duyet'
+    | '/nhan-vien-chua-danh-gia'
+    | '/tao-danh-gia'
+   
+    | '/danh-gia/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/cau-hinh-luong-duyet' | '/nhan-vien-chua-danh-gia' | '/tao-danh-gia' | '/danh-gia/$id'
+    | '/'
+    | '/cau-hinh-luong-duyet'
+    | '/nhan-vien-chua-danh-gia'
+    | '/tao-danh-gia'
+   
+    | '/danh-gia/$id'
   id:
     | '__root__'
     | '/'
     | '/cau-hinh-luong-duyet'
     | '/nhan-vien-chua-danh-gia'
     | '/tao-danh-gia'
+   
     | '/danh-gia/$id'
   fileRoutesById: FileRoutesById
 }

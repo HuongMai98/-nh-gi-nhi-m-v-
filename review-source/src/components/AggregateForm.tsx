@@ -1,7 +1,7 @@
 import { ListPagination } from "@/components/ListPagination";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
-import { STAGES, returnLabel, type StageKey } from "@/lib/workflow";
+import { DirectorSigningDialog } from "@/components/DirectorSigningDialog";
 import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -79,25 +79,14 @@ export function AggregateForm({
   evaluations: Evaluation[];
   mode: "kpi" | "ki" | "appendix";
 }) {
-  const { previewRole, saveCouncilBatch, processCeoBatch, workflows } = useEvaluations();
-  // Nhánh TGĐ theo cấu hình luồng duyệt của các khối đang hiển thị.
-  const ceoBlocks = [...new Set(evaluations.map((e) => e.block))];
-  const ceoTargets = ceoBlocks.length
-    ? ceoBlocks.map((b) => workflows[b].stages.find((s) => s.key === "ceo")?.returnTo ?? []).reduce((a, l) => a.filter((x) => l.includes(x)))
-    : [];
-  const ceoReturnOn = ceoTargets.length > 0;
-  const [ceoReturnStage, setCeoReturnStage] = useState<StageKey | "">("");
-  const ceoChosen = ceoTargets.includes(ceoReturnStage as StageKey) ? (ceoReturnStage as StageKey) : ceoTargets[0];
-  const ceoReturnText = ceoTargets.length === 1 && ceoBlocks[0] ? returnLabel(ceoBlocks[0], "ceo", ceoTargets[0]!) : "Trả về / yêu cầu điều chỉnh";
-  const ceoAdjustOn = ceoBlocks.some((b) => workflows[b].branches.ceoDirectAdjust);
+  const { previewRole } = useEvaluations();
+  const [signingOpen, setSigningOpen] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const scope = JSON.stringify([previewRole, mode, pageSize, evaluations.map(e => e.id)]);
   const [pagination, setPagination] = useState({ scope, page: 1 });
   const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(evaluations.length / pageSize))) : 1;
   const pageRows = evaluations.slice((page - 1) * pageSize, page * pageSize);
   const [councilDrafts, setCouncilDrafts] = useState<Record<string, Draft>>({});
-  const [ceoReturnOpen, setCeoReturnOpen] = useState(false);
-  const [ceoReason, setCeoReason] = useState("");
   const [batchMessage, setBatchMessage] = useState("");
   const title =
     mode === "kpi"
@@ -139,18 +128,10 @@ export function AggregateForm({
           <h2 className="font-semibold">{title}</h2>
           {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some((e) => !["council", "council_adjust"].includes(e.step))} onClick={() => {
-          const issue = saveCouncilBatch(evaluations.map((e) => e.id), {}, true);
-          setBatchMessage(issue ?? "Đã gửi tất cả đánh giá lên TGĐ.");
-          if (!issue) setCouncilDrafts({});
-        }}><Send />Gửi TGĐ</Button>}{mode === "ki" && previewRole === "ceo" && <>{ceoAdjustOn && <Button variant="outline" disabled={!evaluations.some((e) => e.step === "ceo")} onClick={() => {
-          const issue = processCeoBatch(evaluations.filter((e) => e.step === "ceo").map((e) => e.id), "save", "", councilDrafts);
-          setBatchMessage(issue ?? "Đã lưu tất cả điều chỉnh của TGĐ.");
-          if (!issue) setCouncilDrafts({});
-        }}><Save />Lưu tất cả</Button>}{ceoReturnOn && <Button variant="return" disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => setCeoReturnOpen((open) => !open)}><Undo2 />{ceoReturnText}</Button>}<Button disabled={!evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "approve", "", councilDrafts); setBatchMessage(issue ?? "Đã phê duyệt kết quả."); if (!issue) setCouncilDrafts({}); }}><Check />Phê duyệt</Button></>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some(e => !["council", "council_adjust"].includes(e.step))} title="Xem PDF phiếu đánh giá cá nhân, Tổng hợp KI và chọn phiếu GNV kỳ tới" onClick={() => { setBatchMessage(""); setSigningOpen(true); }}><Send />Trình ký GĐ</Button>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
       </div>
-      {previewRole === "ceo" && ceoReturnOpen && <div className="space-y-3 rounded-lg border bg-muted/30 p-4">{ceoTargets.length > 1 && <label className="block space-y-2 text-sm font-medium">Trả về bước<select aria-label="Trả về bước" className="block h-9 w-64 rounded-md border bg-card px-2 text-sm font-normal" value={ceoChosen} onChange={(e) => setCeoReturnStage(e.target.value as StageKey)}>{ceoTargets.map((k) => <option key={k} value={k}>{STAGES[k].name}</option>)}</select></label>}<label className="block space-y-2 text-sm font-medium">{ceoChosen === "council" ? "Nội dung yêu cầu Hội đồng điều chỉnh" : "Lý do trả về"}<textarea aria-label="Yêu cầu điều chỉnh của TGĐ" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm font-normal" value={ceoReason} onChange={(e) => setCeoReason(e.target.value)} /></label><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setCeoReturnOpen(false)}>Hủy</Button><Button disabled={!ceoReason.trim() || !evaluations.length || evaluations.some((e) => e.step !== "ceo")} onClick={() => { const issue = processCeoBatch(evaluations.map((e) => e.id), "return", ceoReason, undefined, ceoChosen); setBatchMessage(issue ?? "Đã gửi Hội đồng điều chỉnh."); if (!issue) { setCeoReturnOpen(false); setCeoReason(""); } }}>Gửi điều chỉnh</Button></div></div>}
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}
+      {mode === "ki" && previewRole === "council" && <DirectorSigningDialog evaluations={evaluations} open={signingOpen} onOpenChange={setSigningOpen} onSubmitted={(m) => { setBatchMessage(m); setCouncilDrafts({}); }} />}
       {!isKpi && <section aria-label="Phân bố xếp hạng Ki" className="rounded-xl border bg-card p-3 shadow-sm 2xl:p-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3>
@@ -279,7 +260,7 @@ function AggregateRow({
   const isKpi = mode === "kpi";
   const editable = isKpi
     ? previewRole === "cqtt" && e.step === "cqtt"
-    : mode === "ki" && previewRole === "ceo" && e.step === "ceo" && workflows[e.block].branches.ceoDirectAdjust;
+    : false;
   const [draft, setDraft] = useState<Draft>(initialDraft ?? {});
   const [error, setError] = useState("");
   const [kiDriven, setKiDriven] = useState(false);

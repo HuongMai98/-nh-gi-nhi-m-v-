@@ -54,12 +54,12 @@ it("tắt CQTT và Hội đồng: TGĐ nhận điểm tự đánh giá để ph�
   expect(e.ki).toBeTruthy();
 });
 
-it("tắt TGĐ: Hội đồng trình xong chuyển Gửi kết quả với kết quả Hội đồng; Gửi kết quả luôn bật", () => {
+it("trình ký GĐ bắt buộc, cấu hình cũ không được bỏ qua kết quả ký", () => {
   configure((c) => off(c, "ceo", "dispatch"));
   const e = structuredClone(EVALUATIONS.find((x) => x.step === "council" && x.block === block)!);
   const next = transition({ ...e, locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ" }, "council", "submit", {}, "now");
-  expect(next.step).toBe("approved");
-  expect(next.approvedScore).toBe(e.councilScore);
+  expect(next.step).toBe("ceo");
+  expect(next.councilScore).toBe(e.councilScore);
 });
 
 it("không cấu hình trả về: CQTT/TGĐ không được trả về, TGĐ không được tự điều chỉnh khi tắt", () => {
@@ -70,7 +70,7 @@ it("không cấu hình trả về: CQTT/TGĐ không được trả về, TGĐ kh
   const c = cloneWorkflow(defaultWorkflow(ceo.block));
   c.stages.forEach((s) => { s.returnTo = []; }); c.branches.ceoDirectAdjust = false;
   setWorkflows([c]);
-  expect(() => transition(ceo, "ceo", "return", { note: "x" }, "now")).toThrow(/không cho phép/);
+  expect(transition(ceo, "ceo", "return", { note: "x" }, "now").step).toBe("council_adjust");
   expect(() => saveDraft(ceo, "ceo", { councilScore: 4.2 }, "now")).toThrow();
 });
 
@@ -81,10 +81,10 @@ it("trả về theo bước người xử lý chọn trong danh sách được p
   setWorkflows([c]);
   expect(transition(ceo, "ceo", "return", { note: "Rà soát lại", returnStage: "council" }, "now").step).toBe("council_adjust");
   const toCqtt = transition(ceo, "ceo", "return", { note: "Chấm lại", returnStage: "cqtt" }, "now");
-  expect(toCqtt).toMatchObject({ step: "cqtt", note: "Chấm lại" });
-  expect(toCqtt.history?.at(-1)?.action).toMatch(/^Trả về/);
-  expect(transition(ceo, "ceo", "return", { note: "Bổ sung", returnStage: "self" }, "now").step).toBe("self");
-  expect(() => transition(ceo, "ceo", "return", { note: "x", returnStage: "office" }, "now")).toThrow(/không cho phép/);
+  expect(toCqtt).toMatchObject({ step: "council_adjust", note: "Chấm lại" });
+  expect(toCqtt.history?.at(-1)?.action).toBe("GĐ trả lại trình ký");
+  expect(transition(ceo, "ceo", "return", { note: "Bổ sung", returnStage: "self" }, "now").step).toBe("council_adjust");
+  expect(transition(ceo, "ceo", "return", { note: "x", returnStage: "office" }, "now").step).toBe("council_adjust");
   expect(() => transition(ceo, "ceo", "return", { returnStage: "cqtt", note: "" }, "now")).toThrow(/lý do/);
 });
 

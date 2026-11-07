@@ -73,6 +73,18 @@ describe("CQTT đánh giá từng công việc", () => {
     expect(partial.cqttKey).toBe(e.cqttKey);
   });
 
+  it("CQTT đánh giá lại phiếu đã Hoàn tất: sửa điểm QLTT thì phải tổng hợp lại", () => {
+    const e = structuredClone(cqttRecord);
+    const scored = saveDraft(e, "cqtt", { criteria: e.criteria.map((c) => ({ ...c, cqtt: 4 })) }, "now");
+    const finished = summarizeCqtt(transition(scored, "cqtt", "finish", {}, "now"), "cqtt", "now");
+    expect([finished.step, finished.cqttSummarized]).toEqual(["cqtt_report", true]);
+    const again = saveDraft(finished, "cqtt", { criteria: finished.criteria.map((c, i) => ({ ...c, cqtt: i ? 4 : 3 })) }, "now");
+    expect(again.criteria[0]!.cqtt).toBe(3);
+    expect(again.step).toBe("cqtt_report");
+    expect(again.cqttSummarized).toBe(false);
+    expect(() => saveDraft(finished, "cqtt", { criteria: finished.criteria.map((c) => ({ ...c, cqtt: 6 })) }, "now")).toThrow(/1 đến 5/);
+  });
+
   it("Tổng hợp đánh giá chỉ có dữ liệu sau khi bấm Tổng hợp; hồ sơ cũ đã có điểm nhóm vẫn tổng hợp được", () => {
     const legacy = structuredClone(EVALUATIONS.find((e) => e.step === "cqtt_report" && e.cqttKey !== undefined)!);
     expect(cqttInSummary(legacy)).toBe(false);

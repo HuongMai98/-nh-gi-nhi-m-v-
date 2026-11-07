@@ -61,7 +61,7 @@ const CONFIG_STAGES: StageKey[] = STAGE_ORDER.filter((k) => k !== "dispatch" && 
 /** Cách xử lý đặc thù của một số đích trả về (các đích khác: hồ sơ quay về bước đó kèm lý do). */
 const RETURN_NOTE: Partial<Record<string, string>> = {
   "cqtt>self": "CQĐV/CQ Tiếp thu (cập nhật, gửi CQTT chấm lại) hoặc Bảo lưu (giữ nguyên điểm).",
-  "ceo>council": "Hội đồng điều chỉnh theo comment rồi trình lại TGĐ.",
+  "ceo>council": "Hội đồng điều chỉnh theo comment rồi trình lại GĐ.",
 };
 const STATE_TONE: Record<VersionState, "pending" | "success" | "muted"> = {
   draft: "pending",
@@ -255,7 +255,7 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
     update((c) => {
       c.customStages = [
         ...(c.customStages ?? []),
-        { id: `cs-${Date.now()}`, name: "Bước duyệt bổ sung", after: "ceo", role: "ceo", handler: "Phó TGĐ phụ trách", slaDays: 3, enabled: true, returnTo: [] },
+        { id: `cs-${Date.now()}`, name: "Bước duyệt bổ sung", after: "ceo", role: "ceo", handler: "Phó GĐ phụ trách", slaDays: 3, enabled: true, returnTo: [] },
       ];
     });
   const notify = { ...DEFAULT_NOTIFICATIONS, ...(draft.notifications ?? {}) };

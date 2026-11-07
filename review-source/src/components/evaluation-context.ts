@@ -1,8 +1,11 @@
+import type { SigningAttachment } from "@/lib/director-signing";
 import { createContext, useContext, type Context } from "react";
 import type { Evaluation, PreviewRole, Draft, Action } from "@/lib/evaluation";
 import type { Block, StageKey, WorkflowConfig, WorkflowVersion } from "@/lib/workflow";
 type EvaluationState = {
   evaluations: Evaluation[];
+  signingFiles: Record<string, SigningAttachment[]>;
+  submitDirectorSigning: (ids: string[], options?: { files?: SigningAttachment[]; note?: string }) => Promise<string | null>;
   processCeoBatch: (ids: string[], action: "approve" | "return" | "save", note: string, drafts?: Record<string, Draft>, returnStage?: StageKey) => string | null;
   saveCouncilBatch: (ids: string[], drafts: Record<string, Draft>, submit?: boolean) => string | null;
   createCouncilSummary: (ids: string[]) => void;

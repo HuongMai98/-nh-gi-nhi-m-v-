@@ -78,18 +78,6 @@ it("view mode locks evaluation fields and exposes the explicit edit action", () 
   expect(onEdit).toHaveBeenCalledOnce();
 });
 
-it("sends the saved council summary to the CEO without changing its assessment", () => {
-  render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
-  role("council");
-  const before=record();
-  fireEvent.click(screen.getByRole("button", { name: "Gửi TGĐ" }));
-  expect(record().step).toBe("ceo");
-  expect(record().councilScore).toBe(4.1);
-  expect(record().ki).toBe("A");
-  expect(record().criteria).toEqual(before.criteria);
-  expect(record().locationCompliance).toBe(before.locationCompliance);
-  expect(record().laborCompliance).toBe(before.laborCompliance);
-});
 it("Ki counts display the saved council results without editable summary fields", () => {
   render(<EvaluationProvider><Screen id="DG-2026-Q3-002" /></EvaluationProvider>);
   role("council");
@@ -98,33 +86,12 @@ it("Ki counts display the saved council results without editable summary fields"
   expect(screen.getByTestId("ki-count-B")).toHaveTextContent("0");
   expect(screen.getByTestId("ki-count-K")).toHaveTextContent("0");
 });
-it("lets CEO adjust totals directly or return to council with a required reason", () => {
-  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
-  role("ceo");
-  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001")).toBeEnabled();
-  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp kết quả đánh giá và xếp hạng KI" })).getByRole("button", { name: "Yêu cầu Hội đồng điều chỉnh" }));
-  expect(screen.getByRole("button", { name: "Gửi điều chỉnh" })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText("Yêu cầu điều chỉnh của TGĐ"), { target: { value: "Rà soát căn cứ xếp Ki" } });
-  fireEvent.click(screen.getByRole("button", { name: "Gửi điều chỉnh" }));
-  expect(record().step).toBe("council_adjust");
-  expect(record().note).toBe("Rà soát căn cứ xếp Ki");
-});
-it("lets CEO save all direct adjustments without approving", () => {
-  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
-  role("ceo");
-  const region = within(screen.getByRole("region", { name: "Tổng hợp kết quả đánh giá và xếp hạng KI" }));
-  fireEvent.click(region.getByRole("button", { name: "Lưu tất cả" }));
-  expect(screen.getByText("Chưa có thay đổi để lưu.")).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001"), { target: { value: "4.3" } });
-  fireEvent.click(region.getByRole("button", { name: "Lưu tất cả" }));
-  expect(record().step).toBe("ceo");
-  expect(record().councilScore).toBe(4.3);
-  expect(record().ceoAdjusted).toBe(true);
-});
-it("lets CEO approve the council results from the summary", () => {
-  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>);
-  role("ceo");
-  fireEvent.click(within(screen.getByRole("region", { name: "Tổng hợp kết quả đánh giá và xếp hạng KI" })).getByRole("button", { name: "Phê duyệt" }));
-  expect(record().step).toBe("approved");
-  expect(record().approvedScore).toBe(4.1);
+
+it("đang trình ký: điểm chỉ đọc, không còn thao tác duyệt của GĐ trong module Đánh giá", () => {
+ render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>); role("ceo");
+ expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001")).toBeDisabled();
+ expect(screen.queryByRole("button",{name:"Phê duyệt"})).not.toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Trả lại Hội đồng"})).not.toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Lưu tất cả"})).not.toBeInTheDocument();
+ expect(screen.queryByText("Mở luồng trình ký GĐ")).not.toBeInTheDocument();
 });

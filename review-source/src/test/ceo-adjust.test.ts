@@ -3,15 +3,10 @@ import { EVALUATIONS, allocatedTotal, saveDraft, transition } from "@/lib/evalua
 
 const atCeo = () => structuredClone(EVALUATIONS.find((x) => x.step === "ceo")!);
 
-it("TGĐ điều chỉnh trực tiếp điểm/Ki, phân bổ lại và phê duyệt theo điểm đã chỉnh", () => {
-  const e = atCeo();
-  const adjusted = saveDraft(e, "ceo", { councilScore: 4.6, ki: "A+" }, "now");
-  expect(adjusted.step).toBe("ceo");
-  expect(adjusted.ceoAdjusted).toBe(true);
-  expect(allocatedTotal(adjusted.criteria)).toBe(4.6);
-  expect(adjusted.history?.at(-1)).toMatchObject({ role: "ceo", action: "TGĐ điều chỉnh trực tiếp" });
-  const approved = transition(adjusted, "ceo", "approve", {}, "now");
-  expect(approved).toMatchObject({ step: "approved", approvedScore: 4.6, approvedKi: "A+" });
+it("GĐ ký theo kết quả Hội đồng, không được điều chỉnh điểm trực tiếp", () => {
+ const e=atCeo(); expect(() => saveDraft(e,"ceo",{councilScore:4.6,ki:"A+"},"now")).toThrow();
+ const approved=transition(e,"ceo","approve",{},"now");
+ expect(approved).toMatchObject({step:"done",approvedScore:e.councilScore,approvedKi:e.ki});
 });
 
 it("TGĐ không được điều chỉnh trái điều kiện Ki", () => {

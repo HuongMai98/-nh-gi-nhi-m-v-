@@ -181,7 +181,7 @@ export function AppShell({
               }}
               className="h-9 w-36 rounded-md border border-input bg-card px-2 text-sm 2xl:w-auto"
             >
-              {Object.entries(ROLES).map(([key, label]) => (
+              {Object.entries(ROLES).filter(([key]) => key !== "ceo").map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>

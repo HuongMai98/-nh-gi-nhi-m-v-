@@ -98,3 +98,24 @@ export function buildEvaluationPdf(evaluations: Evaluation[], mode: EvaluationPd
     footer: (page, pages) => ({ text: `${page} / ${pages}`, alignment: "right", margin: [0, 5, 24, 0], fontSize: 8 }),
   };
 }
+
+function assignment(e: Evaluation): Content[] {
+  const body: TableCell[][] = [
+    ["STT", "TT", "Mục tiêu nhiệm vụ/công việc\n(Kết quả mong đợi đối với nhiệm vụ/công việc)", "Chỉ số đo lường KPI", "Phương pháp đo", "Đơn vị đo", "Tỷ trọng (%)", "Tối thiểu\n(T - Threshold)", "Mong đợi\n(B - Base)", "Thách thức\n(S - Stretch)", "Ngày bắt đầu", "Ngày hoàn thành", "Mức độ mới/khó\nVị trí trên ma trận", "Lý do", "Phạm vi tác động/tính chất trọng yếu\nVị trí trên ma trận", "Lý do", "Nhóm mục tiêu trọng điểm đề xuất"].map(v => header(v)),
+  ];
+  let ordinal = 0;
+  for (const [group, label] of [["A", "A. Nhóm mục tiêu theo nhiệm vụ trọng tâm, trọng điểm"], ["B-I", "I. Mục tiêu theo chức năng"], ["B-II", "II. Chỉ số kiểm soát ngành dọc"]] as const) {
+    if (group === "B-I") body.push(merged("B. Nhóm mục tiêu theo chức năng", 17));
+    body.push(merged(label, 17));
+    e.criteria.filter(c => c.group === group).forEach((c, i) => body.push([++ordinal, i + 1, c.goal, c.kpi, text(c.method), c.unit, `${Math.round(c.weight * 100)}%`, c.target.t, c.target.b, c.target.s, date(c.startDate), date(c.endDate), "", "", "", "", ""].map(v => ({ text: String(v) }))));
+  }
+  body.push(merged(`Tổng tỷ trọng: ${Math.round(e.criteria.reduce((s,c) => s+c.weight,0)*100)}%`,17));
+  const parts = personal(e);
+  return [parts[0]!, ...title("PHIẾU GIAO NHIỆM VỤ/CÔNG VIỆC", [e]), parts[3]!, parts[4]!, section("2. NỘI DUNG CỤ THỂ"), table(body,[3,3,18,11,9,5,5,6,6,6,7,7,8,7,9,7,8],1,6.5), parts[parts.length-1]!];
+}
+export function buildSigningDossierPdf(evaluations: Evaluation[]): TDocumentDefinitions {
+  if (!evaluations.length) throw new Error("Không có hồ sơ để trình ký.");
+  const documents: Content[][] = evaluations.flatMap(e => [assignment(e), personal(e)]);
+  documents.push(summary(evaluations, "ki"));
+  return { ...buildEvaluationPdf(evaluations,"ki"), info: { title: "Hồ sơ trình ký GĐ — Phiếu GNV, Phiếu đánh giá, Tổng hợp KI" }, content: documents.flatMap((parts,i) => [...(i ? [{ text:"", pageBreak:"before" as const }] : []), ...parts]) };
+}

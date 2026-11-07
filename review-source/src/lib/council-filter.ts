@@ -3,7 +3,7 @@ export const COUNCIL_FILTERS = [
   { key: "pending", label: "Chờ Hội đồng đánh giá" },
   { key: "completed", label: "Hội đồng đã đánh giá" },
   { key: "adjustment", label: "Chờ Hội đồng điều chỉnh" },
-  { key: "submitted", label: "Đã trình TGĐ" },
+  { key: "submitted", label: "Đang trình ký" },
   { key: "approved", label: "Đã phê duyệt" },
 ] as const;
 export type CouncilFilter = (typeof COUNCIL_FILTERS)[number]["key"];
