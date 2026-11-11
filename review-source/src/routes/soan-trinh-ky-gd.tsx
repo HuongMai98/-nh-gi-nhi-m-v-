@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Download, Send, Plus, X } from "lucide-react";
+import { Download, Send, Plus, X, FileText } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,19 @@ import { downloadSigningAttachment, loadSigningTemplate } from "@/lib/director-s
 export const Route = createFileRoute("/soan-trinh-ky-gd")({
   component: DirectorSigningPage,
 });
+
+function AttachmentLabel({ name }: { name: string }) {
+  const extension = name.match(/\.([a-z0-9]{1,5})$/i)?.[1]?.toUpperCase();
+  const color = extension === "PDF" ? "bg-rose-700 text-white"
+    : extension === "XLSX" || extension === "XLS" ? "bg-emerald-700 text-white"
+    : "bg-muted text-muted-foreground";
+  return <span className="flex min-w-0 items-center gap-2">
+    <span aria-hidden="true" className={"inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold " + color}>
+      <FileText className="size-3.5" />{extension}
+    </span>
+    <span className="break-all">{name}</span>
+  </span>;
+}
 
 export function DirectorSigningPage() {
   const navigate = useNavigate();
@@ -75,9 +88,9 @@ export function DirectorSigningPage() {
         {heading(1, "Danh sách file")}
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2 text-sm">
-            <h3>File trình ký <span className="text-primary">*</span></h3><div className={dropzone}>File PDF sinh từ phiếu đã xem trước</div>
+            <h3>File trình ký <span className="text-primary">*</span></h3><div className={dropzone}><FileText aria-hidden="true" className="size-4" />File PDF sinh từ phiếu đã xem trước</div>
             {draft.files.map((file) => <div key={file.name} className="flex items-center justify-between gap-2 rounded-md border p-2">
-              <span>{file.name}</span>
+              <AttachmentLabel name={file.name} />
               <Button type="button" variant="ghost" size="action" aria-label={`Tải xuống ${file.name}`} onClick={() => downloadSigningAttachment(file)}><Download /></Button>
             </div>)}
           </div>
@@ -88,13 +101,16 @@ export function DirectorSigningPage() {
               <input type="file" className="sr-only" multiple onChange={(event) => { addReferences(event.target.files); event.target.value = ""; }} />
             </label>
             {references.map((file, index) => <div key={index} className="flex items-center justify-between gap-2 rounded-md border p-2">
-              <span className="break-all">{file.name}</span>
+              <AttachmentLabel name={file.name} />
               <Button type="button" variant="ghost" size="action" aria-label={"Bỏ " + file.name} onClick={() => setReferences((current) => current.filter((_, i) => i !== index))}><X /></Button>
             </div>)}
           </div>
           <div className="space-y-2 text-sm">
             <h3>File biểu mẫu</h3><div className={dropzone}>Biểu mẫu XLSX tự động đính kèm</div>
-            <Button type="button" variant="outline" onClick={() => downloadSigningAttachment(loadSigningTemplate())}><Download /> BM 01 · XLSX</Button>
+            <div className="flex items-center justify-between gap-2 rounded-md border p-2">
+              <AttachmentLabel name="BM 01.xlsx" />
+              <Button type="button" variant="ghost" size="action" aria-label="Tải xuống biểu mẫu BM 01.xlsx" onClick={() => downloadSigningAttachment(loadSigningTemplate())}><Download /></Button>
+            </div>
           </div>
         </div>
         <div className="space-y-2 text-sm">
