@@ -46,7 +46,8 @@ it("Hội đồng bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu 
   expect(state().step).toBe("council");
   fireEvent.click(screen.getByRole("button", { name: "Trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
-  expect(state().files).toEqual(["Tong-hop-KI.pdf"]);
+  expect(state().files).toEqual(["Tong-hop-KI.pdf", expect.stringMatching(/\.xlsx$/)]);
+  expect(state().note).toContain("Ngành: Kế hoạch");
   expect(state().note).toContain("GNV-2026-Q4-777");
   vi.unstubAllGlobals();
 });
