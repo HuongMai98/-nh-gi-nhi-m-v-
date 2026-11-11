@@ -23,17 +23,17 @@ it("kỳ tới của Quý IV là Quý I năm sau", () => {
   expect(nextPeriod("Quý IV/2026").label).toBe("Quý I/2027");
 });
 
-it("Hội đồng bấm Trình ký GĐ: xem PDF phiếu cá nhân + Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi", async () => {
+it("Hội đồng bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi", async () => {
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:test", revokeObjectURL: () => {} }));
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chuẩn bị"));
   fireEvent.click(screen.getByRole("button", { name: "Trình ký GĐ" }));
   const dialog = await screen.findByRole("dialog");
   const docs = await within(dialog).findByRole("list", { name: "Tài liệu trình ký" });
-  await waitFor(() => expect(within(docs).getAllByRole("listitem")).toHaveLength(2));
-  expect(docs).toHaveTextContent("Phieu-danh-gia-SIGNING-TEST.pdf");
+  await waitFor(() => expect(within(docs).getAllByRole("listitem")).toHaveLength(1));
+  expect(docs).not.toHaveTextContent("Phieu-danh-gia-SIGNING-TEST.pdf");
   expect(docs).toHaveTextContent("Tong-hop-KI.pdf");
-  expect(within(dialog).getByTitle("Xem Phieu-danh-gia-SIGNING-TEST.pdf")).toBeInTheDocument();
+  expect(within(dialog).getByTitle("Xem Tong-hop-KI.pdf")).toBeInTheDocument();
   // Bỏ chọn hết phiếu GNV kỳ tới thì không gửi được.
   const gnv = within(dialog).getByLabelText("Chọn GNV-2026-Q4-777");
   fireEvent.click(gnv);
@@ -41,7 +41,7 @@ it("Hội đồng bấm Trình ký GĐ: xem PDF phiếu cá nhân + Tổng hợp
   fireEvent.click(gnv);
   fireEvent.click(within(dialog).getByRole("button", { name: "Gửi trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
-  expect(state().files).toEqual(["Phieu-danh-gia-SIGNING-TEST.pdf", "Tong-hop-KI.pdf"]);
+  expect(state().files).toEqual(["Tong-hop-KI.pdf"]);
   expect(state().note).toContain("GNV-2026-Q4-777");
   vi.unstubAllGlobals();
 });

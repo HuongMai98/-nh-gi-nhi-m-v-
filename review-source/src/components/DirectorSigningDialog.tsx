@@ -52,7 +52,6 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange, onSubmi
     (async () => {
       try {
         const specs = [
-          ...evaluations.map((e) => ({ name: `Phieu-danh-gia-${e.id}.pdf`, label: `Phiếu đánh giá · ${e.owner}`, def: buildEvaluationPdf([e], "personal") })),
           { name: "Tong-hop-KI.pdf", label: `Tổng hợp KI · ${evaluations.length} cá nhân`, def: buildEvaluationPdf(evaluations, "ki") },
         ];
         const built: Doc[] = [];
