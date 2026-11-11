@@ -131,7 +131,7 @@ export function AggregateForm({
         <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some(e => !["council", "council_adjust"].includes(e.step))} title="Xem PDF phiếu đánh giá cá nhân, Tổng hợp KI và chọn phiếu GNV kỳ tới" onClick={() => { setBatchMessage(""); setSigningOpen(true); }}><Send />Trình ký GĐ</Button>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
       </div>
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}
-      {mode === "ki" && previewRole === "council" && <DirectorSigningDialog evaluations={evaluations} open={signingOpen} onOpenChange={setSigningOpen} onSubmitted={(m) => { setBatchMessage(m); setCouncilDrafts({}); }} />}
+      {signingOpen && mode === "ki" && previewRole === "council" && <DirectorSigningDialog evaluations={evaluations} open={signingOpen} onOpenChange={setSigningOpen} />}
       {!isKpi && <section aria-label="Phân bố xếp hạng Ki" className="rounded-xl border bg-card p-3 shadow-sm 2xl:p-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3>

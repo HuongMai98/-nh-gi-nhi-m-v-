@@ -61,6 +61,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
   const [evaluations, setEvaluations] = useState(EVALUATIONS);
   const latestEvaluations = useRef(evaluations); latestEvaluations.current = evaluations;
   const signingInFlight = useRef(false);
+  const [directorSigningDraft, setDirectorSigningDraft] = useState<import("./evaluation-context").DirectorSigningDraft | null>(null);
   const [signingFiles, setSigningFiles] = useState<Record<string, SigningAttachment[]>>({});
   const [workflowVersions, setVersionState] = useState(() => { const v = loadVersions(); setWorkflowVersions(v); return v; });
   const today = todayIso();
@@ -154,6 +155,8 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
       value={{
         evaluations,
         signingFiles,
+        directorSigningDraft,
+        setDirectorSigningDraft,
         submitDirectorSigning: async (ids, options = {}) => {
           if (previewRole !== "council") return "Chỉ Hội đồng được trình ký GĐ.";
           if (signingInFlight.current) return "Đang tạo hồ sơ trình ký, vui lòng chờ.";

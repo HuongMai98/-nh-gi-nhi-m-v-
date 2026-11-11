@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,18 +27,17 @@ export function nextAssignmentRef(e: Evaluation): string {
 
 type Doc = SigningAttachment & { url: string; label: string };
 
-/** Hội đồng trình ký GĐ: xem PDF phiếu đánh giá từng cá nhân + Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi. */
-export function DirectorSigningDialog({ evaluations, open, onOpenChange, onSubmitted }: {
+/** Hội đồng trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi. */
+export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   evaluations: Evaluation[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmitted: (message: string) => void;
 }) {
-  const { submitDirectorSigning } = useEvaluations();
+  const navigate = useNavigate();
+  const { setDirectorSigningDraft } = useEvaluations();
   const [docs, setDocs] = useState<Doc[]>([]);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const options = useMemo(() => evaluations.map((e) => ({ id: e.id, ref: nextAssignmentRef(e), owner: e.owner, unit: e.unit })), [evaluations]);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
@@ -72,17 +72,15 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange, onSubmi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, key]);
 
-  async function send() {
-    setBusy(true); setError("");
-    const refs = options.filter((o) => chosen.has(o.ref)).map((o) => o.ref);
-    const issue = await submitDirectorSigning(evaluations.map((e) => e.id), {
+  function openDraft() {
+    setDirectorSigningDraft({
+      ids: evaluations.map((e) => e.id),
       files: docs.map(({ name, blob }) => ({ name, blob })),
-      note: `Phiếu GNV kỳ tới (${nextPeriod(evaluations[0]!.period).label}): ${refs.join(", ")}`,
+      refs: options.filter((o) => chosen.has(o.ref)).map((o) => o.ref),
+      period: evaluations[0]!.period,
     });
-    setBusy(false);
-    if (issue) { setError(issue); return; }
-    onSubmitted(`Đã trình ký GĐ ${evaluations.length} phiếu kèm ${docs.length} file PDF và ${refs.length} phiếu GNV kỳ tới.`);
     onOpenChange(false);
+    void navigate({ to: "/soan-trinh-ky-gd" });
   }
 
   const current = docs[active];
@@ -122,7 +120,7 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange, onSubmi
       <div className="flex items-center justify-end gap-2 border-t px-6 py-4">
         {error && <p role="alert" className="mr-auto text-sm text-primary">{error}</p>}
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
-        <Button type="button" disabled={busy || loading || !docs.length || !chosen.size} title={!chosen.size ? "Chọn ít nhất một phiếu GNV kỳ tới" : undefined} onClick={() => void send()}><Send />{busy ? "Đang gửi…" : "Gửi trình ký"}</Button>
+        <Button type="button" disabled={loading || !docs.length || !chosen.size} title={!chosen.size ? "Chọn ít nhất một phiếu GNV kỳ tới" : undefined} onClick={openDraft}><Send />Gửi trình ký</Button>
       </div>
     </DialogContent>
   </Dialog>;

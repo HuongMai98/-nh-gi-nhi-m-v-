@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-vi.mock("@tanstack/react-router", () => ({ Link: ({children}: {children: React.ReactNode}) => <a>{children}</a> }));
+vi.mock("@tanstack/react-router", () => ({ createFileRoute: () => (route: unknown) => route, useNavigate: () => vi.fn(), Link: ({children}: {children: React.ReactNode}) => <a>{children}</a> }));
 vi.mock("@/lib/pdf-runtime", () => ({ createPdfBlob: vi.fn(async () => new Blob(["pdf"], { type: "application/pdf" })) }));
 import { EvaluationProvider } from "@/components/EvaluationProvider";
 import { useEvaluations } from "@/components/evaluation-context";
@@ -8,12 +8,14 @@ import { AggregateForm } from "@/components/AggregateForm";
 import { EVALUATIONS } from "@/lib/evaluation";
 import { nextPeriod } from "@/components/DirectorSigningDialog";
 
+import { DirectorSigningPage } from "@/routes/soan-trinh-ky-gd";
+
 function Probe() {
-  const { evaluations, setPreviewRole, addEvaluation, signingFiles } = useEvaluations();
+  const { evaluations, setPreviewRole, addEvaluation, signingFiles, directorSigningDraft } = useEvaluations();
   const e = evaluations.find(e => e.id === "SIGNING-TEST");
   return <><button onClick={() => { setPreviewRole("council"); addEvaluation({ ...EVALUATIONS[1]!, id: "SIGNING-TEST", assignmentRef: "GNV-2026-Q3-777", step: "council", councilReviewed: true, councilSummaryCreated: true, councilTaskScored: true, councilScore: 4, ki: "A", locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", criteria: EVALUATIONS[1]!.criteria.map(c => ({ ...c, council: 4 })) }); }}>Chuẩn bị</button>
     <output data-testid="state">{JSON.stringify({ step: e?.step, note: e?.history?.at(-1)?.note, files: e?.directorSigningId ? signingFiles[e.directorSigningId]?.map(f => f.name) : [] })}</output>
-    {e && <AggregateForm mode="ki" evaluations={[e]} />}
+    {directorSigningDraft ? <DirectorSigningPage /> : e && <AggregateForm mode="ki" evaluations={[e]} />}
 </>;
 }
 const state = () => JSON.parse(screen.getByTestId("state").textContent!);
@@ -40,6 +42,9 @@ it("Hội đồng bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu 
   expect(within(dialog).getByRole("button", { name: "Gửi trình ký" })).toBeDisabled();
   fireEvent.click(gnv);
   fireEvent.click(within(dialog).getByRole("button", { name: "Gửi trình ký" }));
+  expect(await screen.findByText("Chỉnh sửa văn bản trình ký")).toBeInTheDocument();
+  expect(state().step).toBe("council");
+  fireEvent.click(screen.getByRole("button", { name: "Trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
   expect(state().files).toEqual(["Tong-hop-KI.pdf"]);
   expect(state().note).toContain("GNV-2026-Q4-777");

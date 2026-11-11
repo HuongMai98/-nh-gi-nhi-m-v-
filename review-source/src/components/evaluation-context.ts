@@ -2,7 +2,11 @@ import type { SigningAttachment } from "@/lib/director-signing";
 import { createContext, useContext, type Context } from "react";
 import type { Evaluation, PreviewRole, Draft, Action } from "@/lib/evaluation";
 import type { Block, StageKey, WorkflowConfig, WorkflowVersion } from "@/lib/workflow";
+export type DirectorSigningDraft = { ids: string[]; files: SigningAttachment[]; refs: string[]; period: string };
+
 type EvaluationState = {
+  directorSigningDraft: DirectorSigningDraft | null;
+  setDirectorSigningDraft: (draft: DirectorSigningDraft | null) => void;
   evaluations: Evaluation[];
   signingFiles: Record<string, SigningAttachment[]>;
   submitDirectorSigning: (ids: string[], options?: { files?: SigningAttachment[]; note?: string }) => Promise<string | null>;

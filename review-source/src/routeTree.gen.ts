@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CauHinhLuongDuyetRouteImport } from './routes/cau-hinh-luong-duyet'
 import { Route as NhanVienChuaDanhGiaRouteImport } from './routes/nhan-vien-chua-danh-gia'
+import { Route as SoanTrinhKyGdRouteImport } from './routes/soan-trinh-ky-gd'
 import { Route as TaoDanhGiaRouteImport } from './routes/tao-danh-gia'
 import { Route as DanhGiaIdRouteImport } from './routes/danh-gia.$id'
 
@@ -30,6 +31,11 @@ const NhanVienChuaDanhGiaRoute = NhanVienChuaDanhGiaRouteImport.update({
   path: '/nhan-vien-chua-danh-gia',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SoanTrinhKyGdRoute = SoanTrinhKyGdRouteImport.update({
+  id: '/soan-trinh-ky-gd',
+  path: '/soan-trinh-ky-gd',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TaoDanhGiaRoute = TaoDanhGiaRouteImport.update({
   id: '/tao-danh-gia',
   path: '/tao-danh-gia',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cau-hinh-luong-duyet': typeof CauHinhLuongDuyetRoute
   '/nhan-vien-chua-danh-gia': typeof NhanVienChuaDanhGiaRoute
+  '/soan-trinh-ky-gd': typeof SoanTrinhKyGdRoute
   '/tao-danh-gia': typeof TaoDanhGiaRoute
   '/danh-gia/$id': typeof DanhGiaIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cau-hinh-luong-duyet': typeof CauHinhLuongDuyetRoute
   '/nhan-vien-chua-danh-gia': typeof NhanVienChuaDanhGiaRoute
+  '/soan-trinh-ky-gd': typeof SoanTrinhKyGdRoute
   '/tao-danh-gia': typeof TaoDanhGiaRoute
   '/danh-gia/$id': typeof DanhGiaIdRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cau-hinh-luong-duyet': typeof CauHinhLuongDuyetRoute
   '/nhan-vien-chua-danh-gia': typeof NhanVienChuaDanhGiaRoute
+  '/soan-trinh-ky-gd': typeof SoanTrinhKyGdRoute
   '/tao-danh-gia': typeof TaoDanhGiaRoute
   '/danh-gia/$id': typeof DanhGiaIdRoute
 }
@@ -69,24 +78,24 @@ export interface FileRouteTypes {
     | '/'
     | '/cau-hinh-luong-duyet'
     | '/nhan-vien-chua-danh-gia'
+    | '/soan-trinh-ky-gd'
     | '/tao-danh-gia'
-   
     | '/danh-gia/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cau-hinh-luong-duyet'
     | '/nhan-vien-chua-danh-gia'
+    | '/soan-trinh-ky-gd'
     | '/tao-danh-gia'
-   
     | '/danh-gia/$id'
   id:
     | '__root__'
     | '/'
     | '/cau-hinh-luong-duyet'
     | '/nhan-vien-chua-danh-gia'
+    | '/soan-trinh-ky-gd'
     | '/tao-danh-gia'
-   
     | '/danh-gia/$id'
   fileRoutesById: FileRoutesById
 }
@@ -94,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CauHinhLuongDuyetRoute: typeof CauHinhLuongDuyetRoute
   NhanVienChuaDanhGiaRoute: typeof NhanVienChuaDanhGiaRoute
+  SoanTrinhKyGdRoute: typeof SoanTrinhKyGdRoute
   TaoDanhGiaRoute: typeof TaoDanhGiaRoute
   DanhGiaIdRoute: typeof DanhGiaIdRoute
 }
@@ -121,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NhanVienChuaDanhGiaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/soan-trinh-ky-gd': {
+      id: '/soan-trinh-ky-gd'
+      path: '/soan-trinh-ky-gd'
+      fullPath: '/soan-trinh-ky-gd'
+      preLoaderRoute: typeof SoanTrinhKyGdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tao-danh-gia': {
       id: '/tao-danh-gia'
       path: '/tao-danh-gia'
@@ -142,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CauHinhLuongDuyetRoute: CauHinhLuongDuyetRoute,
   NhanVienChuaDanhGiaRoute: NhanVienChuaDanhGiaRoute,
+  SoanTrinhKyGdRoute: SoanTrinhKyGdRoute,
   TaoDanhGiaRoute: TaoDanhGiaRoute,
   DanhGiaIdRoute: DanhGiaIdRoute,
 }
