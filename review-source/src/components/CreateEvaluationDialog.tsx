@@ -139,8 +139,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   return <form id={FORM_ID} onSubmit={submit} aria-label={title} className="space-y-4">
     <h2 className="sr-only">{title}</h2>
     <div className="space-y-4">
-      <section className={card} aria-label="Thông tin chung">
-        <h3 className={cardTitle}>Thông tin chung</h3>
+      <section className={card} aria-label="Thông tin người đánh giá">
+        <h3 className={cardTitle}>Thông tin người đánh giá</h3>
         <div className="grid grid-cols-1 items-start gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <label className={fieldLabel + " block"}>Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass + " font-normal text-foreground"} value={performerId} onChange={(event) => {
             setPerformerId(event.target.value);
