@@ -146,9 +146,12 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             setPerformerId(event.target.value);
             setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
           }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
-          {[["Mã nhân viên", performer?.employeeId], ["Đơn vị", performer?.unit ?? unit], ["Chức danh", personalMetadata(performerId).jobTitle], ["Địa điểm làm việc", personalMetadata(performerId).location], ["Phiếu giao nhiệm vụ", personalMetadata(performerId).assignmentRef]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
+          {[["Đơn vị", performer?.unit ?? unit], ["Chức danh", personalMetadata(performerId).jobTitle], ["Phiếu giao nhiệm vụ", personalMetadata(performerId).assignmentRef]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
         </div>
-        <div className="grid grid-cols-1 items-start gap-4 border-t pt-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+      </section>
+      <section className={card} aria-label="Thông tin kỳ đánh giá">
+        <h3 className={cardTitle}>Thông tin kỳ đánh giá</h3>
+        <div className="grid grid-cols-1 items-start gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <div className="grid grid-cols-2 gap-4"><label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
           <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
           {existing ? <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{statusLabelOf(existing)}</div></div> : <div className="hidden lg:block" aria-hidden="true" />}
