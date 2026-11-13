@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Send } from "lucide-react";
+import { Check, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEvaluations } from "@/components/evaluation-context";
@@ -150,7 +150,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
             setPerformerId(event.target.value);
             setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
           }}><option value="">Chọn người thực hiện</option>{performers.map((person) => <option key={person.employeeId} value={person.employeeId}>{person.name} — {person.employeeId}</option>)}</select></label>
-          {[['Đơn vị', performer?.unit ?? unit], ['Chức danh', personalMetadata(performerId).jobTitle], ['Phiếu giao nhiệm vụ', personalMetadata(performerId).assignmentRef]].map(([label, value]) => <label key={label} className="flex min-h-[42px] items-center gap-2 rounded-md border border-input bg-muted/40 px-3 py-2 text-sm text-foreground"><input aria-label={label} type="checkbox" checked={Boolean(value)} disabled readOnly className="h-4 w-4 shrink-0 accent-primary disabled:opacity-100" /><span className="min-w-0"><span className="block text-xs text-muted-foreground">{label}</span><span className="font-medium">{value || "—"}</span></span></label>)}
+          {[['Đơn vị', performer?.unit ?? unit], ['Chức danh', personalMetadata(performerId).jobTitle], ['Phiếu giao nhiệm vụ', personalMetadata(performerId).assignmentRef]].map(([label, value]) => <div key={label} className="flex min-h-[42px] min-w-0 items-center gap-2.5 px-1"><span role="checkbox" aria-label={label} aria-checked={Boolean(value)} aria-disabled="true" className={`grid size-4 shrink-0 place-items-center rounded-[3px] border ${value ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40 bg-muted/30 text-transparent"}`}><Check aria-hidden="true" className="size-3" /></span><div className="min-w-0"><div className="text-xs text-muted-foreground">{label}</div><div className="truncate font-medium text-foreground" title={value || "—"}>{value || "—"}</div></div></div>)}
           <label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label>
           <label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label>
           {existing && <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{statusLabelOf(existing)}</div></div>}
