@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EvaluationDateInput } from "@/components/EvaluationDateInput";
 import { useEvaluations } from "@/components/evaluation-context";
 import { responseScoreLimits, statusLabelOf, allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
@@ -18,6 +17,11 @@ const selectClass = "h-[42px] w-full rounded-md border border-input bg-card px-3
 const card = "space-y-4 rounded-lg bg-card p-5 shadow-[0_4px_30px_rgba(30,58,138,0.05)]";
 const cardTitle = "text-base font-semibold text-foreground";
 const fieldLabel = "space-y-2 text-sm font-medium text-secondary-foreground";
+const addDaysToDate = (value: string, days: number) => {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year!, month! - 1, day! + days));
+  return date.toISOString().slice(0, 10);
+};
 /** Chỗ đặt nút Hủy / Lưu / Gửi ở đầu trang (AppShell actions); không có thì hiện ở cuối form. */
 export const EVALUATION_FORM_ACTIONS_ID = "evaluation-form-actions";
 const FORM_ID = "evaluation-form";
@@ -37,8 +41,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const [year, setYear] = useState(existing?.period.split("/")[1] ?? "2026");
   const taskUnit = performer?.unit ?? unit;
   const tasksFor = (group: Criterion["group"]) => quarterTasks(SOURCE_TASKS, taskUnit, quarter, year, group);
-  const [evaluationDate, setEvaluationDate] = useState(existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
-  const [deadline, setDeadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? "");
+  const evaluationDate = existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const [deadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? addDaysToDate(evaluationDate, 14));
   const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.unit === existing.unit && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : [{ ...blankCriterion(), weight: 0.2 }, { ...blankCriterion(), group: "B-I", weight: 0 }, { ...blankCriterion(), group: "B-II", weight: 0 }]);
   const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
   const [error, setError] = useState("");
@@ -153,10 +157,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
         <h3 className={cardTitle}>Thông tin kỳ đánh giá</h3>
         <div className="grid grid-cols-1 items-start gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <div className="grid grid-cols-2 gap-4"><label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label><label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label></div>
-          <label className={fieldLabel + " block"}>Khối <span className="text-primary">*</span><Input className="h-[42px] bg-muted/40 font-normal shadow-none" readOnly value={block} /></label>
           {existing ? <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{statusLabelOf(existing)}</div></div> : <div className="hidden lg:block" aria-hidden="true" />}
-          <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Ngày đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Ngày đánh giá" value={evaluationDate} onChange={setEvaluationDate} /></label>
-          <label className={fieldLabel + " flex min-w-0 flex-col"}><span>Hạn đánh giá <span className="text-primary">*</span></span><EvaluationDateInput label="Hạn đánh giá" value={deadline} onChange={setDeadline} /></label>
         </div>
       </section>
       <div className={card + " min-w-0"}>
