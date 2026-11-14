@@ -362,14 +362,6 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           );
         })}
       </ol>
-      {previewRole === "office" && (
-        <p className="mb-4 rounded-md bg-info-soft px-3 py-2 text-sm text-info">
-          Văn phòng thẩm định phiếu CQ/CQĐV đã gửi. Có thể yêu cầu điều chỉnh tại đây; khi thẩm định xong, chuyển phiếu sang CQTT ở tab <b>Tổng hợp đánh giá</b>.{" "}
-          <Link to="/" className="font-medium underline">
-            Mở bảng Tổng hợp đánh giá
-          </Link>
-        </p>
-      )}
       {!own && ev.step !== "done" && (
         <p className="mb-4 text-sm text-muted-foreground">
           {readOnly ? "Chế độ xem đánh giá." : `Chọn vai trò ${ROLES[roleOf(ev)]} để xử lý bước hiện tại.`}
