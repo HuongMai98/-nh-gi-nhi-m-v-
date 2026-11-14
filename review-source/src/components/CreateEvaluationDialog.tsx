@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Send } from "lucide-react";
+import { ChevronDown, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEvaluations } from "@/components/evaluation-context";
@@ -44,6 +44,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const evaluationDate = existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const [deadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? addDaysToDate(evaluationDate, 14));
   const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.unit === existing.unit && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })));
+  const [personalInfoOpen, setPersonalInfoOpen] = useState(true);
   const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -149,8 +150,11 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
     <h2 className="sr-only">{title}</h2>
     <div className="space-y-4">
       <section className={card} aria-label="Thông tin người đánh giá">
-        <h3 className={cardTitle}>Thông tin người đánh giá</h3>
-        <div className="grid grid-cols-1 items-start gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+        <button type="button" aria-expanded={personalInfoOpen} onClick={() => setPersonalInfoOpen((open) => !open)} className="flex w-full items-center justify-between gap-3 text-left">
+          <span className={cardTitle}>Thông tin người đánh giá</span>
+          <ChevronDown aria-hidden="true" className={`size-4 shrink-0 text-muted-foreground transition-transform ${personalInfoOpen ? "rotate-180" : ""}`} />
+        </button>
+        {personalInfoOpen && <div className="grid grid-cols-1 items-start gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <label className={fieldLabel + " block"}>Họ và tên <span className="text-primary">*</span><select disabled={!!existing} required className={selectClass + " font-normal text-foreground"} value={performerId} onChange={(event) => {
             setPerformerId(event.target.value);
             setCriteria((current) => current.map((item) => ({ ...blankCriterion(), group: item.group, weight: item.weight })));
@@ -159,7 +163,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
           <label className={fieldLabel}>Kỳ đánh giá <span className="text-primary">*</span><select aria-label="Quý đánh giá" className={selectClass + " font-normal text-foreground"} value={quarter} onChange={(event) => setQuarter(event.target.value)}>{["I", "II", "III", "IV"].map((q) => <option key={q} value={q}>Quý {q}</option>)}</select></label>
           <label className={fieldLabel}>Năm <span className="text-primary">*</span><Input aria-label="Năm đánh giá" className="h-[42px] font-normal" required type="number" min="2000" max="2100" value={year} onChange={(event) => setYear(event.target.value)} /></label>
           {existing && <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{statusLabelOf(existing)}</div></div>}
-        </div>
+        </div>}
       </section>
       <div className={card + " min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
