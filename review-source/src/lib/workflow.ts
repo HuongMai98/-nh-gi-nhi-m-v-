@@ -73,10 +73,10 @@ export const STAGES: Record<
     steps: ["self"],
   },
   office: {
-    name: "Tổng hợp kết quả",
+    name: "Thẩm định phiếu",
     role: "office",
     required: false,
-    description: "Tổng hợp phiếu của khối và gửi CQTT theo danh sách.",
+    description: "Văn phòng thẩm định phiếu CQĐV/CQ gửi; có thể yêu cầu điều chỉnh trước khi tổng hợp.",
     handlers: ["Văn phòng", "Ban Chiến lược", "Ban Tổ chức lao động"],
     steps: ["office"],
   },
@@ -126,7 +126,7 @@ export function stageOf(step: Step): StageKey {
   return STAGE_ORDER.find((key) => STAGES[key].steps.includes(step)) ?? "self";
 }
 
-const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { cqtt: ["self"], ceo: ["council"] };
+const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { office: ["self"], cqtt: ["self"], ceo: ["council"] };
 export function defaultWorkflow(block: Block): WorkflowConfig {
   const unit = block === "Khối Cơ quan" ? "Văn phòng" : "Ban Chiến lược";
   const sla: Record<StageKey, number> = { self: 7, office: 3, cqtt: 5, council: 5, ceo: 3, dispatch: 3, sign: 5 };
@@ -161,13 +161,17 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
       const s = raw.stages.find((x) => x.key === key) ?? base.stages.find((x) => x.key === key)!;
       const legacy = key === "cqtt" ? raw.branches.cqttReturn : key === "ceo" ? raw.branches.ceoReturn : undefined;
       const stored = (s as { returnTo?: StageKey[] | StageKey | null }).returnTo;
-      const returnTo: StageKey[] = Array.isArray(stored)
+      const configuredReturn: StageKey[] = Array.isArray(stored)
         ? stored
         : typeof stored === "string"
           ? [stored]
           : stored === null || legacy === false
             ? []
             : [...(DEFAULT_RETURN[key] ?? [])];
+      // Office must be able to return a submitted evaluation to the performer for correction.
+      const returnTo: StageKey[] = key === "office" && !configuredReturn.includes("self")
+        ? [...configuredReturn, "self"]
+        : configuredReturn;
       return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo };
     }),
     branches: { ceoDirectAdjust: false },
@@ -361,6 +365,7 @@ export function resolveReturn(block: Block, key: StageKey, chosen?: StageKey): S
 }
 /** Nhãn nút trả về theo bước nguồn/đích. */
 export function returnLabel(block: Block, from: StageKey, to: StageKey): string {
+  if (from === "office" && to === "self") return "Yêu cầu CQ/CQĐV điều chỉnh";
   if (from === "cqtt" && to === "self") return "Gửi điều chỉnh CQ/CQĐV";
   if (from === "ceo" && to === "council") return "Yêu cầu Hội đồng điều chỉnh";
   return `Trả về ${handlerFor(block, to)}`;

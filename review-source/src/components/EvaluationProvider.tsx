@@ -98,8 +98,6 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
   function updateEvaluation(id: string, patch: Draft, action?: Action): string | null {
     const e = evaluations.find((item) => item.id === id);
     if (!e) return "Không tìm thấy hồ sơ.";
-    if (e.step === "office" && action === "send")
-      return "Gửi chung các phiếu đang tổng hợp từ bảng Tổng hợp đánh giá.";
     if (e.step === "self" && action === "submit" && !canSubmitEvaluation(e, CURRENT_USER))
       return "Chỉ người thực hiện hoặc người cùng đơn vị được gửi tổng hợp.";
     try {

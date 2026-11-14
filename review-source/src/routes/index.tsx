@@ -146,7 +146,7 @@ function Index() {
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
   const selectedRoleStatus = previewRole === "office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter;
   const roleStatus = (e: Evaluation) => e.step === "custom" && roleOf(e) === previewRole ? "pending" : previewRole === "office" ? officeAggregationStatus(e) : previewRole === "cqtt" ? cqttStatus(e) : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) : ceoStatus(e.step);
-  const roleStatusOptions = (previewRole === "office" ? [{ key: "pending", label: "Chờ tổng hợp" }, { key: "completed", label: "Đã tổng hợp" }] : previewRole === "cqtt" ? [{ key: "pending", label: "Chờ CQTT đánh giá" }, { key: "report", label: "Đã hoàn tất đánh giá" }, { key: "waiting", label: "Chờ CQ/CQĐV phản hồi" }, { key: "submitted", label: "Đã trình Hội đồng" }] : previewRole === "council" ? COUNCIL_FILTERS : CEO_FILTERS).map(option => ({ ...option, tone: option.key === "approved" || option.key === "completed" || option.key === "report" ? "success" as const : option.key === "adjustment" || option.key === "waiting" ? "warning" as const : "info" as const }));
+  const roleStatusOptions = (previewRole === "office" ? [{ key: "pending", label: "Chờ thẩm định" }, { key: "completed", label: "Đã thẩm định" }] : previewRole === "cqtt" ? [{ key: "pending", label: "Chờ CQTT đánh giá" }, { key: "report", label: "Đã hoàn tất đánh giá" }, { key: "waiting", label: "Chờ CQ/CQĐV phản hồi" }, { key: "submitted", label: "Đã trình Hội đồng" }] : previewRole === "council" ? COUNCIL_FILTERS : CEO_FILTERS).map(option => ({ ...option, tone: option.key === "approved" || option.key === "completed" || option.key === "report" ? "success" as const : option.key === "adjustment" || option.key === "waiting" ? "warning" as const : "info" as const }));
   const changeRoleStatus = (value: string) => { setSelectedBatch(undefined); if (previewRole === "office") setOfficeStatus(value as OfficeStatus); else if (previewRole === "cqtt") setCqttFilter(value as CqttStatus); else if (previewRole === "council") setCouncilFilter(value as CouncilFilter); else setCeoFilter(value as CeoFilter); };
   const toggle = (k: Step) =>
     setFilter((s) => {
@@ -417,10 +417,10 @@ function Index() {
                       <span className={chip + " font-medium text-foreground"}>{period}</span>
                       <span className={chip}>Cơ quan <b className="font-semibold text-foreground tabular-nums">{rows.filter((e) => e.block === "Khối Cơ quan").length}</b> phiếu</span>
                       <span className={chip}>Đơn vị <b className="font-semibold text-foreground tabular-nums">{rows.filter((e) => e.block === "Khối Đơn vị").length}</b> phiếu</span>
-                      <span className={chip}>Chờ tổng hợp <b className="font-semibold text-foreground tabular-nums">{waiting.length}</b></span>
+                      <span className={chip}>Chờ thẩm định <b className="font-semibold text-foreground tabular-nums">{waiting.length}</b></span>
                     </div>
                   </div>
-                  {officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!waiting.length}><KanbanSquare />Tổng hợp</Button>}
+                  {officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!waiting.length}><KanbanSquare />Thẩm định phiếu</Button>}
                 </div>
               );
             })()}

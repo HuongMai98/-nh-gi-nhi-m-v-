@@ -173,7 +173,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     else if (action === "return") patch = { note, ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && action === "request") patch = { ...patch, ...(note.trim() ? { note } : {}), ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && note.trim()) patch = { ...patch, note };
-    if (action === "request" && requestReasonOverride !== undefined) patch = { ...patch, note: requestReasonOverride.trim() };
+    if ((action === "request" || (action === "return" && previewRole === "office")) && requestReasonOverride !== undefined) patch = { ...patch, note: requestReasonOverride.trim() };
     const issue = updateEvaluation(ev.id, patch, action);
     setError(issue ?? "");
     setMessage(
@@ -190,7 +190,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     : ev.step === "self"
       ? [{ action: "submit", label: "Gửi đánh giá" }]
       : ev.step === "office"
-        ? []
+        ? [{ action: "send", label: "Gửi CQTT" }]
         : ev.step === "cqtt"
           ? [{ action: "finish", label: "Hoàn tất đánh giá" }]
           : ev.step === "response"
@@ -267,7 +267,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <Button
               key={a.action}
               variant={a.outline ? "return" : "default"}
-              onClick={() => { if (a.action === "request" && previewRole === "cqtt") { setRequestReason(note.trim() || ev.note || ""); setRequestError(""); setRequestOpen(true); } else run(a.action); }}
+              onClick={() => { if ((a.action === "request" && previewRole === "cqtt") || (a.action === "return" && previewRole === "office")) { setRequestReason(note.trim() || ev.note || ""); setRequestError(""); setRequestOpen(true); } else run(a.action); }}
             >
               {a.outline ? <Undo2 /> : a.action === "approve" ? <Check /> : <Send />}
               {a.label}
@@ -288,15 +288,15 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           <form onSubmit={event => {
             event.preventDefault();
             if (!requestReason.trim()) { setRequestError("Vui lòng nhập lý do yêu cầu điều chỉnh."); return; }
-            const issue = run("request", requestReason);
+            const issue = previewRole === "office" ? run("return", requestReason) : run("request", requestReason);
             if (issue) setRequestError(issue); else setRequestOpen(false);
           }}>
-            <DialogHeader><DialogTitle>Gửi điều chỉnh</DialogTitle><DialogDescription>Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá.</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>{previewRole === "office" ? "Yêu cầu CQ/CQĐV điều chỉnh" : "Gửi điều chỉnh"}</DialogTitle><DialogDescription>{previewRole === "office" ? "Nhập nội dung cần CQ/CQĐV bổ sung hoặc chỉnh sửa. Phiếu sẽ quay lại người gửi để cập nhật, sau đó Văn phòng thẩm định lại." : "Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá."}</DialogDescription></DialogHeader>
             <label className="my-4 block space-y-2 text-sm font-medium">Lý do điều chỉnh <span className="text-primary">*</span>
               <textarea autoFocus aria-label="Lý do gửi điều chỉnh" className="mt-2 block min-h-28 w-full rounded-md border border-input bg-card p-3 text-sm font-normal" value={requestReason} onChange={event => { setRequestReason(event.target.value); setRequestError(""); }} placeholder="Nhập lý do yêu cầu điều chỉnh..." />
             </label>
             {requestError && <p role="alert" className="mb-3 text-sm text-primary">{requestError}</p>}
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />Xác nhận gửi</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />{previewRole === "office" ? "Gửi yêu cầu" : "Xác nhận gửi"}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -364,8 +364,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
       </ol>
       {previewRole === "office" && (
         <p className="mb-4 rounded-md bg-info-soft px-3 py-2 text-sm text-info">
-          Gửi chung các phiếu đang tổng hợp tại tab <b>Tổng hợp đánh giá</b> trên màn hình danh
-          sách.{" "}
+          Văn phòng thẩm định phiếu CQ/CQĐV đã gửi. Có thể yêu cầu điều chỉnh tại đây; khi thẩm định xong, chuyển phiếu sang CQTT ở tab <b>Tổng hợp đánh giá</b>.{" "}
           <Link to="/" className="font-medium underline">
             Mở bảng Tổng hợp đánh giá
           </Link>

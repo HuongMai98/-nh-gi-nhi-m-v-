@@ -51,8 +51,9 @@ export function AssessmentSummary({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editAllVersion, setEditAllVersion] = useState(0);
   const [batchFeedback, setBatchFeedback] = useState("");
+  // Văn phòng chỉ chuyển các phiếu đã thẩm định sang CQTT.
   const pending = (batchCandidates ?? []).filter((e) => e.step === "office");
-  // Văn phòng đếm phiếu chờ tổng hợp; CQTT/Hội đồng đếm phiếu đang hiển thị trong bảng.
+  // Văn phòng đếm phiếu chờ thẩm định; CQTT/Hội đồng đếm phiếu đang hiển thị trong bảng.
   const countRows = previewRole === "office" && pending.length ? pending : evaluations;
   const agencyCount = countRows.filter((e) => e.block === "Khối Cơ quan").length;
   const unitCount = countRows.filter((e) => e.block === "Khối Đơn vị").length;

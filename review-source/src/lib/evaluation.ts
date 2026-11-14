@@ -40,7 +40,7 @@ export const officeFor = (e: Evaluation) =>
 export const appendixFor = (_e: Evaluation) => "Phụ lục Kết quả";
 export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
-  { key: "office", label: "Đang tổng hợp", actor: "VP / Ban CL" },
+  { key: "office", label: "Văn phòng thẩm định", actor: "Văn phòng" },
   { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
   { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
@@ -55,7 +55,7 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
 ];
 export const MAIN_STEPS = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
-  { key: "office", label: "Đang tổng hợp", actor: "VP / Ban CL" },
+  { key: "office", label: "Văn phòng thẩm định", actor: "Văn phòng" },
   { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
   { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
   { key: "ceo", label: "Đang trình ký", actor: "GĐ" },
