@@ -32,6 +32,7 @@ import {
   canConfigureWorkflow,
   roleOf,
   statusLabelOf,
+  statusToneOf,
   selfEditable,
   templateResult,
   cqttTotal,
@@ -531,8 +532,8 @@ function Index() {
                             : e.criteria.some(c => c.cqtt !== undefined) ? cqttTaskTotal(e.criteria) : cqttTotal(e))?.toFixed(2) ?? "—"}</td>
                         <td className="px-3 py-4">{result.ki}</td>
                         <td className="px-3 py-4">
-                          <StatusPill tone={STATUS[e.step].tone}>
-                            {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? "Hội đồng đã đánh giá" : e.step === "custom" ? statusLabelOf(e) : FILTER_STEPS.find((s) => s.key === listStage(e))?.label}
+                          <StatusPill tone={statusToneOf(e)}>
+                            {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? "Hội đồng đã đánh giá" : statusLabelOf(e)}
                           </StatusPill>
                           {previewRole === "cqtt" && e.step === "cqtt" && cqttScoredCount(e.criteria) > 0 && (
                             <div className="mt-1 text-xs text-muted-foreground">Đã chấm {cqttScoredCount(e.criteria)}/{e.criteria.length} công việc</div>

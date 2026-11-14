@@ -12,7 +12,7 @@ import { AppShell, StatusPill, statusStepClasses } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { AggregateForm, exportCsv, fieldClass, LABOR } from "@/components/AggregateForm";
 import { useEvaluations } from "@/components/evaluation-context";
-import { roleOf, statusLabelOf,
+import { roleOf, statusLabelOf, statusToneOf,
   STATUS,
   STEPS,
   MAIN_STEPS,
@@ -402,7 +402,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 {[["Họ và tên", ev.owner], ["Đơn vị", ev.unit], ["Chức danh", ev.jobTitle], ["Phiếu giao nhiệm vụ", ev.assignmentRef], ["Kỳ đánh giá", ev.period]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
                 <div>
                   <div className="text-xs text-muted-foreground">Trạng thái</div>
-                  <div className="mt-1"><StatusPill tone={STATUS[ev.step].tone}>{statusLabelOf(ev)}</StatusPill></div>
+                  <div className="mt-1"><StatusPill tone={statusToneOf(ev)}>{statusLabelOf(ev)}</StatusPill></div>
                 </div>
               </section>
             </div>

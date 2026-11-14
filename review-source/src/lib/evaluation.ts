@@ -73,7 +73,10 @@ export const roleOf = (e: Evaluation): PreviewRole =>
   e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.role ?? "council") : stageRole[e.step];
 /** Nhãn trạng thái hiển thị (bước tùy chỉnh dùng tên bước). */
 export const statusLabelOf = (e: Evaluation) =>
-  e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.name ?? "Bước bổ sung") : STATUS[e.step].label;
+  e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.name ?? "Bước bổ sung")
+    : e.step === "self" && e.officeReturnPending ? "Chờ CQ phản hồi" : STATUS[e.step].label;
+export const statusToneOf = (e: Evaluation): StatusTone =>
+  e.step === "self" && e.officeReturnPending ? "warning" : STATUS[e.step].tone;
 export function mainStage(step: Step): MainStage {
   if (step === "custom") return "council";
   if (step === "response" || step === "cqtt_report") return "cqtt";
@@ -144,6 +147,8 @@ export type Evaluation = {
   location?: string;
   assignmentRef?: string;
   selfSubmittedAt?: string;
+  /** Văn phòng yêu cầu CQ/CQĐV điều chỉnh trước khi thẩm định tiếp. */
+  officeReturnPending?: boolean;
   officeBatchId?: string;
   cqttKey?: number | undefined;
   cqttFunction?: number | undefined;
@@ -592,7 +597,7 @@ function returnTo(e: Evaluation, role: PreviewRole, from: StageKey | "custom", c
   if (!reason) throw new Error("Vui lòng nhập lý do trả về.");
   const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council_adjust";
   const { response: _r, responseNote: _n, responseBaseline: _b, ...rest } = e;
-  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
+  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: from === "office" && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
   return record(e, next, role, `Trả về ${handlerFor(e.block, target)}`, reason, at);
 }
 export function transition(
@@ -617,7 +622,7 @@ export function transition(
       next.criteria.some((c) => !c.result.trim())
     )
       throw new Error("Nhập đủ kết quả, điểm 1–5 và tổng tỷ trọng 100%.");
-    next = { ...advance(next, { kind: "fixed", key: "self" }), selfSubmittedAt: at };
+    next = { ...advance(next, { kind: "fixed", key: "self" }), selfSubmittedAt: at, officeReturnPending: false };
   } else if (e.step === "office") {
     if (action === "send") next = advance(e, { kind: "fixed", key: "office" });
     else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
