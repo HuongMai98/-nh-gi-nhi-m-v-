@@ -564,6 +564,9 @@ function Index() {
                                 ? null
                                 : <Button variant="outline" size="icon" className="h-8 w-8" aria-label={`Tổng hợp KI ${e.id}`} title="Tổng hợp KI" onClick={() => { createCouncilSummary([e.id]); setView("ki"); }}><KanbanSquare className="h-4 w-4" /></Button>
                             )}
+                            {previewRole === "office" && e.step === "office" && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Thẩm định" aria-label={`Thẩm định phiếu ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>
+                            )}
                             {((previewRole === "cqtt" && ["cqtt", "cqtt_report"].includes(e.step)) || (previewRole === "council" && ["council", "council_adjust"].includes(e.step))) && (
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Đánh giá" aria-label={`Đánh giá ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>
                             )}
