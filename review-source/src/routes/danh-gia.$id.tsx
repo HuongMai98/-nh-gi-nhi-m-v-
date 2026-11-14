@@ -397,24 +397,14 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               <div><span className="text-sm font-semibold">Thông tin người đánh giá</span><span className="ml-3 text-sm text-muted-foreground">{ev.owner}</span></div>
               <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="group-open:hidden">Mở rộng</span><span className="hidden group-open:inline">Thu gọn</span><ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
             </summary>
-            <div className="space-y-4 border-t p-4">
-          <section aria-label="Thông tin người thực hiện">
-            <div className="grid grid-cols-1 gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-              {[["Họ và tên", ev.owner], ["Đơn vị", ev.unit], ["Chức danh", ev.jobTitle], ["Phiếu giao nhiệm vụ", ev.assignmentRef]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
-            </div>
-          </section>
-          <div className="grid grid-cols-2 gap-4 border-t pt-4 text-sm lg:grid-cols-3">
-            <div>
-              <div className="text-xs text-muted-foreground">Kỳ đánh giá</div>
-              <div className="mt-1 font-medium">{ev.period}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Trạng thái</div>
-              <div className="mt-1">
-                <StatusPill tone={STATUS[ev.step].tone}>{statusLabelOf(ev)}</StatusPill>
-              </div>
-            </div>
-          </div>
+            <div className="border-t p-4">
+              <section aria-label="Thông tin người đánh giá" className="grid grid-cols-1 items-start gap-x-5 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                {[["Họ và tên", ev.owner], ["Đơn vị", ev.unit], ["Chức danh", ev.jobTitle], ["Phiếu giao nhiệm vụ", ev.assignmentRef], ["Kỳ đánh giá", ev.period]].map(([label, value]) => <div key={label}><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value || "—"}</div></div>)}
+                <div>
+                  <div className="text-xs text-muted-foreground">Trạng thái</div>
+                  <div className="mt-1"><StatusPill tone={STATUS[ev.step].tone}>{statusLabelOf(ev)}</StatusPill></div>
+                </div>
+              </section>
             </div>
           </details>
           <div
