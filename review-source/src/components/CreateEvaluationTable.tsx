@@ -9,10 +9,11 @@ import type { SourceTask } from "@/lib/source-tasks";
 export type FormCriterion = Criterion & { sourceTaskId?: string | undefined };
 const groups = [["A", "A. Nhiệm vụ trọng tâm, trọng điểm"], ["B-I", "I. Mục tiêu theo chức năng"], ["B-II", "II. Chỉ số kiểm soát ngành dọc"]] as const;
 const field = "h-9 w-full rounded-md border bg-card px-2 text-sm";
-export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, cqttLimits, cqttScore = null }: {
+export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, cqttLimits, cqttScore = null, fillVerticalSpace = false }: {
   items: FormCriterion[];
   /** Điểm CQTT (khi CQTT gửi điều chỉnh về) — phân bổ theo tỷ lệ tự đánh giá, chỉ để tham chiếu. */
   cqttScore?: number | null;
+  fillVerticalSpace?: boolean;
   cqttLimits?: (number | null)[];
   onCopyQltt?: (() => void) | undefined;
   tasksFor: (group: Criterion["group"]) => SourceTask[];
@@ -34,7 +35,7 @@ export function CreateEvaluationTable({ items, tasksFor, onChange, onCopyQltt, c
   const span = showCqtt ? 16 : 15;
   return <div>
     {weightError && <p role="alert" className="mb-2 text-sm text-primary">{weightError}</p>}
-    <div className="relative isolate max-h-[55dvh] overflow-auto rounded-lg border">
+    <div className={`relative isolate ${fillVerticalSpace ? "max-h-[68dvh]" : "max-h-[55dvh]"} overflow-auto rounded-lg border`}>
     <table className="w-full min-w-[1474px] text-left text-sm">
       <thead className="sticky top-0 z-30 bg-muted text-xs shadow-[0_1px_0_0_hsl(var(--border))]">
         <tr>{["STT", "TT", "Nhiệm vụ", "Chỉ số đo lường KPI", "Phương pháp đo", "Đơn vị đo", "Tỷ trọng (%)"].map((h) => <th key={h} rowSpan={2} className={"border-r px-3 py-3 font-medium " + (h === "Tỷ trọng (%)" ? "text-center " : "") +  (h === "STT" ? "sticky left-0 z-20 w-12 min-w-12 bg-muted" : h === "TT" ? "sticky left-12 z-20 w-12 min-w-12 bg-muted"  : h === "Nhiệm vụ" ? "sticky left-24 z-20 w-80 min-w-80 max-w-80 bg-muted shadow-[2px_0_0_0_hsl(var(--border))]" : "")}>{h === "Tỷ trọng (%)" ? <span className="inline-flex flex-col items-center justify-center whitespace-nowrap leading-snug"><span>Tỷ trọng</span><span>(%)</span></span> : h === "Nhiệm vụ" ? "Mục tiêu nhiệm vụ/công việc" : h}{h === "Nhiệm vụ" && <span className="block font-normal italic">(Kết quả mong đợi đối với nhiệm vụ/công việc)</span>}{h === "Phương pháp đo" && <span className="block font-normal italic">(công thức hoặc mô tả cách tính)</span>}{h === "Đơn vị đo" && <span className="block font-normal italic">(số, số lượng, %, điểm, ...)</span>}</th>)}

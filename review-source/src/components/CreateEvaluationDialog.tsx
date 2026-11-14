@@ -167,7 +167,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       </section>
       <div className={card + " -mx-4 min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
-        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
+        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} fillVerticalSpace={!personalInfoOpen} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
         {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
           <h3 className={cardTitle + " mb-3"}>Phản hồi yêu cầu điều chỉnh của CQTT</h3>
           <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
