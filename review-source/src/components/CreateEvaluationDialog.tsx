@@ -165,7 +165,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
           {existing && <div><div className="text-xs text-muted-foreground">Trạng thái</div><div className="mt-1 font-medium">{statusLabelOf(existing)}</div></div>}
         </div>}
       </section>
-      <div className={card + " min-w-0"}>
+      <div className={card + " -mx-2 min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
         <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
         {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
