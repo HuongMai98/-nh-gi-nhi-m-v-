@@ -150,7 +150,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const chosenReturn = allowedReturns.includes(returnStage as StageKey) ? (returnStage as StageKey) : allowedReturns[0];
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
   const returnText =
-    ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
+    previewRole === "office" && ev.step === "office" ? "Gửi điều chỉnh" : ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
   const run = (action?: Action, requestReasonOverride?: string) => {
     let patch: Draft =
       own && (["office", "cqtt", "council", "council_adjust"].includes(ev.step) || (ev.step === "ceo" && action === "approve"))
@@ -291,12 +291,12 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             const issue = previewRole === "office" ? run("return", requestReason) : run("request", requestReason);
             if (issue) setRequestError(issue); else setRequestOpen(false);
           }}>
-            <DialogHeader><DialogTitle>{previewRole === "office" ? "Yêu cầu CQ/CQĐV điều chỉnh" : "Gửi điều chỉnh"}</DialogTitle><DialogDescription>{previewRole === "office" ? "Nhập nội dung cần CQ/CQĐV bổ sung hoặc chỉnh sửa. Phiếu sẽ quay lại người gửi để cập nhật, sau đó Văn phòng thẩm định lại." : "Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá."}</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>Gửi điều chỉnh</DialogTitle><DialogDescription>{previewRole === "office" ? "Nhập nội dung cần CQ/CQĐV bổ sung hoặc chỉnh sửa. Phiếu sẽ quay lại người gửi để cập nhật, sau đó Văn phòng thẩm định lại." : "Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá."}</DialogDescription></DialogHeader>
             <label className="my-4 block space-y-2 text-sm font-medium">Lý do điều chỉnh <span className="text-primary">*</span>
               <textarea autoFocus aria-label="Lý do gửi điều chỉnh" className="mt-2 block min-h-28 w-full rounded-md border border-input bg-card p-3 text-sm font-normal" value={requestReason} onChange={event => { setRequestReason(event.target.value); setRequestError(""); }} placeholder="Nhập lý do yêu cầu điều chỉnh..." />
             </label>
             {requestError && <p role="alert" className="mb-3 text-sm text-primary">{requestError}</p>}
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />{previewRole === "office" ? "Gửi yêu cầu" : "Xác nhận gửi"}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />{previewRole === "office" ? "Gửi điều chỉnh" : "Xác nhận gửi"}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
