@@ -86,11 +86,11 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
     <section aria-label="Chấm điểm theo nhiệm vụ" className="space-y-4">
       {/* Ma trận tổng quan: điểm bình quân từng nhóm theo cơ quan/đơn vị; bấm ô để lọc. */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Ma trận điểm theo nhóm <span className="font-normal text-muted-foreground">· {evaluations.length} cơ quan/đơn vị</span></h3>
-        <button type="button" className="text-xs text-primary hover:underline" aria-expanded={showMatrix} onClick={() => setShowMatrix(!showMatrix)}>{showMatrix ? "Thu gọn" : "Mở ma trận"}</button>
+        <h3 className="text-sm font-semibold">Tổng quan theo đơn vị <span className="font-normal text-muted-foreground">· {evaluations.length} cơ quan/đơn vị</span></h3>
+        <button type="button" className="text-xs text-primary hover:underline" aria-expanded={showMatrix} onClick={() => setShowMatrix(!showMatrix)}>{showMatrix ? "Thu gọn" : "Mở tổng quan"}</button>
       </div>
       {showMatrix && <div className="max-h-80 overflow-auto rounded-lg border">
-        <table className="w-full min-w-[860px] text-sm" aria-label="Ma trận điểm theo nhóm">
+        <table className="w-full min-w-[860px] text-sm" aria-label="Tổng quan theo đơn vị">
           <thead className="sticky top-0 z-10 bg-muted text-left text-xs">
             <tr>
               <th className="px-3 py-2.5 font-medium">Cơ quan / Đơn vị</th>
