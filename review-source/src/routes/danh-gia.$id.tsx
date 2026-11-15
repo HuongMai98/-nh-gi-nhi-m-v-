@@ -1,4 +1,5 @@
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
@@ -95,6 +96,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [cqttTouched, setCqttTouched] = useState(false);
   const [note, setNote] = useState("");
   const [requestOpen, setRequestOpen] = useState(false);
+  const [taskIndex, setTaskIndex] = useState<number | null>(null);
   const [requestReason, setRequestReason] = useState("");
   const [requestError, setRequestError] = useState("");
   const response = "Tiếp thu" as const;
@@ -471,7 +473,9 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 councilVisible={!["council", "council_adjust"].includes(ev.step) || !!ev.councilReviewed}
                 cqttRef={ev.step === "response" || showCouncilTasks ? cqttTaskScores(ev.criteria, cqttTotal(ev)) : null}
                 onChange={(next) => { setItems(next); if (canCqttTasks || canCouncilTasks) setCqttTouched(true); }}
+                onOpenTask={setTaskIndex}
               />
+              {taskIndex !== null && items[taskIndex] && <TaskDetailDialog ev={ev} criterion={items[taskIndex]!} index={taskIndex} onClose={() => setTaskIndex(null)} />}
 
             </section>
           )}
@@ -690,8 +694,11 @@ function PersonalTable({
   canCouncil = false,
   councilVisible = true,
   cqttRef = null,
+  onOpenTask,
   onChange,
 }: {
+  /** Mở màn chi tiết nhiệm vụ (module Nhiệm vụ) của mục tiêu thứ `index`. */
+  onOpenTask?: (index: number) => void;
   /** Chờ CQ/CQĐV phản hồi: cột "QLTT đánh giá (1-5)" lấy điểm CQTT đã chấm từng công việc. */
   cqttRef?: (number | null)[] | null;
   items: Criterion[];
@@ -794,6 +801,7 @@ function PersonalTable({
               councilVisible={councilVisible}
               cqttRef={cqttRef}
               update={update}
+              onOpenTask={onOpenTask}
             />
           ))}
           <tr className="bg-muted font-semibold">
@@ -838,7 +846,9 @@ function GroupRows({
   councilVisible,
   cqttRef,
   update,
+  onOpenTask,
 }: {
+  onOpenTask?: ((index: number) => void) | undefined;
   cqttRef: (number | null)[] | null;
   label: string;
   rows: { c: Criterion; i: number }[];
@@ -862,7 +872,7 @@ function GroupRows({
       {rows.map(({ c, i }, groupIndex) => (
         <tr className="border-t" key={i}>
           <td className="sticky left-0 z-10 w-12 min-w-12 max-w-12 bg-card px-3 py-3 text-center">{i + 1}</td><td className="sticky left-12 z-10 w-12 min-w-12 max-w-12 bg-card px-3 py-3 text-center">{groupIndex + 1}</td>
-          <td className="sticky left-24 z-10 w-72 min-w-72 max-w-72 break-words bg-card px-3 py-3 font-medium shadow-[2px_0_0_0_var(--color-border)]">{c.goal}</td>
+          <td className="sticky left-24 z-10 w-72 min-w-72 max-w-72 break-words bg-card px-3 py-3 font-medium shadow-[2px_0_0_0_var(--color-border)]">{onOpenTask ? <button type="button" className="text-left text-primary underline-offset-2 hover:underline" title="Xem chi tiết nhiệm vụ" aria-label={`Xem chi tiết nhiệm vụ ${c.goal}`} onClick={() => onOpenTask(i)}>{c.goal}</button> : c.goal}</td>
           <td className="px-2">
             <input
               aria-label={`Chỉ số đo lường KPI mục tiêu ${i + 1}`}
