@@ -4,9 +4,9 @@ import type { Evaluation, PreviewRole, Step } from "./evaluation";
 export type Block = Evaluation["block"];
 export const BLOCKS: Block[] = ["Khối Cơ quan", "Khối Đơn vị"];
 
-export type StageKey = "self" | "office" | "cqtt" | "council" | "ceo" | "dispatch" | "sign";
+export type StageKey = "self" | "office" | "support" | "cqtt" | "council" | "ceo" | "dispatch" | "sign";
 /** Thứ tự bước cố định theo phụ thuộc dữ liệu: điểm tự ĐG → điểm CQTT → Ki CQTT → phê duyệt → phát hành. */
-export const STAGE_ORDER: StageKey[] = ["self", "office", "cqtt", "council", "ceo", "dispatch", "sign"];
+export const STAGE_ORDER: StageKey[] = ["self", "office", "support", "cqtt", "council", "ceo", "dispatch", "sign"];
 
 export type StageConfig = {
   key: StageKey;
@@ -23,7 +23,7 @@ export type BranchConfig = {
   ceoDirectAdjust: boolean;
 };
 /** Bước có thể cấu hình trả về, và các bước có thể là đích trả về. */
-export const RETURNABLE: StageKey[] = ["office", "cqtt", "council", "ceo"];
+export const RETURNABLE: StageKey[] = ["office", "support", "cqtt", "council", "ceo"];
 export const RETURN_TARGETS: StageKey[] = ["self", "office", "cqtt", "council"];
 /** Bước duyệt tùy chỉnh chèn sau một bước cố định: chỉ xem và Duyệt / Trả về. */
 export type CustomStage = {
@@ -58,7 +58,7 @@ export type WorkflowConfig = {
   updatedAt?: string;
 };
 /** Bước cố định có thể đặt bước tùy chỉnh phía sau. */
-export const CUSTOM_ANCHORS: StageKey[] = ["self", "office", "cqtt", "council", "ceo"];
+export const CUSTOM_ANCHORS: StageKey[] = ["self", "office", "support", "council", "ceo"];
 
 export const STAGES: Record<
   StageKey,
@@ -73,16 +73,23 @@ export const STAGES: Record<
     steps: ["self"],
   },
   office: {
-    name: "Thẩm định phiếu",
+    name: "Văn phòng thẩm định",
     role: "office",
     required: false,
-    description: "Văn phòng thẩm định phiếu CQĐV/CQ gửi; có thể yêu cầu điều chỉnh trước khi tổng hợp.",
+    description: "Thẩm định phiếu CQĐV/CQ gửi, tổng hợp đánh giá rồi gửi Tổ giúp việc; được gửi điều chỉnh về CQĐV/CQ.",
     handlers: ["Văn phòng", "Ban Chiến lược", "Ban Tổ chức lao động"],
-    // Gồm cả bước Tổ giúp việc đang đánh giá sau khi Văn phòng thẩm định.
-    steps: ["office", "support"],
+    steps: ["office"],
+  },
+  support: {
+    name: "Tổ giúp việc đánh giá",
+    role: "support_office",
+    required: false,
+    description: "Văn phòng (đại diện) tổng hợp và gửi CQTT; Cơ quan Chính trị, Tổ chức Nhân lực, Ban Chiến lược cho ý kiến/xác nhận. Cả 4 bộ phận được gửi điều chỉnh về CQĐV/CQ.",
+    handlers: ["Tổ giúp việc"],
+    steps: ["support"],
   },
   cqtt: {
-    name: "Rà soát, chấm điểm",
+    name: "Rà soát, chấm điểm (luồng cũ)",
     role: "cqtt",
     required: false,
     description: "CQTT chấm điểm trọng tâm/chức năng, có thể gửi điều chỉnh và tổng hợp báo cáo.",
@@ -127,12 +134,12 @@ export function stageOf(step: Step): StageKey {
   return STAGE_ORDER.find((key) => STAGES[key].steps.includes(step)) ?? "self";
 }
 
-const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { office: ["self"], ceo: ["council"] };
+const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { office: ["self"], support: ["self"], ceo: ["council"] };
 /** Bước "Rà soát, chấm điểm" cũ của CQTT đã gộp vào bước CQTT chấm điểm, tính Ki (không còn gửi Hội đồng). */
 export const RETIRED_STAGES: StageKey[] = ["cqtt"];
 export function defaultWorkflow(block: Block): WorkflowConfig {
   const unit = block === "Khối Cơ quan" ? "Văn phòng" : "Ban Chiến lược";
-  const sla: Record<StageKey, number> = { self: 7, office: 3, cqtt: 5, council: 5, ceo: 3, dispatch: 3, sign: 5 };
+  const sla: Record<StageKey, number> = { self: 7, office: 3, support: 3, cqtt: 5, council: 5, ceo: 3, dispatch: 3, sign: 5 };
   return {
     block,
     stages: STAGE_ORDER.map((key) => ({
@@ -368,7 +375,7 @@ export function resolveReturn(block: Block, key: StageKey, chosen?: StageKey): S
 }
 /** Nhãn nút trả về theo bước nguồn/đích. */
 export function returnLabel(block: Block, from: StageKey, to: StageKey): string {
-  if (from === "office" && to === "self") return "Yêu cầu CQ/CQĐV điều chỉnh";
+  if ((from === "office" || from === "support") && to === "self") return "Gửi điều chỉnh";
   if (from === "cqtt" && to === "self") return "Gửi điều chỉnh CQ/CQĐV";
   if (from === "ceo" && to === "council") return "Yêu cầu CQTT điều chỉnh";
   return `Trả về ${handlerFor(block, to)}`;

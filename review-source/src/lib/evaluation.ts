@@ -1,4 +1,4 @@
-import { customStageOf, handlerFor, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
+import { customStageOf, handlerFor, isStageEnabled, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
 export type Step =
   | "self"
   | "office"
@@ -85,7 +85,7 @@ export const MAIN_STEPS = [
   { key: "approved", label: "Đã phê duyệt", actor: "CQTT → VP/Ban CL → CQĐV/CQ" },
 ] as const;
 export type MainStage = (typeof MAIN_STEPS)[number]["key"];
-const MAIN_OF_STAGE: Record<StageKey, MainStage> = { self: "self", office: "office", cqtt: "council", council: "council", ceo: "ceo", dispatch: "approved", sign: "approved" };
+const MAIN_OF_STAGE: Record<StageKey, MainStage> = { self: "self", office: "office", support: "support", cqtt: "council", council: "council", ceo: "ceo", dispatch: "approved", sign: "approved" };
 /** Nhóm trạng thái chính của hồ sơ; bước tùy chỉnh thuộc nhóm của bước đặt trước nó. */
 export function mainStageOf(e: Evaluation): MainStage {
   if (e.step !== "custom") return mainStage(e.step);
@@ -600,6 +600,8 @@ export function enterStage(e: Evaluation, key: StageKey): Evaluation {
   switch (key) {
     case "office":
       return { ...e, step: "office" };
+    case "support":
+      return { ...e, step: "support", supportOpinions: [] };
     case "cqtt":
       return { ...e, step: "cqtt", note: "" };
     case "council": {
@@ -633,7 +635,7 @@ function returnTo(e: Evaluation, role: PreviewRole, from: StageKey | "custom", c
   if (!reason) throw new Error("Vui lòng nhập lý do trả về.");
   const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council";
   const { response: _r, responseNote: _n, responseBaseline: _b, ...rest } = e;
-  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: from === "office" && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
+  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: (from === "office" || from === "support") && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
   return record(e, next, role, `Trả về ${handlerFor(e.block, target)}`, reason, at);
 }
 export function transition(
@@ -662,13 +664,14 @@ export function transition(
     next = { ...advance(next, { kind: "fixed", key: "self" }), selfSubmittedAt: at, officeReturnPending: false };
   } else if (e.step === "office") {
     // Văn phòng thẩm định xong → Tổ giúp việc đang đánh giá.
-    if (action === "send") return record(e, { ...e, step: "support", supportOpinions: [] }, role, "Gửi tổ giúp việc", "", at);
+    // Văn phòng thẩm định xong → bước bật kế tiếp (mặc định Tổ giúp việc).
+    if (action === "send") return record(e, advance(e, { kind: "fixed", key: "office" }), role, isStageEnabled(e.block, "support") ? "Gửi tổ giúp việc" : "Gửi đánh giá", "", at);
     else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
     else throw new Error("Thao tác không hợp lệ.");
   } else if (e.step === "support") {
     // Văn phòng (đại diện Tổ giúp việc) tổng hợp và gửi CQTT; mọi bộ phận được gửi điều chỉnh CQ/CQĐV.
-    if (action === "send") next = advance(e, { kind: "fixed", key: "office" });
-    else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
+    if (action === "send") next = advance(e, { kind: "fixed", key: "support" });
+    else if (action === "return") return returnTo(e, role, "support", patch.returnStage, reason, at);
     else throw new Error("Thao tác không hợp lệ.");
   } else if (e.step === "cqtt" || (e.step === "cqtt_report" && action === "request")) {
     // Gửi điều chỉnh được thực hiện ở màn Tổng hợp đánh giá, kể cả phiếu đã Hoàn tất đánh giá.

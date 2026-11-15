@@ -37,6 +37,7 @@ import {
   type NotificationConfig,
   type VersionStatus,
   type WorkflowVersion,
+  RETIRED_STAGES,
 } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +58,8 @@ export const Route = createFileRoute("/cau-hinh-luong-duyet")({
 });
 
 /** Bước hiển thị trên màn cấu hình. Gửi kết quả và Trình ký phiếu ĐG luôn chạy cuối luồng, không cấu hình. */
-const CONFIG_STAGES: StageKey[] = STAGE_ORDER.filter((k) => k !== "dispatch" && k !== "sign");
+// Bước cố định hiển thị trong cấu hình: bỏ bước phát hành và bước CQTT rà soát cũ đã gộp vào CQTT chấm điểm.
+const CONFIG_STAGES: StageKey[] = STAGE_ORDER.filter((k) => k !== "dispatch" && k !== "sign" && !RETIRED_STAGES.includes(k));
 /** Cách xử lý đặc thù của một số đích trả về (các đích khác: hồ sơ quay về bước đó kèm lý do). */
 const RETURN_NOTE: Partial<Record<string, string>> = {
   "cqtt>self": "CQĐV/CQ Tiếp thu (cập nhật, gửi CQTT chấm lại) hoặc Bảo lưu (giữ nguyên điểm).",
@@ -487,7 +489,10 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
                       <div className="mt-1 text-xs text-amber-700">{inStage[key]} phiếu đang ở bước này sẽ xử lý nốt, sau đó bỏ qua bước.</div>
                     )}
                   </td>
-                  <td className="px-3 py-3 whitespace-nowrap">{ROLES[meta.role]}</td>
+                  <td className="px-3 py-3">{key === "support"
+                    ? <div><div className="whitespace-nowrap">{ROLES.support_office}</div><div className="mt-0.5 max-w-44 text-xs text-muted-foreground">Cho ý kiến: {ROLES.politics}, {ROLES.hr}, {ROLES.strategy}</div></div>
+                    : key === "council" ? <div><div>CQTT</div><div className="mt-0.5 text-xs text-muted-foreground">Văn phòng · Cơ quan Chính trị</div></div>
+                    : <span className="whitespace-nowrap">{ROLES[meta.role]}</span>}</td>
                   <td className="px-3 py-3">
                     <select
                       aria-label={`Đơn vị xử lý ${meta.name}`}

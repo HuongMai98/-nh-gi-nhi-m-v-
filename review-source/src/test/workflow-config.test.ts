@@ -48,7 +48,7 @@ it("chặn cấu hình sai: tắt bước bắt buộc, không còn bước ch�
 });
 
 it("tắt CQTT và CQTT: TGĐ nhận điểm tự đánh giá để phê duyệt", () => {
-  configure((c) => off(c, "office", "cqtt", "council"));
+  configure((c) => off(c, "office", "support", "cqtt", "council"));
   const e = transition(selfStep(), "performer", "submit", {}, "now");
   expect(e.step).toBe("ceo");
   expect(e.councilScore).toBeGreaterThan(0);

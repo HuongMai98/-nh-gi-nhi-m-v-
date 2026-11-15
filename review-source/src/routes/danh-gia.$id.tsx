@@ -240,7 +240,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   }
   const active: string = ev.step === "custom" ? `custom:${ev.customStageId}` : mainStage(ev.step);
   // Tiến trình theo cấu hình luồng duyệt: chỉ hiện bước đang áp dụng (kèm bước tùy chỉnh); bước đã tắt bị bỏ qua.
-  const stageForMain = (key: string): StageKey | null => (key === "approved" || key.startsWith("custom:") ? null : key === "support" ? "office" : (key as StageKey));
+  const stageForMain = (key: string): StageKey | null => (key === "approved" || key.startsWith("custom:") ? null : (key as StageKey));
   const shownSteps: { key: string; label: string; actor: string }[] = MAIN_STEPS.filter((s) => {
     const stage = stageForMain(s.key);
     return !stage || s.key === active || flow.stages.find((x) => x.key === stage)?.enabled;
