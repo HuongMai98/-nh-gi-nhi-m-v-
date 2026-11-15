@@ -12,6 +12,7 @@ import {
   Settings,
   UserSquare,
 } from "lucide-react";
+import { councilConfirmers } from "@/lib/workflow";
 import { ROLES, canConfigureWorkflow, isSupportCommenter, roleOf, stageRole, statusLabelOf, STATUS, type PreviewRole } from "@/lib/evaluation";
 import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
@@ -53,7 +54,7 @@ export function AppShell({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   // Thông báo theo cấu hình luồng duyệt của khối: đến bước / nhắc trước hạn / cảnh báo quá hạn, kênh hệ thống.
   const notifications = evaluations
-    .filter((item) => (roleOf(item) === previewRole || (item.step === "support" && isSupportCommenter(previewRole) && !item.supportOpinions?.some((o) => o.role === previewRole))) && item.step !== "done")
+    .filter((item) => (roleOf(item) === previewRole || (item.step === "support" && isSupportCommenter(previewRole) && !item.supportOpinions?.some((o) => o.role === previewRole)) || (item.step === "council" && !!item.councilSummaryCreated && !item.councilConfirmations?.some((c) => c.role === previewRole) && councilConfirmers(item.block).includes(previewRole))) && item.step !== "done")
     .map((item) => {
       const n = { ...DEFAULT_NOTIFICATIONS, ...(workflows[item.block].notifications ?? {}) };
       const sla = slaFor(item);

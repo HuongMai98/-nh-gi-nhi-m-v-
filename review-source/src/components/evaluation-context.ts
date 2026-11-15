@@ -27,6 +27,10 @@ type EvaluationState = {
   commentSupport: (id: string, note: string) => string | null;
   /** Bộ phận Tổ giúp việc xác nhận đánh giá. */
   confirmSupport: (id: string, note: string) => string | null;
+  /** Bộ phận xác nhận (mặc định Cơ quan Chính trị) xác nhận cả lô Tổng hợp KI. */
+  confirmCouncil: (ids: string[]) => string | null;
+  /** Bộ phận xác nhận gửi điều chỉnh cả lô cho Văn phòng (CQTT). */
+  requestCouncilAdjust: (ids: string[], note: string) => string | null;
   sendOfficeBatch: (ids: string[], drafts?: Record<string, Draft>) => string | null;
   updateEvaluation: (id: string, patch: Draft, action?: Action) => string | null;
   /** Cấu hình đang áp dụng hôm nay của từng khối. */

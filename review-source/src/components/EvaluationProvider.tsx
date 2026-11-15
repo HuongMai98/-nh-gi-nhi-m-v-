@@ -14,6 +14,8 @@ import {
   supportComment,
   addComment,
   supportConfirm,
+  confirmCouncilSummary,
+  requestCouncilAdjust,
   transition,
   type PreviewRole,
   type Draft,
@@ -220,7 +222,8 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
             if (!ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) || !e.councilReviewed) return e;
             const score = allocatedTotal(e.criteria);
             if (score === null) return e;
-            const summary = { ...e, councilScore: score, councilSummaryCreated: true };
+            const { councilConfirmed: _confirmed, councilConfirmations: _confirmations, ...rest } = e;
+            const summary = { ...rest, councilScore: score, councilSummaryCreated: true };
             return { ...summary, ki: councilAutoKi(summary) };
           }));
         },
@@ -246,6 +249,22 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
             setEvaluations(evaluations.map((e) => (e.id === id ? supportConfirm(e, previewRole, note, at, CURRENT_USER.name) : e)));
             return null;
           } catch (error) { return error instanceof Error ? error.message : "Không thể xác nhận."; }
+        },
+        confirmCouncil: (ids) => {
+          try {
+            if (!ids.length) throw new Error("Không có phiếu nào để xác nhận.");
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (ids.includes(e.id) ? confirmCouncilSummary(e, previewRole, at, CURRENT_USER.name) : e)));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể xác nhận."; }
+        },
+        requestCouncilAdjust: (ids, note) => {
+          try {
+            if (!ids.length) throw new Error("Không có phiếu nào để gửi điều chỉnh.");
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (ids.includes(e.id) ? requestCouncilAdjust(e, previewRole, note, at, CURRENT_USER.name) : e)));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể gửi điều chỉnh."; }
         },
         sendToSupport: (ids) => {
           try {

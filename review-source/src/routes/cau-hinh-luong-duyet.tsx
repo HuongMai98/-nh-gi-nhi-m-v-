@@ -38,6 +38,7 @@ import {
   type VersionStatus,
   type WorkflowVersion,
   RETIRED_STAGES,
+  COUNCIL_CONFIRMER_OPTIONS,
 } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 
@@ -491,7 +492,24 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
                   </td>
                   <td className="px-3 py-3">{key === "support"
                     ? <div><div className="whitespace-nowrap">{ROLES.support_office}</div><div className="mt-0.5 max-w-44 text-xs text-muted-foreground">Cho ý kiến: {ROLES.politics}, {ROLES.hr}, {ROLES.strategy}</div></div>
-                    : key === "council" ? <div><div>CQTT</div><div className="mt-0.5 text-xs text-muted-foreground">Văn phòng · Cơ quan Chính trị</div></div>
+                    : key === "council" ? <div className="min-w-48 space-y-2">
+                      <div><div>Văn phòng (CQTT)</div><div className="mt-0.5 text-xs text-muted-foreground">Chấm điểm, tổng hợp KI, trình ký GĐ</div></div>
+                      {/* Bộ phận phải xác nhận cả lô Tổng hợp KI trước khi Văn phòng (CQTT) trình ký GĐ. */}
+                      <fieldset className="space-y-1 rounded-md border bg-muted/30 p-2 text-xs" aria-label="Xác nhận trước khi trình ký">
+                        <legend className="px-1 font-medium text-foreground">Xác nhận trước khi trình ký</legend>
+                        {COUNCIL_CONFIRMER_OPTIONS.map((r) => <label key={r} className="flex items-center gap-1.5">
+                          <input type="checkbox" className="size-3.5 accent-primary" aria-label={`${ROLES[r]} xác nhận Tổng hợp KI`} disabled={readOnly || !s.enabled}
+                            checked={(s.confirmBy ?? []).includes(r)}
+                            onChange={(event) => setStage(key, { confirmBy: event.target.checked ? COUNCIL_CONFIRMER_OPTIONS.filter((x) => x === r || (s.confirmBy ?? []).includes(x)) : (s.confirmBy ?? []).filter((x) => x !== r) })} />
+                          {ROLES[r]}
+                        </label>)}
+                        <label className="flex items-center gap-1.5 border-t pt-1.5">
+                          <input type="checkbox" className="size-3.5 accent-primary" aria-label="Bộ phận xác nhận được gửi điều chỉnh" disabled={readOnly || !s.enabled || !(s.confirmBy ?? []).length}
+                            checked={!!s.confirmCanAdjust && !!(s.confirmBy ?? []).length} onChange={(event) => setStage(key, { confirmCanAdjust: event.target.checked })} />
+                          Được gửi điều chỉnh cho Văn phòng
+                        </label>
+                      </fieldset>
+                    </div>
                     : <span className="whitespace-nowrap">{ROLES[meta.role]}</span>}</td>
                   <td className="px-3 py-3">
                     <select

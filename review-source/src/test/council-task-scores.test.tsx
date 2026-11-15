@@ -23,7 +23,7 @@ it("CQTT lưu điểm từng công việc, bảo toàn điểm CQTT và không p
   expect(finished.councilSummaryCreated).not.toBe(true);
   expect(finished.criteria).toEqual(saved.criteria);
   expect(()=>transition(saved,"council","submit",{},"now")).toThrow(/tổng hợp KI/);
-  expect(transition({...finished,councilSummaryCreated:true},"council","submit",{},"now").criteria).toEqual(saved.criteria);
+  expect(transition({...finished,councilSummaryCreated:true,councilConfirmed:{role:"politics",at:"now"}},"council","submit",{},"now").criteria).toEqual(saved.criteria);
   expect(()=>saveDraft(e,"council",{criteria:criteria.map(c=>({...c,council:6}))},"now")).toThrow(/1 đến 5/);
   const partial=saveDraft(e,"council",{criteria:criteria.map((c,i)=>({...c,council:i?undefined:4}))},"now");
   expect(partial.councilReviewed).toBe(false);

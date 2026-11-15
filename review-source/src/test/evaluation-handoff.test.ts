@@ -54,7 +54,7 @@ describe("evaluation workflow", () => {
     };
     expect(kiError(e)).toMatch(/Ki D/);
     expect(() => transition(e, "council", "submit", {}, "now")).toThrow();
-    const ready = { ...e, locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ" };
+    const ready = { ...e, locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", councilConfirmed: { role: "politics" as const, at: "now" } };
     const approved = transition(
       transition(ready, "council", "submit", {}, "now"),
       "ceo",

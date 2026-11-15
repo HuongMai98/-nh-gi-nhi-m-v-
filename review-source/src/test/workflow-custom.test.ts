@@ -11,7 +11,7 @@ const withCustom = (...cs: CustomStage[]) => {
   c.customStages = cs;
   setWorkflows([normalizeBranches(c)]);
 };
-const atCouncil = (): Evaluation => ({ ...structuredClone(EVALUATIONS.find((x) => x.step === "council" && x.block === block)!), locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ" });
+const atCouncil = (): Evaluation => ({ ...structuredClone(EVALUATIONS.find((x) => x.step === "council" && x.block === block)!), locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", councilConfirmed: { role: "politics", at: "now" } });
 afterEach(() => setWorkflows([defaultWorkflow("Khối Cơ quan"), defaultWorkflow("Khối Đơn vị")]));
 
 it("bước tùy chỉnh hợp lệ / thiếu tên bị chặn", () => {

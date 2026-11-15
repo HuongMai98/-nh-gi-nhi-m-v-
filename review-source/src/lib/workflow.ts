@@ -17,7 +17,14 @@ export type StageConfig = {
   slaDays: number;
   /** Các bước được phép trả về (đứng trước, đang bật). Rỗng = không cho trả về. Người xử lý chọn 1 bước khi trả về. */
   returnTo: StageKey[];
+  /** Bước CQTT: bộ phận phải xác nhận Tổng hợp KI (cả lô) trước khi Văn phòng trình ký GĐ. Rỗng = không cần xác nhận. */
+  confirmBy?: PreviewRole[];
+  /** Bước CQTT: bộ phận xác nhận được Gửi điều chỉnh cho Văn phòng (CQTT). */
+  confirmCanAdjust?: boolean;
 };
+/** Bộ phận có thể được cấu hình xác nhận Tổng hợp KI ở bước CQTT. */
+export const COUNCIL_CONFIRMER_OPTIONS: PreviewRole[] = ["politics", "hr", "strategy"];
+const DEFAULT_COUNCIL_CONFIRM = { confirmBy: ["politics"] as PreviewRole[], confirmCanAdjust: true };
 export type BranchConfig = {
   /** GĐ điều chỉnh trực tiếp điểm/Ki trước khi phê duyệt. */
   ceoDirectAdjust: boolean;
@@ -100,7 +107,7 @@ export const STAGES: Record<
     name: "CQTT chấm điểm, tính Ki",
     role: "council",
     required: false,
-    description: "CQTT (Văn phòng · Cơ quan Chính trị) chấm từng công việc, tổng hợp KI, xác nhận tuân thủ và trình ký GĐ.",
+    description: "Văn phòng (CQTT) chấm từng công việc, xác nhận tuân thủ, tổng hợp KI; bộ phận được chọn (mặc định Cơ quan Chính trị) xác nhận cả lô rồi Văn phòng trình ký GĐ.",
     handlers: ["CQTT"],
     steps: ["council", "council_adjust"],
   },
@@ -148,6 +155,7 @@ export function defaultWorkflow(block: Block): WorkflowConfig {
       handler: key === "office" || key === "dispatch" ? unit : STAGES[key].handlers[0]!,
       slaDays: sla[key],
       returnTo: [...(DEFAULT_RETURN[key] ?? [])],
+      ...(key === "council" ? { confirmBy: [...DEFAULT_COUNCIL_CONFIRM.confirmBy], confirmCanAdjust: DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {}),
     })),
     branches: { ceoDirectAdjust: false },
     customStages: [],
@@ -182,7 +190,8 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
       const returnTo: StageKey[] = key === "office" && !configuredReturn.includes("self")
         ? [...configuredReturn, "self"]
         : configuredReturn;
-      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo };
+      const confirm = key === "council" ? { confirmBy: [...(s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy)], confirmCanAdjust: s.confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {};
+      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo, ...confirm };
     }),
     branches: { ceoDirectAdjust: false },
     customStages: (raw.customStages ?? []).map((s) => ({ ...s, returnTo: [...(s.returnTo ?? [])] })),
@@ -192,7 +201,7 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
 
 export const cloneWorkflow = (c: WorkflowConfig): WorkflowConfig => ({
   ...c,
-  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo] })),
+  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo], ...(s.confirmBy ? { confirmBy: [...s.confirmBy] } : {}) })),
   branches: { ...c.branches },
   customStages: (c.customStages ?? []).map((s) => ({ ...s, returnTo: [...s.returnTo] })),
   notifications: { ...DEFAULT_NOTIFICATIONS, ...(c.notifications ?? {}) },
@@ -365,6 +374,12 @@ export const customStageOf = (block: Block, id: string | undefined): CustomStage
   id ? getWorkflow(block).customStages?.find((s) => s.id === id) : undefined;
 export const notificationsFor = (block: Block): NotificationConfig => ({ ...DEFAULT_NOTIFICATIONS, ...(getWorkflow(block).notifications ?? {}) });
 export const handlerFor = (block: Block, key: StageKey) => stageConfig(block, key).handler;
+/** Bộ phận phải xác nhận Tổng hợp KI trước khi trình ký GĐ (theo cấu hình bước CQTT). */
+export const councilConfirmers = (block: Block): PreviewRole[] => {
+  const s = stageConfig(block, "council");
+  return s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy;
+};
+export const councilConfirmCanAdjust = (block: Block) => stageConfig(block, "council").confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust;
 /** Các bước được phép trả về từ bước `key` (rỗng = không cho trả về). */
 export const returnTargets = (block: Block, key: StageKey): StageKey[] => stageConfig(block, key).returnTo ?? [];
 /** Bước đích: bước người xử lý chọn (null nếu không được phép); không chọn thì lấy bước đầu tiên được phép. */

@@ -24,7 +24,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { AppShell, StatusPill, toneBoxColor } from "@/components/AppShell";
-import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
+import { BLOCKS, DEFAULT_NOTIFICATIONS, councilConfirmers, slaFor, slaLabel } from "@/lib/workflow";
 import {
   ASSIGNING_UNIT,
   isSupportCommenter,
@@ -110,7 +110,9 @@ function Index() {
   );
   // Cơ quan Chính trị / Tổ chức Nhân lực / Ban Chiến lược chỉ cho ý kiến: chỉ có tab Danh sách.
   const commenter = isSupportCommenter(previewRole);
-  const activeView = previewRole === "performer" || commenter ? "list" : view;
+  // Bộ phận xác nhận Tổng hợp KI (mặc định Cơ quan Chính trị) có thêm tab Tổng hợp KPI để xác nhận cả lô.
+  const confirmer = commenter && BLOCKS.some((b) => councilConfirmers(b).includes(previewRole));
+  const activeView = previewRole === "performer" || (commenter && !(confirmer && view === "ki")) ? "list" : view;
   const [period, setPeriod] = useState("Quý III/2026");
   const [filter, setFilter] = useState<Set<Step>>(new Set(FILTER_STEPS.map((s) => s.key)));
   const [block, setBlock] = useState<"all" | "Khối Cơ quan" | "Khối Đơn vị">("all");
@@ -200,7 +202,7 @@ function Index() {
             ["appendix", "Phụ lục Kết quả"],
           ] as const
         )
-          .filter(([key]) => ((previewRole !== "performer" && !commenter) || key === "list") && (SHOW_APPENDIX_TAB || key !== "appendix"))
+          .filter(([key]) => ((previewRole !== "performer" && !commenter) || key === "list" || (confirmer && key === "ki")) && (SHOW_APPENDIX_TAB || key !== "appendix"))
           .map(([key, label]) => (
             <button
               role="tab"
@@ -377,7 +379,11 @@ function Index() {
           })()}
 
           {previewRole === "cqtt" && activeView === "kpi" && cqttNotice && <p role="status" className="mb-3 rounded-md border border-success/40 bg-success-soft px-3 py-2 text-sm text-success">{cqttNotice}</p>}
-          {previewRole === "office" && activeView === "kpi" && !rows.some(officeInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi Văn phòng thẩm định bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => setView("list")}>Mở danh sách Chờ thẩm định</Button></div> : previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi CQTT.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách CQTT đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách CQTT đã đánh giá</Button></div> : activeView !== "list" ? (
+          {confirmer && activeView === "ki" ? (() => {
+            // Lô Tổng hợp KI ở bước CQTT chờ bộ phận xác nhận (đã tổng hợp KI, chưa trình ký).
+            const batch = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && ["council", "council_adjust"].includes(e.step) && e.councilSummaryCreated && councilConfirmers(e.block).includes(previewRole));
+            return batch.length ? <AggregateForm evaluations={batch} mode="ki" /> : <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có Tổng hợp KI chờ xác nhận</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi Văn phòng (CQTT) chấm điểm và bấm Tổng hợp KI.</p></div>;
+          })() : previewRole === "office" && activeView === "kpi" && !rows.some(officeInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi Văn phòng thẩm định bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => setView("list")}>Mở danh sách Chờ thẩm định</Button></div> : previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi CQTT.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách CQTT đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách CQTT đã đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
               evaluations={(previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) : rows).filter((e) => (activeView === "kpi" || hasKiData(e)) && (previewRole !== "cqtt" || activeView !== "kpi" || cqttInSummary(e)) && (previewRole !== "office" || activeView !== "kpi" || officeInSummary(e)))}
               mode={activeView}

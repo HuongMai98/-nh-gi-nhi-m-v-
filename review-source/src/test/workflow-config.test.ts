@@ -58,7 +58,7 @@ it("tắt CQTT và CQTT: TGĐ nhận điểm tự đánh giá để phê duyệt
 it("trình ký GĐ bắt buộc, cấu hình cũ không được bỏ qua kết quả ký", () => {
   configure((c) => off(c, "ceo", "dispatch"));
   const e = structuredClone(EVALUATIONS.find((x) => x.step === "council" && x.block === block)!);
-  const next = transition({ ...e, locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ" }, "council", "submit", {}, "now");
+  const next = transition({ ...e, locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", councilConfirmed: { role: "politics", at: "now" } }, "council", "submit", {}, "now");
   expect(next.step).toBe("ceo");
   expect(next.councilScore).toBe(e.councilScore);
 });

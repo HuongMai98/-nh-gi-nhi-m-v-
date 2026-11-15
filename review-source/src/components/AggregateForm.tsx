@@ -2,7 +2,9 @@ import { ListPagination } from "@/components/ListPagination";
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { DirectorSigningDialog } from "@/components/DirectorSigningDialog";
-import { Check, Copy, Download, Save, Send, Undo2 } from "lucide-react";
+import { Check, CheckCircle2, Clock, Copy, Download, Save, Send, Undo2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { councilConfirmCanAdjust, councilConfirmers } from "@/lib/workflow";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AssessmentSummary } from "@/components/AssessmentSummary";
@@ -18,6 +20,9 @@ import {
   templateResult,
   rating,
   kiError,
+  councilConfirmState,
+  needsCouncilConfirm,
+  ROLES,
   type Evaluation,
   type Draft,
   type Ki,
@@ -131,8 +136,9 @@ export function AggregateForm({
           <h2 className="font-semibold">{title}</h2>
           {isKpi && <p className="mt-1 truncate text-xs text-muted-foreground">{"Điểm nhóm là phần điểm đã nhân tỷ trọng theo phiếu giao nhiệm vụ. CQTT chấm trên bảng tổng hợp."}</p>}
         </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some(e => !["council", "council_adjust"].includes(e.step))} title="Xem PDF phiếu đánh giá cá nhân, Tổng hợp KI và chọn phiếu GNV kỳ tới" onClick={() => { setBatchMessage(""); setSigningOpen(true); }}><Send />Trình ký GĐ</Button>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{mode === "ki" && previewRole === "council" && <Button disabled={!evaluations.length || evaluations.some(e => !["council", "council_adjust"].includes(e.step) || needsCouncilConfirm(e))} title={evaluations.some(needsCouncilConfirm) ? "Chờ bộ phận xác nhận Tổng hợp KI trước khi trình ký GĐ" : "Xem PDF phiếu đánh giá cá nhân, Tổng hợp KI và chọn phiếu GNV kỳ tới"} onClick={() => { setBatchMessage(""); setSigningOpen(true); }}><Send />Trình ký GĐ</Button>}{allowPdfExport && <EvaluationExportMenu evaluations={summaryRecords} mode="ki" onCsv={exportData} />}</div>
       </div>
+      {mode === "ki" && <CouncilConfirmBar key={previewRole} evaluations={evaluations} />}
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}
       {signingOpen && mode === "ki" && previewRole === "council" && <DirectorSigningDialog evaluations={evaluations} open={signingOpen} onOpenChange={setSigningOpen} />}
       {!isKpi && <KiDistribution counts={counts} denominator={denominator} total={evaluations.length} />}
@@ -233,7 +239,7 @@ function AggregateRow({
     onDraftChange?.(next);
   };
   const current = { ...e, ...draft, ...(mode === "ki" ? { councilReviewed: true } : {}) };
-  const councilTotalReadOnly = mode === "ki" && previewRole === "council";
+  const councilTotalReadOnly = mode === "ki" && ["council", "politics", "hr", "strategy"].includes(previewRole);
   const result = templateResult(current);
   const numeric = (key: "cqttKey" | "cqttFunction" | "councilScore", label: string) => councilTotalReadOnly
     ? <span aria-label={`${label} ${e.id}`} className="font-medium tabular-nums">{number(current[key])}</span> : (
@@ -447,5 +453,75 @@ function KiDistribution({ counts, denominator, total }: { counts: { ki: string; 
         </div>
       </div>
     </section>
+  );
+}
+
+/** Xác nhận cả lô Tổng hợp KI ở bước CQTT: bộ phận xác nhận (mặc định Cơ quan Chính trị) Xác nhận / Gửi điều chỉnh;
+ * Văn phòng (CQTT) thấy trạng thái, chỉ trình ký GĐ khi đã được xác nhận. */
+function CouncilConfirmBar({ evaluations }: { evaluations: Evaluation[] }) {
+  const { previewRole, confirmCouncil, requestCouncilAdjust } = useEvaluations();
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const batch = evaluations.filter((e) => ["council", "council_adjust"].includes(e.step) && e.councilSummaryCreated && councilConfirmers(e.block).length);
+  if (!batch.length) return null;
+  const confirmers = [...new Set(batch.flatMap((e) => councilConfirmers(e.block)))];
+  const names = confirmers.map((r) => ROLES[r]).join(", ");
+  const states = batch.map(councilConfirmState);
+  const confirmed = batch.filter((e) => e.councilConfirmed);
+  const adjust = batch.filter((e) => e.councilAdjustRequest);
+  const isConfirmer = confirmers.includes(previewRole);
+  const mineDone = isConfirmer && batch.every((e) => e.councilConfirmations?.some((c) => c.role === previewRole));
+  const waitingFor = confirmers.filter((r) => batch.some((e) => councilConfirmers(e.block).includes(r) && !e.councilConfirmations?.some((c) => c.role === r)));
+  const canAdjust = isConfirmer && batch.some((e) => councilConfirmCanAdjust(e.block));
+  const allConfirmed = states.every((s) => s === "confirmed");
+  const last = confirmed.map((e) => e.councilConfirmed!).sort((a, b) => b.at.localeCompare(a.at))[0];
+  const requests = [...new Map(adjust.map((e) => [e.councilAdjustRequest!.note + e.councilAdjustRequest!.at, e.councilAdjustRequest!])).values()];
+  const tone = allConfirmed ? "border-green-200 bg-green-50 text-green-800" : adjust.length ? "border-amber-200 bg-amber-50 text-amber-900" : "border-blue-200 bg-blue-50 text-blue-900";
+  return (
+    <div role="region" aria-label="Xác nhận Tổng hợp KI" className={"flex flex-wrap items-start gap-3 rounded-lg border px-4 py-3 text-sm " + tone}>
+      {allConfirmed ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" /> : <Clock className="mt-0.5 size-4 shrink-0" />}
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="font-medium" data-testid="council-confirm-status">
+          {allConfirmed
+            ? `${ROLES[last?.role ?? confirmers[0]!]} đã xác nhận Tổng hợp KI (${batch.length} phiếu)${last ? ` · ${last.actorName ? last.actorName + " · " : ""}${last.at}` : ""}`
+            : adjust.length
+              ? `${names} yêu cầu Văn phòng (CQTT) điều chỉnh — ${adjust.length}/${batch.length} phiếu`
+              : `Chờ ${(waitingFor.length ? waitingFor : confirmers).map((r) => ROLES[r]).join(", ")} xác nhận Tổng hợp KI — đã xác nhận ${confirmed.length}/${batch.length} phiếu`}
+        </p>
+        {!allConfirmed && requests.map((r, i) => <p key={i} className="whitespace-pre-wrap text-xs">“{r.note}” — {r.actorName ? r.actorName + " · " : ""}{ROLES[r.role]} · {r.at}</p>)}
+        {!allConfirmed && previewRole === "council" && <p className="text-xs opacity-80">{adjust.length ? "Điều chỉnh theo yêu cầu (sửa điểm trên phiếu, tổng hợp lại nếu cần); bộ phận xác nhận sẽ xác nhận lại trước khi trình ký GĐ." : "Chỉ trình ký GĐ được sau khi lô Tổng hợp KI đã được xác nhận."}</p>}
+        {message && <p role="status" className="text-xs">{message}</p>}
+        {error && !open && <p role="alert" className="text-xs text-primary">{error}</p>}
+      </div>
+      {isConfirmer && (
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {canAdjust && <Button type="button" variant="outline" className="bg-card" onClick={() => { setNote(""); setError(""); setMessage(""); setOpen(true); }}><Undo2 />Gửi điều chỉnh</Button>}
+          <Button type="button" disabled={mineDone} onClick={() => {
+            const issue = confirmCouncil(batch.filter((e) => !e.councilConfirmations?.some((c) => c.role === previewRole)).map((e) => e.id));
+            setError(issue ?? ""); setMessage(issue ? "" : `${ROLES[previewRole]} đã xác nhận Tổng hợp KI ${batch.length} phiếu.`);
+          }}><Check />{mineDone ? "Đã xác nhận" : "Xác nhận Tổng hợp KI"}</Button>
+        </div>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <form onSubmit={(event) => {
+            event.preventDefault();
+            if (!note.trim()) { setError("Vui lòng nhập nội dung cần điều chỉnh."); return; }
+            const issue = requestCouncilAdjust(batch.map((e) => e.id), note);
+            if (issue) { setError(issue); return; }
+            setOpen(false); setError(""); setMessage(`Đã gửi điều chỉnh ${batch.length} phiếu cho Văn phòng (CQTT).`);
+          }}>
+            <DialogHeader><DialogTitle>Gửi điều chỉnh cho Văn phòng (CQTT)</DialogTitle><DialogDescription>Phiếu vẫn ở bước CQTT, không trả về. Văn phòng (CQTT) điều chỉnh xong, {ROLES[previewRole]} xác nhận lại trước khi trình ký GĐ.</DialogDescription></DialogHeader>
+            <label className="my-4 block space-y-2 text-sm font-medium">Nội dung cần điều chỉnh <span className="text-primary">*</span>
+              <textarea autoFocus aria-label="Nội dung cần điều chỉnh" className="mt-2 block min-h-28 w-full rounded-md border border-input bg-card p-3 text-sm font-normal" value={note} onChange={(event) => { setNote(event.target.value); setError(""); }} placeholder="Nhập nội dung cần Văn phòng (CQTT) điều chỉnh..." />
+            </label>
+            {error && <p role="alert" className="mb-3 text-sm text-primary">{error}</p>}
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Hủy</Button><Button type="submit"><Send />Gửi điều chỉnh</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

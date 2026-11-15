@@ -1,4 +1,4 @@
-import { customStageOf, handlerFor, isStageEnabled, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
+import { councilConfirmCanAdjust, councilConfirmers, customStageOf, handlerFor, isStageEnabled, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
 export type Step =
   | "self"
   | "office"
@@ -180,6 +180,12 @@ export type Evaluation = {
   cqttFunction?: number | undefined;
   /** CQTT đã tổng hợp điểm nhóm từ chi tiết đánh giá từng công việc. */
   cqttSummarized?: boolean | undefined;
+  /** Bộ phận xác nhận (mặc định Cơ quan Chính trị) đã xác nhận Tổng hợp KI cả lô: Văn phòng (CQTT) mới được trình ký GĐ. */
+  councilConfirmed?: { role: PreviewRole; at: string; actorName?: string } | undefined;
+  /** Từng bộ phận đã xác nhận (khi cấu hình nhiều bộ phận, đủ tất cả mới có councilConfirmed). */
+  councilConfirmations?: { role: PreviewRole; at: string; actorName?: string }[] | undefined;
+  /** Bộ phận xác nhận gửi điều chỉnh cho Văn phòng (CQTT); xoá khi xác nhận lại. */
+  councilAdjustRequest?: { role: PreviewRole; note: string; at: string; actorName?: string } | undefined;
   /** Văn phòng thẩm định đã bấm Tổng hợp đánh giá: phiếu có dữ liệu ở tab Tổng hợp đánh giá. */
   officeSummarized?: boolean | undefined;
   cqttAdjustmentPercent?: number | undefined;
@@ -449,6 +455,37 @@ export function summarizeCqtt(e: Evaluation, role: PreviewRole, at: string): Eva
   const next = { ...e, ...groups, cqttSummarized: true };
   return record(e, next, role, "Tổng hợp đánh giá", "Tổng hợp từ chi tiết đánh giá từng công việc", at);
 }
+/** Phiếu ở bước CQTT đã tổng hợp KI nhưng chưa được bộ phận xác nhận đồng ý → chưa được trình ký GĐ. */
+export const needsCouncilConfirm = (e: Evaluation) => councilConfirmers(e.block).length > 0 && !e.councilConfirmed;
+/** Trạng thái xác nhận của lô Tổng hợp KI. */
+export type CouncilConfirmState = "none" | "pending" | "confirmed" | "adjust";
+export function councilConfirmState(e: Evaluation): CouncilConfirmState {
+  if (!councilConfirmers(e.block).length) return "none";
+  if (e.councilConfirmed) return "confirmed";
+  return e.councilAdjustRequest ? "adjust" : "pending";
+}
+function assertCouncilConfirmer(e: Evaluation, role: PreviewRole) {
+  if (!["council", "council_adjust"].includes(e.step) || !e.councilSummaryCreated) throw new Error(`${e.id}: chỉ xác nhận phiếu CQTT đã tổng hợp KI, chưa trình ký.`);
+  if (!councilConfirmers(e.block).includes(role)) throw new Error(`${ROLES[role]} không có quyền xác nhận Tổng hợp KI của ${e.block}.`);
+}
+/** Bộ phận xác nhận đồng ý Tổng hợp KI (thao tác cả lô gọi cho từng phiếu). */
+export function confirmCouncilSummary(e: Evaluation, role: PreviewRole, at: string, actorName?: string): Evaluation {
+  assertCouncilConfirmer(e, role);
+  const { councilAdjustRequest: _a, ...rest } = e;
+  const mine = { role, at, ...(actorName ? { actorName } : {}) };
+  const confirmations = [...(e.councilConfirmations ?? []).filter((c) => c.role !== role), mine];
+  const all = councilConfirmers(e.block).every((r) => confirmations.some((c) => c.role === r));
+  return record(e, { ...rest, councilConfirmations: confirmations, councilConfirmed: all ? mine : undefined }, role, `Xác nhận Tổng hợp KI — ${ROLES[role]}`, "", at);
+}
+/** Bộ phận xác nhận không đồng ý: gửi điều chỉnh cho Văn phòng (CQTT); phiếu vẫn ở bước CQTT, không trả về. */
+export function requestCouncilAdjust(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
+  assertCouncilConfirmer(e, role);
+  if (!councilConfirmCanAdjust(e.block)) throw new Error(`${ROLES[role]} không có quyền gửi điều chỉnh ở bước CQTT.`);
+  const text = note.trim();
+  if (!text) throw new Error("Vui lòng nhập nội dung cần Văn phòng (CQTT) điều chỉnh.");
+  const { councilConfirmed: _c, councilConfirmations: _cs, ...rest } = e;
+  return record(e, { ...rest, councilAdjustRequest: { role, note: text, at, ...(actorName ? { actorName } : {}) } }, role, "Gửi điều chỉnh — Văn phòng (CQTT)", text, at);
+}
 /** Tab Tổng hợp đánh giá của Văn phòng thẩm định chỉ có dữ liệu sau khi bấm Tổng hợp đánh giá. */
 export const officeInSummary = (e: Evaluation) => e.step !== "office" || !!e.officeSummarized;
 export function summarizeOffice(e: Evaluation, role: PreviewRole, at: string): Evaluation {
@@ -545,6 +582,8 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
   }
   if (next.proposedKi !== undefined && !["A+", "A", "B", "C", "D", "K"].includes(next.proposedKi))
     throw new Error("Đề xuất Ki không hợp lệ.");
+  // Văn phòng (CQTT) sửa điểm/tuân thủ sau khi đã được xác nhận thì cần bộ phận xác nhận lại.
+  if (role === "council" && next.councilConfirmations?.length && JSON.stringify({ ...next, updated: "" }) !== JSON.stringify({ ...e, updated: "" })) { delete next.councilConfirmed; delete next.councilConfirmations; }
   if (cqttTotal(next) !== null && cqttTotal(next)! > 5)
     throw new Error("Tổng điểm CQTT không được vượt 5.");
   if (role === "cqtt") {
@@ -635,7 +674,7 @@ function returnTo(e: Evaluation, role: PreviewRole, from: StageKey | "custom", c
   if (!reason) throw new Error("Vui lòng nhập lý do trả về.");
   const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council";
   const { response: _r, responseNote: _n, responseBaseline: _b, ...rest } = e;
-  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: (from === "office" || from === "support") && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
+  const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: (from === "office" || from === "support") && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}), councilConfirmed: undefined, councilConfirmations: undefined, councilAdjustRequest: undefined };
   return record(e, next, role, `Trả về ${handlerFor(e.block, target)}`, reason, at);
 }
 export function transition(
@@ -737,6 +776,7 @@ export function transition(
     return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách CQTT đã đánh giá.", at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
     if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách CQTT đã đánh giá trước khi trình GĐ.");
+    if (needsCouncilConfirm(e)) throw new Error(`${e.id}: chờ ${councilConfirmers(e.block).map((r) => ROLES[r]).join(", ")} xác nhận Tổng hợp KI trước khi trình ký GĐ.`);
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
@@ -766,7 +806,7 @@ export function receiveDirectorSigningResult(e: Evaluation, outcome: "approved" 
   if (outcome === "approved" && kiError(e)) throw new Error(kiError(e));
   const next: Evaluation = outcome === "approved"
     ? { ...e, step: "done", directorSigningStatus: "approved", approvedScore: e.councilScore, approvedKi: e.ki }
-    : { ...e, step: "council", directorSigningStatus: "returned", councilReviewed: false, councilSummaryCreated: false, note: reason.trim(), approvedScore: undefined, approvedKi: undefined };
+    : { ...e, step: "council", directorSigningStatus: "returned", councilReviewed: false, councilSummaryCreated: false, councilConfirmed: undefined, councilConfirmations: undefined, councilAdjustRequest: undefined, note: reason.trim(), approvedScore: undefined, approvedKi: undefined };
   return record(e, next, "ceo", outcome === "approved" ? "GĐ phê duyệt trình ký" : "GĐ trả lại trình ký", reason.trim(), at);
 }
 

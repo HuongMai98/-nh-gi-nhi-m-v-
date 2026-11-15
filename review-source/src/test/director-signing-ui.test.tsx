@@ -13,7 +13,7 @@ import { DirectorSigningPage } from "@/routes/soan-trinh-ky-gd";
 function Probe() {
   const { evaluations, setPreviewRole, addEvaluation, signingFiles, directorSigningDraft } = useEvaluations();
   const e = evaluations.find(e => e.id === "SIGNING-TEST");
-  return <><button onClick={() => { setPreviewRole("council"); addEvaluation({ ...EVALUATIONS[1]!, id: "SIGNING-TEST", assignmentRef: "GNV-2026-Q3-777", step: "council", councilReviewed: true, councilSummaryCreated: true, councilTaskScored: true, councilScore: 4, ki: "A", locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", criteria: EVALUATIONS[1]!.criteria.map(c => ({ ...c, council: 4 })) }); }}>Chuẩn bị</button>
+  return <><button onClick={() => { setPreviewRole("council"); addEvaluation({ ...EVALUATIONS[1]!, id: "SIGNING-TEST", assignmentRef: "GNV-2026-Q3-777", step: "council", councilReviewed: true, councilSummaryCreated: true, councilConfirmed: { role: "politics", at: "now" }, councilTaskScored: true, councilScore: 4, ki: "A", locationCompliance: "Tuân thủ", laborCompliance: "Tuân thủ", criteria: EVALUATIONS[1]!.criteria.map(c => ({ ...c, council: 4 })) }); }}>Chuẩn bị</button>
     <output data-testid="state">{JSON.stringify({ step: e?.step, note: e?.history?.at(-1)?.note, files: e?.directorSigningId ? signingFiles[e.directorSigningId]?.map(f => f.name) : [] })}</output>
     {directorSigningDraft ? <DirectorSigningPage /> : e && <AggregateForm mode="ki" evaluations={[e]} />}
 </>;
