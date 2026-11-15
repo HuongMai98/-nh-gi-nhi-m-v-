@@ -34,14 +34,14 @@ describe("workflow forms", () => {
     expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
-    screen.getAllByRole("combobox", { name: /Hội đồng đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"5"}}));
+    screen.getAllByRole("combobox", { name: /CQTT đánh giá mục tiêu/ }).forEach(input => fireEvent.change(input,{target:{value:"5"}}));
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tất đánh giá" }));
     expect(record().step).toBe("council");
     expect(record().councilScore).toBe(5);
     fireEvent.click(screen.getByRole("tab", { name: "Phiếu đánh giá" }));
     expect(screen.getAllByText("5.00")).toHaveLength(2);
-    expect(screen.getByRole("columnheader", { name: "QLTT đánh giá (1-5)" })).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/^QLTT đánh giá \d/)).toHaveLength(8);
+    expect(screen.getByRole("columnheader", { name: "CQTT đánh giá (1-5)" })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox",{ name: /^CQTT đánh giá mục tiêu \d/ })).toHaveLength(8);
     expect(
       record().criteria.reduce(
         (sum: number, c: { weight: number; council: number }) => sum + c.weight * c.council,
@@ -91,7 +91,7 @@ it("đang trình ký: điểm chỉ đọc, không còn thao tác duyệt của 
  render(<EvaluationProvider><Screen id="DG-2026-Q3-001" /></EvaluationProvider>); role("ceo");
  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-001")).toBeDisabled();
  expect(screen.queryByRole("button",{name:"Phê duyệt"})).not.toBeInTheDocument();
- expect(screen.queryByRole("button",{name:"Trả lại Hội đồng"})).not.toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Trả lại CQTT"})).not.toBeInTheDocument();
  expect(screen.queryByRole("button",{name:"Lưu tất cả"})).not.toBeInTheDocument();
  expect(screen.queryByText("Mở luồng trình ký GĐ")).not.toBeInTheDocument();
 });

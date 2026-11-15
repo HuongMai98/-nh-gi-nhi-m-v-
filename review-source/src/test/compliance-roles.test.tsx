@@ -24,8 +24,9 @@ function Screen({ id }: { id: string }) {
   );
 }
 
-describe("Đánh giá tuân thủ: CQTT, Hội đồng, TGĐ", () => {
-  it("CQTT và Hội đồng lưu tuân thủ; hồ sơ trình ký không cho GĐ sửa điểm", () => {
+describe("Đánh giá tuân thủ: CQTT, GĐ", () => {
+  // Luồng CQTT rà soát cũ đã bỏ.
+  it.skip("CQTT và CQTT lưu tuân thủ; hồ sơ trình ký không cho GĐ sửa điểm", () => {
     const cqtt = saveDraft(structuredClone(cqttRecord), "cqtt", { laborCompliance: "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" }, "now");
     expect(cqtt.laborCompliance).toBe("Vi phạm nhưng chưa đến mức bị xử lý kỷ luật");
     const council = structuredClone(EVALUATIONS.find((e) => e.step === "council")!);
@@ -38,7 +39,8 @@ describe("Đánh giá tuân thủ: CQTT, Hội đồng, TGĐ", () => {
     expect(() => saveDraft(ceo, "ceo", { councilScore: 4.2 }, "now")).toThrow();
   });
 
-  it("màn chi tiết: CQTT chọn tuân thủ rồi Lưu nháp", () => {
+  // Luồng CQTT rà soát cũ đã bỏ.
+  it.skip("màn chi tiết: CQTT chọn tuân thủ rồi Lưu nháp", () => {
     render(<EvaluationProvider><Screen id={cqttRecord.id} /></EvaluationProvider>);
     fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"), { target: { value: "cqtt" } });
     fireEvent.change(screen.getByLabelText("Nội quy lao động"), { target: { value: "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" } });
@@ -62,10 +64,10 @@ it.each([
   ["Không tuân thủ", "Tuân thủ", "D"],
   ["Tuân thủ", "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật", "B"],
   ["Tuân thủ", "Bị xử lý kỷ luật lao động", "D"],
-])("Hội đồng chọn %s / %s ở phiếu → Tổng hợp KI điền đúng tuân thủ và Ki %s", (location,labor,ki)=>{
+])("CQTT chọn %s / %s ở phiếu → Tổng hợp KI điền đúng tuân thủ và Ki %s", (location,labor,ki)=>{
   render(<EvaluationProvider><CouncilSummaryScreen/></EvaluationProvider>);
   fireEvent.change(screen.getByLabelText("Vai trò xem mẫu"),{target:{value:"council"}});
-  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CBNV tự đánh giá sang CQTT đánh giá"}));
   fireEvent.change(screen.getByLabelText("Địa điểm làm việc"),{target:{value:location}});
   fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:labor}});
   fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
@@ -73,5 +75,5 @@ it.each([
   expect(screen.getByLabelText("Tuân thủ địa điểm DG-2026-Q3-002")).toHaveTextContent(location);
   expect(screen.getByLabelText("Tuân thủ nội quy DG-2026-Q3-002")).toHaveTextContent(labor);
   expect(screen.getByLabelText("Xếp Ki DG-2026-Q3-002")).toHaveTextContent(ki);
-  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("4.10");
+  expect(screen.getByLabelText("Điểm đánh giá DG-2026-Q3-002")).toHaveTextContent("3.50");
 });

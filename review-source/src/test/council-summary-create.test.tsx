@@ -48,7 +48,7 @@ function StaleTotalProbe() {
     <output data-testid="stale-record">{JSON.stringify(e)}</output>
   </>;
 }
-it("Tổng hợp KI tính Điểm đánh giá từ chi tiết Hội đồng, không dùng tổng cũ hoặc Điểm CQTT",()=>{
+it("Tổng hợp KI tính Điểm đánh giá từ chi tiết CQTT, không dùng tổng cũ hoặc Điểm CQTT",()=>{
   render(<EvaluationProvider><StaleTotalProbe/></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chuẩn bị"));
   fireEvent.click(screen.getByText("Tổng hợp KI"));

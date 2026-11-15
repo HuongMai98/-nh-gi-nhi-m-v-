@@ -1,6 +1,7 @@
+// Luồng CQTT rà soát → gửi điều chỉnh CQ/CQĐV → gửi Hội đồng đã bỏ: CQTT làm phần việc Hội đồng (bước council).
 import { expect, it } from "vitest";
 import { EVALUATIONS, processCqttBatch } from "@/lib/evaluation";
-it("sends scored CQTT records to council and inherits their total atomically", () => {
+it.skip("sends scored CQTT records to council and inherits their total atomically", () => {
   const rows = EVALUATIONS.filter((e) => e.step === "cqtt").slice(0, 2);
   const ids = rows.map((e) => e.id);
   const drafts = Object.fromEntries(ids.map((id) => [id, { cqttKey: 0.9, cqttFunction: 2.6 }]));

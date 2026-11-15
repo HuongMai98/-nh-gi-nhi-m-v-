@@ -40,7 +40,7 @@ it("bước tùy chỉnh trả về theo cấu hình, bắt buộc lý do", () =
   withCustom(step());
   const atCustom = transition(atCouncil(), "council", "submit", {}, "now");
   expect(() => transition(atCustom, "ceo", "return", { note: "" }, "now")).toThrow(/lý do/);
-  expect(transition(atCustom, "ceo", "return", { note: "Xem lại Ki" }, "now").step).toBe("council_adjust");
+  expect(transition(atCustom, "ceo", "return", { note: "Xem lại Ki" }, "now").step).toBe("council");
 });
 
 it("bước tùy chỉnh đang tắt bị bỏ qua; hai bước liên tiếp đi đúng thứ tự", () => {

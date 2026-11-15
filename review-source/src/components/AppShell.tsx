@@ -12,7 +12,7 @@ import {
   Settings,
   UserSquare,
 } from "lucide-react";
-import { ROLES, canConfigureWorkflow, roleOf, stageRole, statusLabelOf, STATUS, type PreviewRole } from "@/lib/evaluation";
+import { ROLES, canConfigureWorkflow, isSupportCommenter, roleOf, stageRole, statusLabelOf, STATUS, type PreviewRole } from "@/lib/evaluation";
 import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export function AppShell({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   // Thông báo theo cấu hình luồng duyệt của khối: đến bước / nhắc trước hạn / cảnh báo quá hạn, kênh hệ thống.
   const notifications = evaluations
-    .filter((item) => roleOf(item) === previewRole && item.step !== "done")
+    .filter((item) => (roleOf(item) === previewRole || (item.step === "support" && isSupportCommenter(previewRole) && !item.supportOpinions?.some((o) => o.role === previewRole))) && item.step !== "done")
     .map((item) => {
       const n = { ...DEFAULT_NOTIFICATIONS, ...(workflows[item.block].notifications ?? {}) };
       const sla = slaFor(item);
@@ -181,7 +181,7 @@ export function AppShell({
               }}
               className="h-9 w-36 rounded-md border border-input bg-card px-2 text-sm 2xl:w-auto"
             >
-              {Object.entries(ROLES).filter(([key]) => key !== "ceo").map(([key, label]) => (
+              {Object.entries(ROLES).filter(([key]) => key !== "ceo" && key !== "cqtt").map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>

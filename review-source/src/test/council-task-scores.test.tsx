@@ -7,7 +7,7 @@ import { useEvaluations } from "@/components/evaluation-context";
 import { EvaluationDetail } from "@/routes/danh-gia.$id";
 
 const base = EVALUATIONS.find(e=>e.step === "council")!;
-it("Hội đồng lưu điểm từng công việc, bảo toàn điểm CQTT và không phân bổ lại khi trình TGĐ", () => {
+it("CQTT lưu điểm từng công việc, bảo toàn điểm CQTT và không phân bổ lại khi trình TGĐ", () => {
   const e: Evaluation = { ...base, criteria: base.criteria.map(c=>({...c,cqtt:4})), locationCompliance:"Tuân thủ",laborCompliance:"Tuân thủ" };
   const criteria = e.criteria.map((c,i)=>({...c,council:i%2 ? 4 : 3,cqtt:1,self:1}));
   const saved=saveDraft(e,"council",{criteria},"now");
@@ -34,23 +34,23 @@ it("Hội đồng lưu điểm từng công việc, bảo toàn điểm CQTT và
 function Probe({onFinished}: {onFinished?: () => void}) {
   const {evaluations,setPreviewRole,previewRole}=useEvaluations();
   const e=evaluations.find(e=>e.id===base.id)!;
-  return <><button onClick={()=>setPreviewRole("council")}>Hội đồng</button><output data-testid="record">{JSON.stringify(e)}</output><EvaluationDetail key={`${e.id}-${e.history?.length}-${previewRole}`} ev={e} onCouncilSaved={onFinished}/></>;
+  return <><button onClick={()=>setPreviewRole("council")}>CQTT</button><output data-testid="record">{JSON.stringify(e)}</output><EvaluationDetail key={`${e.id}-${e.history?.length}-${previewRole}`} ev={e} onCouncilSaved={onFinished}/></>;
 }
-it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng công việc rồi Lưu",()=>{
+it("CQTT thấy tham chiếu CQTT, sao chép và sửa điểm từng công việc rồi Lưu",()=>{
   const done=vi.fn();
   render(<EvaluationProvider><Probe onFinished={done}/></EvaluationProvider>);
-  fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  fireEvent.click(screen.getByRole("button",{name:"CQTT"}));
   expect(screen.getByTestId("council-task-rating")).toHaveTextContent("—");
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
   expect(screen.getByTestId("review-score-summary").children).toHaveLength(2);
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("CBNV tự đánh giá");
   expect(screen.getByTestId("review-score-summary")).toHaveTextContent("QLTT đánh giá");
   expect(screen.getByTestId("qltt-summary-score")).toHaveTextContent("—");
-  const inputs=screen.getAllByRole("combobox",{name:/Hội đồng đánh giá mục tiêu/});
+  const inputs=screen.getAllByRole("combobox",{name:/CQTT đánh giá mục tiêu/});
   expect(inputs).toHaveLength(base.criteria.length);
-  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CBNV tự đánh giá sang CQTT đánh giá"}));
   expect((inputs[0] as HTMLInputElement).value).not.toBe("");
-  const expected = cqttTaskScores(base.criteria, cqttTotal(base))!;
+  const expected = base.criteria.map(c=>c.self);
   inputs.forEach((input, i) => {
     expect(input).toHaveValue(String(Math.round(expected[i]! * 100) / 100));
     expect((input as HTMLInputElement).validity.stepMismatch).toBe(false);
@@ -73,9 +73,9 @@ it("Hội đồng thấy tham chiếu CQTT, sao chép và sửa điểm từng c
 
 it("Ki dự kiến cập nhật theo điểm QLTT và tuân thủ ngay trên phiếu, không tự lưu hay hoàn tất",()=>{
   render(<EvaluationProvider><Probe/></EvaluationProvider>);
-  fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  fireEvent.click(screen.getByRole("button",{name:"CQTT"}));
   const before=JSON.parse(screen.getByTestId("record").textContent!);
-  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CBNV tự đánh giá sang CQTT đánh giá"}));
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A");
   fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:"Vi phạm nhưng chưa đến mức bị xử lý kỷ luật"}});
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("B");
@@ -83,9 +83,9 @@ it("Ki dự kiến cập nhật theo điểm QLTT và tuân thủ ngay trên phi
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("D");
   fireEvent.change(screen.getByLabelText("Địa điểm làm việc"),{target:{value:"Tuân thủ"}});
   fireEvent.change(screen.getByLabelText("Nội quy lao động"),{target:{value:"Tuân thủ"}});
-  screen.getAllByRole("combobox",{name:/Hội đồng đánh giá mục tiêu/}).forEach(input=>fireEvent.change(input,{target:{value:"5"}}));
+  screen.getAllByRole("combobox",{name:/CQTT đánh giá mục tiêu/}).forEach(input=>fireEvent.change(input,{target:{value:"5"}}));
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("A+");
-  fireEvent.change(screen.getByRole("combobox",{name:"Hội đồng đánh giá mục tiêu 1"}),{target:{value:""}});
+  fireEvent.change(screen.getByRole("combobox",{name:"CQTT đánh giá mục tiêu 1"}),{target:{value:""}});
   expect(screen.getByTestId("evaluation-ki")).toHaveTextContent("—");
   expect(JSON.parse(screen.getByTestId("record").textContent!)).toEqual(before);
 });
@@ -93,11 +93,11 @@ it("Ki dự kiến cập nhật theo điểm QLTT và tuân thủ ngay trên phi
 it("Hoàn tất đánh giá lưu điểm và về danh sách đã đánh giá, chưa trình TGĐ",()=>{
   const done=vi.fn();
   render(<EvaluationProvider><Probe onFinished={done}/></EvaluationProvider>);
-  fireEvent.click(screen.getByRole("button",{name:"Hội đồng"}));
+  fireEvent.click(screen.getByRole("button",{name:"CQTT"}));
   expect(screen.queryByRole("button",{name:"Trình TGĐ"})).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
   expect(done).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CQTT từng công việc"}));
+  fireEvent.click(screen.getByRole("button",{name:"Sao chép điểm CBNV tự đánh giá sang CQTT đánh giá"}));
   fireEvent.click(screen.getByRole("button",{name:"Hoàn tất đánh giá"}));
   const saved=JSON.parse(screen.getByTestId("record").textContent!);
   expect(saved.step).toBe("council");

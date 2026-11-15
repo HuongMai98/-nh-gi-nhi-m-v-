@@ -61,7 +61,7 @@ const CONFIG_STAGES: StageKey[] = STAGE_ORDER.filter((k) => k !== "dispatch" && 
 /** Cách xử lý đặc thù của một số đích trả về (các đích khác: hồ sơ quay về bước đó kèm lý do). */
 const RETURN_NOTE: Partial<Record<string, string>> = {
   "cqtt>self": "CQĐV/CQ Tiếp thu (cập nhật, gửi CQTT chấm lại) hoặc Bảo lưu (giữ nguyên điểm).",
-  "ceo>council": "Hội đồng điều chỉnh theo comment rồi trình lại GĐ.",
+  "ceo>council": "CQTT điều chỉnh theo comment rồi trình lại GĐ.",
 };
 const STATE_TONE: Record<VersionState, "pending" | "success" | "muted"> = {
   draft: "pending",

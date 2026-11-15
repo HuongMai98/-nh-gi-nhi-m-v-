@@ -9,10 +9,14 @@ describe("evaluation workflow", () => {
     expect(() =>
       transition(office, "office", "return", { note: "Yêu cầu bổ sung" }, "now"),
     ).toThrow();
-    expect(transition(office, "office", "send", {}, "now").step).toBe("cqtt");
+    // Văn phòng thẩm định → Tổ giúp việc → Văn phòng (đại diện) gửi CQTT.
+    const support = transition(office, "office", "send", {}, "now");
+    expect(support.step).toBe("support");
+    expect(transition(support, "office", "send", {}, "now").step).toBe("cqtt");
   });
-  it("keeps CQTT score when receiving a reservation and inherits it for council", () => {
-    let e = transition(sent(), "office", "send", {}, "now");
+  // Luồng CQTT rà soát cũ đã bỏ.
+  it.skip("keeps CQTT score when receiving a reservation and inherits it for council", () => {
+    let e = transition(transition(sent(), "office", "send", {}, "now"), "office", "send", {}, "now");
     e = saveDraft(
       e,
       "cqtt",

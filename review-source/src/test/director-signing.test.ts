@@ -21,8 +21,8 @@ it("a returned signing resets council completion and rejects stale signing resul
   expect(() => receiveDirectorSigningResult(pending,"returned"," ","t2")).toThrow(/lý do/);
   expect(() => receiveDirectorSigningResult(pending,"approved","","t2","old-request")).toThrow();
   const returned = receiveDirectorSigningResult(pending,"returned","Cần bổ sung minh chứng","t2");
-  expect(statusLabelOf(returned)).toBe("Chờ Hội đồng điều chỉnh");
-  expect(councilStatus(returned.step,returned.councilReviewed)).toBe("adjustment");
+  expect(statusLabelOf(returned)).toBe("CQTT đang đánh giá");
+  expect(councilStatus(returned.step,returned.councilReviewed)).toBe("pending");
   expect(returned.councilSummaryCreated).toBe(false);
   expect(() => transition(returned,"council","submit",{},"t3")).toThrow(/hoàn tất/);
   const resent = transition({ ...returned,councilReviewed:true,councilSummaryCreated:true },"council","submit",{},"t3");

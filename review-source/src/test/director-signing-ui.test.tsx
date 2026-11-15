@@ -25,7 +25,7 @@ it("kỳ tới của Quý IV là Quý I năm sau", () => {
   expect(nextPeriod("Quý IV/2026").label).toBe("Quý I/2027");
 });
 
-it("Hội đồng bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi", async () => {
+it("CQTT bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi", async () => {
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:test", revokeObjectURL: () => {} }));
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chuẩn bị"));

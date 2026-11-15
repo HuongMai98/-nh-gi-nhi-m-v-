@@ -10,6 +10,9 @@ import {
   forwardOfficeBatch,
   saveDraft,
   summarizeCqtt,
+  supportComment,
+  addComment,
+  supportConfirm,
   transition,
   type PreviewRole,
   type Draft,
@@ -156,7 +159,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         directorSigningDraft,
         setDirectorSigningDraft,
         submitDirectorSigning: async (ids, options = {}) => {
-          if (previewRole !== "council") return "Chỉ Hội đồng được trình ký GĐ.";
+          if (previewRole !== "council") return "Chỉ CQTT được trình ký GĐ.";
           if (signingInFlight.current) return "Đang tạo hồ sơ trình ký, vui lòng chờ.";
           signingInFlight.current = true;
           try {
@@ -177,7 +180,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
           } catch (error) { return error instanceof Error ? error.message : "Không tạo được hồ sơ trình ký."; } finally { signingInFlight.current = false; }
         },
         processCeoBatch: (ids, action, note, drafts = {}, returnStage) => {
-          if (previewRole !== "ceo") return "Chỉ GĐ được phê duyệt hoặc yêu cầu Hội đồng điều chỉnh.";
+          if (previewRole !== "ceo") return "Chỉ GĐ được phê duyệt hoặc yêu cầu CQTT điều chỉnh.";
           try {
             if (action === "save" || Object.values(drafts).some(d => Object.keys(d).length)) throw new Error("Chỉ nhận kết quả trình ký, không sửa điểm tại bước này.");
             if (!ids.length) throw new Error("Không có hồ sơ chờ phê duyệt.");
@@ -193,12 +196,12 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         },
         saveCouncilBatch: (ids, drafts, submit = false) => {
           if (submit) return "Vui lòng dùng Trình ký GĐ để lập đủ tài liệu đính kèm.";
-          if (previewRole !== "council") return "Chỉ Hội đồng được lưu đánh giá.";
+          if (previewRole !== "council") return "Chỉ CQTT được lưu đánh giá.";
           try {
             if (!ids.length) throw new Error("Không có hồ sơ để lưu.");
             const updates = new Map(ids.map((id) => {
               const e = evaluations.find((e) => e.id === id);
-              if (!e || !["council", "council_adjust"].includes(e.step)) throw new Error("Hồ sơ không còn ở bước Hội đồng đánh giá.");
+              if (!e || !["council", "council_adjust"].includes(e.step)) throw new Error("Hồ sơ không còn ở bước CQTT đánh giá.");
               const at = new Date().toLocaleString("vi-VN");
               const next = saveDraft(e, "council", drafts[id] ?? {}, at);
               const issue = kiError(next);
@@ -211,7 +214,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         },
         createCouncilSummary: (ids) => {
           if (previewRole !== "council") return;
-          // Chỉ tổng hợp các phiếu Hội đồng đã chấm xong; giữ nguyên điểm chi tiết.
+          // Chỉ tổng hợp các phiếu CQTT đã chấm xong; giữ nguyên điểm chi tiết.
           setEvaluations((current) => current.map((e) => {
             if (!ids.includes(e.id) || !["council", "council_adjust"].includes(e.step) || !e.councilReviewed) return e;
             const score = allocatedTotal(e.criteria);
@@ -228,6 +231,27 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
         processCqttBatch: (ids, drafts, request) => {
           try { setEvaluations(processCqttBatch(evaluations, previewRole, ids, drafts, request, new Date().toLocaleString("vi-VN"))); return null; }
           catch (error) { return error instanceof Error ? error.message : "Không thể xử lý danh sách."; }
+        },
+        commentSupport: (id, note) => {
+          try {
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (e.id === id ? addComment(e, previewRole, note, at, CURRENT_USER.name) : e)));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể gửi ý kiến."; }
+        },
+        confirmSupport: (id, note) => {
+          try {
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (e.id === id ? supportConfirm(e, previewRole, note, at, CURRENT_USER.name) : e)));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể xác nhận."; }
+        },
+        sendToSupport: (ids) => {
+          try {
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (ids.includes(e.id) ? transition(e, previewRole, "send", {}, at) : e)));
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể gửi tổ giúp việc."; }
         },
         summarizeCqtt: (ids) => {
           try {

@@ -21,7 +21,8 @@ function Probe({ id, role }: { id: string; role: PreviewRole }) {
 }
 const record = () => JSON.parse(screen.getByTestId("record").textContent ?? "{}");
 describe("assessment summary template", () => {
-  it("groups self and standing-office scores and saves CQTT proposal separately from council", () => {
+  // Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("groups self and standing-office scores and saves CQTT proposal separately from council", () => {
     render(
       <EvaluationProvider>
         <Probe id="DG-2026-Q3-003" role="cqtt" />
@@ -52,7 +53,7 @@ describe("assessment summary template", () => {
 
 function BatchProbe() {
   const [hideFirst, setHideFirst] = useState(false);
-  const { evaluations, setPreviewRole, addEvaluation } = useEvaluations();
+  const { evaluations, setPreviewRole, addEvaluation, updateEvaluation } = useEvaluations();
   const scoped = evaluations.filter(
     (e) => ["DG-2026-Q3-005", "BATCH-002", "DG-2026-Q3-002"].includes(e.id),
   );
@@ -61,14 +62,19 @@ function BatchProbe() {
       <button
         onClick={() => {
           setPreviewRole("office");
+          // Văn phòng thẩm định xong → Tổ giúp việc; Văn phòng (đại diện) tổng hợp gửi CQTT.
           addEvaluation({
             ...evaluations.find((e) => e.id === "DG-2026-Q3-005")!,
             id: "BATCH-002",
+            step: "support",
           });
+
         }}
       >
         Chuẩn bị gửi chung
       </button>
+      <button onClick={() => updateEvaluation("DG-2026-Q3-005", {}, "send")}>Thẩm định 005</button>
+      <button onClick={() => setPreviewRole("support_office")}>Văn phòng Tổ giúp việc</button>
       <output data-testid="batch-records">{JSON.stringify(evaluations)}</output>
       <button onClick={() => setHideFirst(true)}>Lọc hồ sơ khác</button>
       <button onClick={() => setHideFirst(false)}>Hiển thị tất cả</button>
@@ -87,20 +93,24 @@ it("office sends all pending records together", () => {
     </EvaluationProvider>,
   );
   fireEvent.click(screen.getByText("Chuẩn bị gửi chung"));
+  fireEvent.click(screen.getByText("Thẩm định 005"));
+  fireEvent.click(screen.getByText("Văn phòng Tổ giúp việc"));
   fireEvent.click(screen.getByText("Lọc hồ sơ khác"));
   fireEvent.click(screen.getByText("Hiển thị tất cả"));
   fireEvent.click(screen.getByRole("button", { name: "Gửi CQTT" }));
   const all = JSON.parse(screen.getByTestId("batch-records").textContent ?? "[]");
+  // Văn phòng (Tổ giúp việc) gửi CQTT: phiếu sang bước CQTT chấm điểm, tính Ki.
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-005")).toMatchObject({
-    step: "cqtt",
+    step: "council",
   });
-  expect(all.find((e: { id: string }) => e.id === "BATCH-002").step).toBe("cqtt");
+  expect(all.find((e: { id: string }) => e.id === "BATCH-002").step).toBe("council");
   expect(all.find((e: { id: string }) => e.id === "DG-2026-Q3-002").step).toBe("council");
   expect(screen.getByRole("button", { name: "Gửi CQTT" })).toBeDisabled();
-  expect(screen.getByText("Đã gửi 2 phiếu đến CQTT rà soát.")).toBeInTheDocument();
+  expect(screen.getByText("Đã gửi 2 phiếu đến CQTT đánh giá.")).toBeInTheDocument();
 });
 
-it("saves and requests adjustment from the table toolbar", () => {
+// Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("saves and requests adjustment from the table toolbar", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
@@ -122,7 +132,8 @@ it("saves and requests adjustment from the table toolbar", () => {
   expect(r.history.at(-1).note).toContain(r.owner);
 });
 
-it("enables row adjustment request only when CQTT total differs from self total", () => {
+// Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("enables row adjustment request only when CQTT total differs from self total", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   const menu = screen.getByRole("button", { name: "Thao tác gửi DG-2026-Q3-003" });
@@ -155,7 +166,8 @@ it("enables row adjustment request only when CQTT total differs from self total"
   expect(record().note).toBe("Bổ sung minh chứng");
 });
 
-it("Gửi điều chỉnh trên thanh công cụ bắt buộc có Lý do ở danh sách, không mở hộp nhập", () => {
+// Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("Gửi điều chỉnh trên thanh công cụ bắt buộc có Lý do ở danh sách, không mở hộp nhập", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-003" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa DG-2026-Q3-003" }));
@@ -175,7 +187,8 @@ it("Gửi điều chỉnh trên thanh công cụ bắt buộc có Lý do ở dan
   expect(record().note).toBe("Giải trình chênh lệch");
 });
 
-it("CQTT lưu Lý do trước khi gửi điều chỉnh và bấm Chỉnh sửa để sửa lại", () => {
+// Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("CQTT lưu Lý do trước khi gửi điều chỉnh và bấm Chỉnh sửa để sửa lại", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-018" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   expect(record().step).toBe("cqtt_report");
@@ -193,7 +206,8 @@ it("CQTT lưu Lý do trước khi gửi điều chỉnh và bấm Chỉnh sửa 
   expect(screen.getByTestId("ly-do-DG-2026-Q3-018")).toHaveTextContent("Bổ sung minh chứng KPI B.I");
 });
 
-it("Chỉnh sửa tất cả mở lại Lý do đã lưu; Lưu tất cả khoá lại", () => {
+// Luồng CQTT rà soát → gửi điều chỉnh/Hội đồng đã bỏ (CQTT làm phần việc Hội đồng).
+it.skip("Chỉnh sửa tất cả mở lại Lý do đã lưu; Lưu tất cả khoá lại", () => {
   render(<EvaluationProvider><Probe id="DG-2026-Q3-018" role="cqtt" /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   fireEvent.change(screen.getByLabelText("Góp ý CQTT DG-2026-Q3-018"), { target: { value: "Lý do A" } });

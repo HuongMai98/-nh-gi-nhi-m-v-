@@ -20,6 +20,12 @@ type EvaluationState = {
   processCqttBatch: (ids: string[], drafts: Record<string, Draft>, request: boolean | "council") => string | null;
   /** CQTT tổng hợp điểm Thường trực đánh giá từ chi tiết đánh giá từng công việc. */
   summarizeCqtt: (ids: string[]) => string | null;
+  /** Văn phòng gửi các phiếu đã thẩm định sang Tổ giúp việc. */
+  sendToSupport: (ids: string[]) => string | null;
+  /** Bộ phận Tổ giúp việc đang đánh giá (không bắt buộc). */
+  commentSupport: (id: string, note: string) => string | null;
+  /** Bộ phận Tổ giúp việc xác nhận đánh giá. */
+  confirmSupport: (id: string, note: string) => string | null;
   sendOfficeBatch: (ids: string[], drafts?: Record<string, Draft>) => string | null;
   updateEvaluation: (id: string, patch: Draft, action?: Action) => string | null;
   /** Cấu hình đang áp dụng hôm nay của từng khối. */

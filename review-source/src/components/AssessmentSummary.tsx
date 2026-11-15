@@ -23,7 +23,9 @@ export function AssessmentSummary({
   batchCandidates,
   onCouncilSummary,
   onCqttReturned,
+  onOfficeSent,
 }: {
+  onOfficeSent?: ((count: number) => void) | undefined;
   allowPdfExport?: boolean;
   onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
@@ -51,26 +53,27 @@ export function AssessmentSummary({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editAllVersion, setEditAllVersion] = useState(0);
   const [batchFeedback, setBatchFeedback] = useState("");
-  // Văn phòng chỉ chuyển các phiếu đã thẩm định sang CQTT.
-  const pending = (batchCandidates ?? []).filter((e) => e.step === "office");
-  // Văn phòng đếm phiếu chờ thẩm định; CQTT/Hội đồng đếm phiếu đang hiển thị trong bảng.
-  const countRows = previewRole === "office" && pending.length ? pending : evaluations;
+  // Văn phòng (đại diện Tổ giúp việc) tổng hợp các phiếu ở bước Tổ giúp việc và gửi CQTT.
+  const pending = (batchCandidates ?? []).filter((e) => e.step === "support");
+  // Văn phòng đếm phiếu chờ thẩm định; CQTT đếm phiếu đang hiển thị trong bảng.
+  const countRows = previewRole === "support_office" && pending.length ? pending : evaluations;
   const agencyCount = countRows.filter((e) => e.block === "Khối Cơ quan").length;
   const unitCount = countRows.filter((e) => e.block === "Khối Đơn vị").length;
-  const canBatchSend = previewRole === "office" && batchCandidates !== undefined;
+  const canBatchSend = previewRole === "support_office" && batchCandidates !== undefined;
   const sendBatch = (batch: Evaluation[]) => {
     const ids = batch.map((e) => e.id);
     const issue = sendOfficeBatch(ids, batchDrafts);
-    setBatchFeedback(issue ?? `Đã gửi ${ids.length} phiếu đến CQTT rà soát.`);
+    setBatchFeedback(issue ?? `Đã gửi ${ids.length} phiếu đến CQTT đánh giá.`);
+    if (!issue) onOfficeSent?.(ids.length);
     if (!issue)
       setBatchDrafts((current) =>
         Object.fromEntries(Object.entries(current).filter(([id]) => !ids.includes(id))),
       );
   };
   const cqttRows = evaluations.filter((e) => e.step === "cqtt");
-  // Gửi điều chỉnh tại màn Tổng hợp: hồ sơ đang rà soát hoặc đã Hoàn tất đánh giá (chưa gửi Hội đồng).
+  // Gửi điều chỉnh tại màn Tổng hợp: hồ sơ đang rà soát hoặc đã Hoàn tất đánh giá (chưa gửi CQTT).
   const returnRows = evaluations.filter((e) => e.step === "cqtt" || e.step === "cqtt_report");
-  // Cột Thao tác: hàng icon (Chỉnh sửa · Lưu · Gửi Hội đồng), bên dưới là Gửi điều chỉnh.
+  // Cột Thao tác: hàng icon (Chỉnh sửa · Lưu · Gửi CQTT), bên dưới là Gửi điều chỉnh.
   const actionsWidth = showActions ? 200 : 0;
   const eligibleIds = returnRows.filter((e) => { const current = { ...e, ...batchDrafts[e.id] }; const total = cqttTotal(current); return total !== null && Math.abs(total - groupScore(e, true) - groupScore(e, false)) >= 0.005; }).map((e) => e.id);
   const selectedEligible = selectedIds.filter((id) => eligibleIds.includes(id));
@@ -140,7 +143,7 @@ export function AssessmentSummary({
   const handleCqttBatch = (request: boolean | "council") => {
     const drafts = request === true && chosenReturn ? Object.fromEntries(selectedEligible.map((id) => [id, { ...(batchDrafts[id] ?? {}), returnStage: chosenReturn }])) : batchDrafts;
     const issue = processCqttBatch((request === true ? selectedEligible : (request === "council" ? councilRows : cqttRows).map((e) => e.id)), drafts, request);
-    setBatchFeedback(issue ?? (request === "council" ? "Đã gửi hồ sơ sang Hội đồng." : request ? "Đã gửi điều chỉnh cho tất cả hồ sơ." : "Đã lưu tất cả hồ sơ."));
+    setBatchFeedback(issue ?? (request === "council" ? "Đã gửi hồ sơ sang CQTT." : request ? "Đã gửi điều chỉnh cho tất cả hồ sơ." : "Đã lưu tất cả hồ sơ."));
     if (!issue) { setBatchDrafts((current) => request === true ? Object.fromEntries(Object.entries(current).filter(([id]) => !selectedEligible.includes(id))) : {}); if (request === true) setSelectedIds([]); }
   };
   const periods = [...new Set(evaluations.map((e) => e.period))];
@@ -189,7 +192,7 @@ export function AssessmentSummary({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><EditIcon />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi Hội đồng" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi Hội đồng</Button></>}
+          {previewRole === "cqtt" && <><Button variant="outline" disabled={!returnRows.length} onClick={() => setEditAllVersion((version) => version + 1)}><EditIcon />Chỉnh sửa tất cả</Button><Button variant="outline" disabled={!cqttRows.length && !evaluations.some((e) => e.step === "cqtt_report" && batchDrafts[e.id]?.note !== undefined)} onClick={saveAll}><Save />Lưu tất cả</Button>{cqttReturnOn && cqttTargets.length > 1 && <select aria-label="Trả về bước" className="h-9 rounded-md border bg-card px-2 text-sm" value={chosenReturn} onChange={(e) => setCqttReturnStage(e.target.value as StageKey)}>{cqttTargets.map((k) => <option key={k} value={k}>Trả về: {STAGES[k].name}</option>)}</select>}{cqttReturnOn && <Button variant="return" disabled={!selectedEligible.length} onClick={() => sendSelected()}><Undo2 />Gửi điều chỉnh ({selectedEligible.length})</Button>}<Button disabled={!allScored} title={allScored ? "Gửi CQTT" : "Cần chấm đủ điểm hợp lệ cho tất cả hồ sơ"} onClick={() => handleCqttBatch("council")}><Send />Gửi CQTT</Button></>}
           {previewRole === "council" && onCouncilSummary && <Button onClick={onCouncilSummary} disabled={!evaluations.length}>Tổng hợp KI</Button>}
           {canBatchSend && <><Button disabled={!pending.length} onClick={() => sendBatch(pending)}><Send />Gửi CQTT</Button></>}
           {allowPdfExport && <EvaluationExportMenu evaluations={evaluations.map(e => ({ ...e, ...batchDrafts[e.id] }))} mode="kpi" onCsv={onExport} />}
@@ -326,7 +329,7 @@ export function AssessmentSummary({
                 noteRequired={noteRequired.includes(e.id)}
                 initialDraft={batchDrafts[e.id]}
                 onDraftChange={(draft) => {
-                  if (previewRole === "office" || previewRole === "cqtt")
+                  if (previewRole === "support_office" || previewRole === "cqtt")
                     setBatchDrafts((current) => ({ ...current, [e.id]: draft }));
                   onDraftChange?.(draft);
                 }}
@@ -536,7 +539,7 @@ function AssessmentRow({
             <Popover>
               <PopoverTrigger asChild><Button type="button" variant="outline" size="icon" className="h-8 w-8" title="Thao tác gửi" aria-label={`Thao tác gửi ${e.id}`}><MoreVertical /></Button></PopoverTrigger>
               <PopoverContent align="end" className="flex w-auto items-center gap-2 p-2" aria-label="Thao tác gửi hồ sơ">
-                {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi Hội đồng" aria-label={`Gửi Hội đồng ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
+                {e.step === "cqtt_report" && <Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }} title="Gửi CQTT" aria-label={`Gửi CQTT ${e.id}`} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-primary hover:bg-accent"><Send className="h-4 w-4" /></Link>}
                 {returnButton}
               </PopoverContent>
             </Popover>

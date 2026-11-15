@@ -1,3 +1,4 @@
+// Luồng CQTT rà soát → gửi điều chỉnh CQ/CQĐV → gửi Hội đồng đã bỏ: CQTT làm phần việc Hội đồng (bước council).
 import { expect, it } from "vitest";
 import { EVALUATIONS, responseScoreLimits, cqttTotal, saveDraft, transition, type Evaluation } from "@/lib/evaluation";
 
@@ -7,13 +8,13 @@ const returned = (): Evaluation => {
   return transition(e, "cqtt", "request", { note: "Bổ sung minh chứng" }, "now");
 };
 
-it("CQTT gửi điều chỉnh: lưu bản dữ liệu gốc để bảo lưu", () => {
+it.skip("CQTT gửi điều chỉnh: lưu bản dữ liệu gốc để bảo lưu", () => {
   const e = returned();
   expect(e.step).toBe("response");
   expect(e.responseBaseline).toEqual(e.criteria);
 });
 
-it("Tiếp thu: cập nhật toàn bộ dữ liệu và gửi CQTT rà soát, chấm lại", () => {
+it.skip("Tiếp thu: cập nhật toàn bộ dữ liệu và gửi CQTT rà soát, chấm lại", () => {
   const e = returned();
   const limits = responseScoreLimits(e);
   const criteria = e.criteria.map((c, i) => ({ ...c, self: limits[i]!, ...(i === 0 ? { result: "Đã bổ sung" } : {}) }));
@@ -23,7 +24,7 @@ it("Tiếp thu: cập nhật toàn bộ dữ liệu và gửi CQTT rà soát, ch
   expect(next.history?.at(-1)?.action).toBe("Tiếp thu");
 });
 
-it("Bảo lưu: bắt buộc lý do, giữ nguyên dữ liệu cá nhân và điểm CQTT, chuyển Tổng hợp báo cáo", () => {
+it.skip("Bảo lưu: bắt buộc lý do, giữ nguyên dữ liệu cá nhân và điểm CQTT, chuyển Tổng hợp báo cáo", () => {
   const e = returned();
   const edited = saveDraft(e, "performer", { criteria: e.criteria.map((c) => ({ ...c, self: 1 })) }, "now");
   expect(() => transition(saveDraft(edited, "performer", { response: "Bảo lưu" }, "now"), "performer", "respond", {}, "now")).toThrow(/lý do bảo lưu/);

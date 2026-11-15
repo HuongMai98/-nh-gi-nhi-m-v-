@@ -19,7 +19,7 @@ function Probe() {
   );
 }
 
-it("Tổng hợp KI của Hội đồng chỉ hiển thị dữ liệu, không có ô nhập hoặc nút Lưu", () => {
+it("Tổng hợp KI của CQTT chỉ hiển thị dữ liệu, không có ô nhập hoặc nút Lưu", () => {
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chọn vai trò"));
   expect(screen.queryByRole("columnheader", { name: "Điểm CQTT" })).not.toBeInTheDocument();
@@ -32,9 +32,9 @@ it("Tổng hợp KI của Hội đồng chỉ hiển thị dữ liệu, không c
   expect(screen.queryByRole("button", { name: "Lưu DG-2026-Q3-002" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Lưu tất cả" })).not.toBeInTheDocument();
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
-  expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
+  expect(screen.getByText(/CQTT đã chấm/).textContent).toContain("0/1");
   expect(screen.getByTestId("reviewed").textContent).toBe("false");
-  expect(screen.getByText(/Hội đồng đã chấm/).textContent).toContain("0/1");
+  expect(screen.getByText(/CQTT đã chấm/).textContent).toContain("0/1");
 });
 
 function CeoProbe() {

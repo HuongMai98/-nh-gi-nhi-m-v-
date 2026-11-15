@@ -55,12 +55,12 @@ export function exportCsv(name: string, rows: (string | number | null | undefine
 }
 /** Màu nhận diện mức Ki (dùng chung cho thẻ, thanh phân bố, nhãn). */
 const KI_TONES = [
-  { ki: "A+", label: "Vượt xa yêu cầu", badge: "bg-emerald-600 text-white", bar: "bg-emerald-500", text: "text-emerald-600", card: "border-emerald-200 bg-emerald-50/60" },
-  { ki: "A", label: "Vượt yêu cầu", badge: "bg-blue-600 text-white", bar: "bg-blue-500", text: "text-blue-600", card: "border-blue-200 bg-blue-50/60" },
-  { ki: "B", label: "Đạt yêu cầu", badge: "bg-violet-600 text-white", bar: "bg-violet-500", text: "text-violet-600", card: "border-violet-200 bg-violet-50/60" },
-  { ki: "C", label: "Gần đạt yêu cầu", badge: "bg-amber-500 text-white", bar: "bg-amber-500", text: "text-amber-600", card: "border-amber-200 bg-amber-50/60" },
-  { ki: "D", label: "Không đạt yêu cầu", badge: "bg-rose-600 text-white", bar: "bg-rose-500", text: "text-rose-600", card: "border-rose-200 bg-rose-50/60" },
-  { ki: "K", label: "Không đánh giá", badge: "bg-slate-500 text-white", bar: "bg-slate-400", text: "text-slate-600", card: "border-slate-200 bg-slate-50" },
+  { ki: "A+", hex: "#10b981", label: "Vượt xa yêu cầu", badge: "bg-emerald-600 text-white", bar: "bg-emerald-500", text: "text-emerald-600", card: "border-emerald-200 bg-emerald-50/60" },
+  { ki: "A", hex: "#3b82f6", label: "Vượt yêu cầu", badge: "bg-blue-600 text-white", bar: "bg-blue-500", text: "text-blue-600", card: "border-blue-200 bg-blue-50/60" },
+  { ki: "B", hex: "#8b5cf6", label: "Đạt yêu cầu", badge: "bg-violet-600 text-white", bar: "bg-violet-500", text: "text-violet-600", card: "border-violet-200 bg-violet-50/60" },
+  { ki: "C", hex: "#f59e0b", label: "Gần đạt yêu cầu", badge: "bg-amber-500 text-white", bar: "bg-amber-500", text: "text-amber-600", card: "border-amber-200 bg-amber-50/60" },
+  { ki: "D", hex: "#f43f5e", label: "Không đạt yêu cầu", badge: "bg-rose-600 text-white", bar: "bg-rose-500", text: "text-rose-600", card: "border-rose-200 bg-rose-50/60" },
+  { ki: "K", hex: "#94a3b8", label: "Không đánh giá", badge: "bg-slate-500 text-white", bar: "bg-slate-400", text: "text-slate-600", card: "border-slate-200 bg-slate-50" },
 ] as const;
 export function AggregateForm({
   allowPdfExport = true,
@@ -70,7 +70,9 @@ export function AggregateForm({
   batchCandidates,
   onCouncilSummary,
   onCqttReturned,
+  onOfficeSent,
 }: {
+  onOfficeSent?: ((count: number) => void) | undefined;
   allowPdfExport?: boolean;
   onCqttReturned?: ((count: number) => void) | undefined;
   onCouncilSummary?: (() => void) | undefined;
@@ -95,7 +97,7 @@ export function AggregateForm({
         ? "Tổng hợp kết quả đánh giá và xếp hạng KI"
         : "Phụ lục Kết quả";
   const isKpi = mode === "kpi";
-  // Tổng hợp KI sử dụng điểm Hội đồng đã chấm ở chi tiết công việc.
+  // Tổng hợp KI sử dụng điểm CQTT đã chấm ở chi tiết công việc.
   const hideCqtt = mode === "ki" || previewRole === "ceo";
   const summaryRecords = evaluations.map((e) => ({ ...e, ...councilDrafts[e.id], ...(mode === "ki" ? { councilReviewed: true } : {}) }));
   const counts = KI.map((ki) => ({
@@ -113,6 +115,7 @@ export function AggregateForm({
         key={previewRole}
         onCouncilSummary={onCouncilSummary}
         onCqttReturned={onCqttReturned}
+        onOfficeSent={onOfficeSent}
         batchCandidates={batchCandidates}
         evaluations={evaluations}
         allowPdfExport={allowPdfExport}
@@ -132,53 +135,13 @@ export function AggregateForm({
       </div>
       {batchMessage && <p role="status" className="text-sm">{batchMessage}</p>}
       {signingOpen && mode === "ki" && previewRole === "council" && <DirectorSigningDialog evaluations={evaluations} open={signingOpen} onOpenChange={setSigningOpen} />}
-      {!isKpi && <section aria-label="Phân bố xếp hạng Ki" className="rounded-xl border bg-card p-3 shadow-sm 2xl:p-4">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3>
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Tổng <b className="tabular-nums text-foreground">{evaluations.length}</b></span>
-          </div>
-          <span className="ml-auto text-[11px] text-muted-foreground">Tỷ lệ tính trên số cá nhân có Ki (không gồm K)</span>
-        </div>
-        {/* Thanh phân bố tổng: mỗi đoạn là tỷ lệ một mức Ki. */}
-        <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={"Tỷ lệ Ki: " + KI_TONES.filter((x) => x.ki !== "K").map((x) => x.ki + " " + (denominator ? Math.round((counts.find((c) => c.ki === x.ki)?.n ?? 0) / denominator * 100) : 0) + "%").join(", ")}>
-          {KI_TONES.filter((x) => x.ki !== "K").map((x) => {
-            const n = counts.find((c) => c.ki === x.ki)?.n ?? 0;
-            return n && denominator ? <div key={x.ki} className={"h-full transition-[width] first:rounded-l-full last:rounded-r-full " + x.bar} style={{ width: (n / denominator) * 100 + "%" }} title={`${x.ki}: ${Math.round((n / denominator) * 100)}%`} /> : null;
-          })}
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-6 2xl:gap-3">
-          {counts.map((c) => {
-            const percent = c.ki === "K" || !denominator ? 0 : Math.round(c.n / denominator * 100);
-            const tone = KI_TONES.find((x) => x.ki === c.ki)!;
-            const active = c.n > 0;
-            return <div key={c.ki} className={"relative overflow-hidden rounded-lg border px-3 py-2.5 transition-colors " + (active ? tone.card : "bg-card opacity-70")}>
-              <span aria-hidden className={"absolute inset-y-0 left-0 w-1 " + (active ? tone.bar : "bg-transparent")} />
-              <div className="flex items-center justify-between gap-2">
-                <span className={"inline-flex min-w-9 justify-center rounded-md px-2 py-0.5 text-sm font-bold " + tone.badge}>{c.ki}</span>
-                <span className="truncate text-[11px] font-medium text-muted-foreground" title={tone.label}>{tone.label}</span>
-              </div>
-              <div className="mt-2 flex items-end justify-between gap-2">
-                <span className="flex flex-col leading-none">
-                  <span className={"text-2xl font-bold tabular-nums 2xl:text-3xl " + (active ? tone.text : "text-muted-foreground")}>{c.ki === "K" ? "—" : percent}<span className="ml-0.5 text-sm font-semibold">{c.ki === "K" ? "" : "%"}</span></span>
-                  <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">tỷ lệ</span>
-                </span>
-                <span className="flex flex-col items-end leading-none">
-                  <strong data-testid={`ki-count-${c.ki}`} className={"text-2xl font-bold tabular-nums 2xl:text-3xl " + (active ? "text-foreground" : "text-muted-foreground")}>{c.n}</strong>
-                  <span className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">cá nhân</span>
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/5"><div className={"h-full rounded-full transition-[width] " + tone.bar} style={{ width: (c.ki === "K" ? 0 : percent) + "%" }} /></div>
-            </div>;
-          })}
-        </div>
-      </section>}
+      {!isKpi && <KiDistribution counts={counts} denominator={denominator} total={evaluations.length} />}
       </div>
       {mode === "ki" && previewRole === "council" && (
         <div aria-label="Thống kê phiếu" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           {([["Cơ quan", evaluations.filter((e) => e.block === "Khối Cơ quan").length], ["Đơn vị", evaluations.filter((e) => e.block === "Khối Đơn vị").length], ["Tổng", evaluations.length]] as const).map(([label, count]) => <span key={label} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-1">{label}<b className="font-semibold tabular-nums text-foreground">{count}</b>phiếu</span>)}
           <span className="text-border">|</span>
-          <span>Hội đồng đã chấm <b className="tabular-nums text-foreground">{evaluations.filter((e) => e.councilReviewed).length}/{evaluations.length}</b></span>
+          <span>CQTT đã chấm <b className="tabular-nums text-foreground">{evaluations.filter((e) => e.councilReviewed).length}/{evaluations.length}</b></span>
         </div>
       )}
       <div className={mode === "ki" ? "relative isolate max-h-[calc(100dvh-8rem)] overflow-auto rounded-lg border" : "overflow-x-auto rounded-lg border"}>
@@ -406,7 +369,7 @@ function AggregateRow({
                 const range = KI_SCORE_RANGES[current.ki];
                 if (current.councilScore === undefined || current.councilScore < range.min || current.councilScore > range.max) { setError(`Điểm Ki ${current.ki} phải trong khoảng ${range.min}–${range.max}.`); return; }
               }
-              // Lưu cả khi giữ nguyên giá trị điền sẵn: Hội đồng bấm Lưu là đã chấm (giống Lưu tất cả).
+              // Lưu cả khi giữ nguyên giá trị điền sẵn: CQTT bấm Lưu là đã chấm (giống Lưu tất cả).
               const issue = updateEvaluation(e.id, previewRole === "council" ? { ...draft, ki: current.ki } : draft);
               setError(issue ?? "Đã lưu");
             }}
@@ -424,5 +387,65 @@ function AggregateRow({
         )}
       </td>
     </tr>
+  );
+}
+
+/** Phân bố xếp hạng Ki: vòng tròn tỷ lệ đạt yêu cầu, thẻ số lượng từng mức Ki và chỉ số tổng quan. */
+function KiDistribution({ counts, denominator, total }: { counts: { ki: string; n: number }[]; denominator: number; total: number }) {
+  const n = (ki: string) => counts.find((c) => c.ki === ki)?.n ?? 0;
+  const pct = (v: number) => (denominator ? Math.round((v / denominator) * 1000) / 10 : 0);
+  const passed = n("A+") + n("A") + n("B");
+  const classified = counts.reduce((sum, c) => sum + c.n, 0);
+  const missing = total - classified;
+  const r = 54, circumference = 2 * Math.PI * r;
+  let offset = 0;
+  const arcs = KI_TONES.filter((t) => t.ki !== "K" && n(t.ki) > 0 && denominator).map((t) => {
+    const length = (n(t.ki) / denominator) * circumference;
+    const arc = { ki: t.ki, hex: t.hex, length, offset };
+    offset += length;
+    return arc;
+  });
+  return (
+    <section aria-label="Phân bố xếp hạng Ki" className="rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h3 className="text-sm font-semibold">Phân bố xếp hạng Ki</h3>
+        <span className={"inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium " + (missing ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700")}>
+          <span className={"h-1.5 w-1.5 rounded-full " + (missing ? "bg-amber-500" : "bg-emerald-500")} />
+          {missing ? `Còn ${missing}/${total} phiếu chưa xếp Ki` : `Đã xếp Ki đủ ${total} phiếu`}
+        </span>
+        <span className="ml-auto text-[11px] text-muted-foreground">Tỷ lệ tính trên số cá nhân có Ki (không gồm K)</span>
+      </div>
+      <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
+        <div className="flex items-center justify-center gap-5 rounded-xl border px-4 py-3">
+          <div className="relative h-36 w-36" role="img" aria-label={"Tỷ lệ Ki: " + KI_TONES.filter((x) => x.ki !== "K").map((x) => `${x.ki} ${pct(n(x.ki))}%`).join(", ")}>
+            <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
+              <circle cx="64" cy="64" r={r} fill="none" stroke="currentColor" strokeWidth="12" className="text-muted" />
+              {arcs.map((a) => <circle key={a.ki} cx="64" cy="64" r={r} fill="none" stroke={a.hex} strokeWidth="12" strokeDasharray={`${Math.max(a.length - (arcs.length > 1 ? 2 : 0), 0)} ${circumference}`} strokeDashoffset={-a.offset} className="transition-all duration-500"><title>{`${a.ki}: ${pct(n(a.ki))}%`}</title></circle>)}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-2xl font-bold tabular-nums leading-none">{denominator ? `${pct(passed)}%` : "—"}</span>
+              <span className="mt-1 max-w-24 text-[11px] leading-tight text-muted-foreground">Đạt yêu cầu trở lên</span>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-y-2 rounded-xl bg-muted/50 p-3 sm:grid-cols-6 [&>*:nth-child(3n+1)]:border-l-0 sm:[&>*:nth-child(3n+1)]:border-l sm:[&>*:first-child]:border-l-0">
+          {KI_TONES.map((t) => {
+            const count = n(t.ki);
+            return (
+              <div key={t.ki} className={"flex flex-col justify-between gap-3 border-l px-3 py-2 " + (count ? "" : "opacity-60")}>
+                <div className="flex items-start gap-2">
+                  <span aria-hidden className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: t.hex }} />
+                  <span className="min-w-0 leading-tight"><b className="block text-sm">{t.ki}</b><span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{t.label}</span></span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <strong data-testid={`ki-count-${t.ki}`} className="text-3xl font-bold tabular-nums leading-none">{count}</strong>
+                  <span className={"text-xs font-medium tabular-nums " + (count ? t.text : "text-muted-foreground")}>{t.ki === "K" ? "\u00a0" : `${pct(count)}%`}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }

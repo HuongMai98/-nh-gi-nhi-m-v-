@@ -5,7 +5,7 @@ export type Block = Evaluation["block"];
 export const BLOCKS: Block[] = ["Khối Cơ quan", "Khối Đơn vị"];
 
 export type StageKey = "self" | "office" | "cqtt" | "council" | "ceo" | "dispatch" | "sign";
-/** Thứ tự bước cố định theo phụ thuộc dữ liệu: điểm tự ĐG → điểm CQTT → Ki Hội đồng → phê duyệt → phát hành. */
+/** Thứ tự bước cố định theo phụ thuộc dữ liệu: điểm tự ĐG → điểm CQTT → Ki CQTT → phê duyệt → phát hành. */
 export const STAGE_ORDER: StageKey[] = ["self", "office", "cqtt", "council", "ceo", "dispatch", "sign"];
 
 export type StageConfig = {
@@ -78,7 +78,8 @@ export const STAGES: Record<
     required: false,
     description: "Văn phòng thẩm định phiếu CQĐV/CQ gửi; có thể yêu cầu điều chỉnh trước khi tổng hợp.",
     handlers: ["Văn phòng", "Ban Chiến lược", "Ban Tổ chức lao động"],
-    steps: ["office"],
+    // Gồm cả bước Tổ giúp việc đang đánh giá sau khi Văn phòng thẩm định.
+    steps: ["office", "support"],
   },
   cqtt: {
     name: "Rà soát, chấm điểm",
@@ -89,18 +90,18 @@ export const STAGES: Record<
     steps: ["cqtt", "response", "cqtt_report"],
   },
   council: {
-    name: "Chấm điểm, tính Ki",
+    name: "CQTT chấm điểm, tính Ki",
     role: "council",
     required: false,
-    description: "Hội đồng kế thừa điểm, xếp Ki, xác nhận tuân thủ và trình phê duyệt.",
-    handlers: ["Hội đồng", "Hội đồng thi đua"],
+    description: "CQTT (Văn phòng · Cơ quan Chính trị) chấm từng công việc, tổng hợp KI, xác nhận tuân thủ và trình ký GĐ.",
+    handlers: ["CQTT"],
     steps: ["council", "council_adjust"],
   },
   ceo: {
     name: "Trình ký GĐ",
     role: "ceo",
     required: true,
-    description: "Hội đồng trình ký hồ sơ và tài liệu đính kèm; nhận kết quả GĐ duyệt hoặc trả lại.",
+    description: "CQTT trình ký hồ sơ và tài liệu đính kèm; nhận kết quả GĐ duyệt hoặc trả lại.",
     handlers: ["GĐ"],
     steps: ["ceo"],
   },
@@ -108,7 +109,7 @@ export const STAGES: Record<
     name: "Gửi kết quả",
     role: "office",
     required: true,
-    description: "Hội đồng gửi kết quả đã duyệt, đơn vị tổng hợp gửi lại CQĐV/CQ.",
+    description: "CQTT gửi kết quả đã duyệt, đơn vị tổng hợp gửi lại CQĐV/CQ.",
     handlers: ["Văn phòng", "Ban Chiến lược", "Ban Tổ chức lao động"],
     steps: ["approved", "dispatch"],
   },
@@ -126,7 +127,9 @@ export function stageOf(step: Step): StageKey {
   return STAGE_ORDER.find((key) => STAGES[key].steps.includes(step)) ?? "self";
 }
 
-const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { office: ["self"], cqtt: ["self"], ceo: ["council"] };
+const DEFAULT_RETURN: Partial<Record<StageKey, StageKey[]>> = { office: ["self"], ceo: ["council"] };
+/** Bước "Rà soát, chấm điểm" cũ của CQTT đã gộp vào bước CQTT chấm điểm, tính Ki (không còn gửi Hội đồng). */
+export const RETIRED_STAGES: StageKey[] = ["cqtt"];
 export function defaultWorkflow(block: Block): WorkflowConfig {
   const unit = block === "Khối Cơ quan" ? "Văn phòng" : "Ban Chiến lược";
   const sla: Record<StageKey, number> = { self: 7, office: 3, cqtt: 5, council: 5, ceo: 3, dispatch: 3, sign: 5 };
@@ -134,7 +137,7 @@ export function defaultWorkflow(block: Block): WorkflowConfig {
     block,
     stages: STAGE_ORDER.map((key) => ({
       key,
-      enabled: true,
+      enabled: !RETIRED_STAGES.includes(key),
       handler: key === "office" || key === "dispatch" ? unit : STAGES[key].handlers[0]!,
       slaDays: sla[key],
       returnTo: [...(DEFAULT_RETURN[key] ?? [])],
@@ -208,7 +211,7 @@ export function validateWorkflow(c: WorkflowConfig): string[] {
     }
   }
   if (!on("cqtt") && !on("council") && !on("ceo"))
-    errors.push("Cần bật ít nhất một bước chấm điểm/phê duyệt (CQTT, Hội đồng hoặc GĐ).");
+    errors.push("Cần bật ít nhất một bước chấm điểm/phê duyệt (CQTT hoặc GĐ).");
   for (const s of c.stages)
     if (s.enabled && s.returnTo.some((t) => !returnOptions(c, s.key).includes(t)))
       errors.push(`Bước "${STAGES[s.key].name}" chỉ được trả về bước đứng trước và đang bật.`);
@@ -234,7 +237,7 @@ export function normalizeBranches(c: WorkflowConfig): WorkflowConfig {
     stages: c.stages.map((s) => ({
       ...s,
       // Bước bắt buộc (Tự đánh giá, Gửi kết quả, Trình ký) luôn bật.
-      enabled: STAGES[s.key].required ? true : s.enabled,
+      enabled: STAGES[s.key].required ? true : RETIRED_STAGES.includes(s.key) ? false : s.enabled,
       // Gửi kết quả do chính đơn vị tổng hợp đầu vào thực hiện.
       handler: s.key === "dispatch" ? (c.stages.find((x) => x.key === "office")?.handler ?? s.handler) : s.handler,
       returnTo: s.returnTo.filter((t) => returnOptions(c, s.key).includes(t)),
@@ -367,7 +370,7 @@ export function resolveReturn(block: Block, key: StageKey, chosen?: StageKey): S
 export function returnLabel(block: Block, from: StageKey, to: StageKey): string {
   if (from === "office" && to === "self") return "Yêu cầu CQ/CQĐV điều chỉnh";
   if (from === "cqtt" && to === "self") return "Gửi điều chỉnh CQ/CQĐV";
-  if (from === "ceo" && to === "council") return "Yêu cầu Hội đồng điều chỉnh";
+  if (from === "ceo" && to === "council") return "Yêu cầu CQTT điều chỉnh";
   return `Trả về ${handlerFor(block, to)}`;
 }
 

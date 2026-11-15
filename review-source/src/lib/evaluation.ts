@@ -2,6 +2,8 @@ import { customStageOf, handlerFor, nextNode, resolveReturn, returnTargets, stag
 export type Step =
   | "self"
   | "office"
+  /** Tổ giúp việc (Văn phòng, Cơ quan Chính trị, Tổ chức Nhân lực, Ban Chiến lược) cho ý kiến. */
+  | "support"
   | "cqtt"
   | "response"
   | "cqtt_report"
@@ -14,16 +16,35 @@ export type Step =
   | "done"
   /** Bước duyệt tùy chỉnh theo cấu hình (xem customStageId). */
   | "custom";
-export type PreviewRole = "performer" | "office" | "cqtt" | "council" | "ceo" | "admin";
+export type PreviewRole = "performer" | "office" | "support_office" | "politics" | "hr" | "strategy" | "cqtt" | "council" | "ceo" | "admin";
 export type Ki = "A+" | "A" | "B" | "C" | "D" | "K";
 export const ROLES: Record<PreviewRole, string> = {
   performer: "CQĐV/CQ",
-  office: "Văn phòng / Ban Chiến lược",
-  cqtt: "CQTT",
-  council: "Hội đồng",
+  office: "Văn phòng thẩm định",
+  support_office: "Văn phòng (Tổ giúp việc)",
+  politics: "Cơ quan Chính trị",
+  hr: "Tổ chức Nhân lực",
+  strategy: "Ban Chiến lược",
+  /** Vai trò CQTT cũ (rà soát rồi gửi Hội đồng) đã gộp vào "council"; ẩn khỏi ô chọn vai trò. */
+  cqtt: "CQTT (rà soát cũ)",
+  council: "CQTT",
   ceo: "GĐ (trình ký)",
   admin: "Quản trị hệ thống",
 };
+/**
+ * Tổ giúp việc: Văn phòng là đại diện (tổng hợp, gửi CQTT); Cơ quan Chính trị, Tổ chức Nhân lực,
+ * Ban Chiến lược cho ý kiến (không bắt buộc). Cả 4 bộ phận được gửi điều chỉnh cho CQ/CQĐV.
+ */
+export const SUPPORT_TEAM: { role: PreviewRole; name: string; lead?: boolean }[] = [
+  { role: "support_office", name: "Văn phòng", lead: true },
+  { role: "politics", name: "Cơ quan Chính trị" },
+  { role: "hr", name: "Tổ chức Nhân lực" },
+  { role: "strategy", name: "Ban Chiến lược" },
+];
+export const isSupportRole = (role: PreviewRole) => SUPPORT_TEAM.some((m) => m.role === role);
+/** Bộ phận cho ý kiến (không gồm Văn phòng đại diện). */
+export const isSupportCommenter = (role: PreviewRole) => isSupportRole(role) && role !== "support_office";
+export type SupportOpinion = { role: PreviewRole; dept: string; note: string; at: string; actorName?: string; confirmed?: boolean };
 /** Chỉ Quản trị hệ thống được cấu hình luồng duyệt. */
 export const canConfigureWorkflow = (role: PreviewRole) => role === "admin";
 export const ASSIGNING_UNIT = {
@@ -41,13 +62,14 @@ export const appendixFor = (_e: Evaluation) => "Phụ lục Kết quả";
 export const STEPS: { key: Step; label: string; actor: string }[] = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Văn phòng thẩm định", actor: "Văn phòng" },
-  { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
+  { key: "support", label: "Tổ giúp việc đang đánh giá", actor: "Tổ giúp việc" },
+  { key: "cqtt", label: "CQTT rà soát (luồng cũ)", actor: "CQTT" },
   { key: "response", label: "Chờ CQ/CQĐV phản hồi", actor: "CQĐV/CQ" },
   { key: "cqtt_report", label: "Tổng hợp báo cáo", actor: "CQTT" },
-  { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
+  { key: "council", label: "CQTT đang đánh giá", actor: "VP · CQ Chính trị" },
   { key: "ceo", label: "Đang trình ký", actor: "GĐ" },
-  { key: "council_adjust", label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" },
-  { key: "approved", label: "Gửi kết quả đã duyệt", actor: "Hội đồng" },
+  { key: "council_adjust", label: "Chờ CQTT điều chỉnh", actor: "CQTT" },
+  { key: "approved", label: "Gửi kết quả đã duyệt", actor: "CQTT" },
   { key: "dispatch", label: "Phân phối kết quả", actor: "VP / Ban CL" },
   { key: "sign", label: "Trình ký phiếu ĐG", actor: "CQĐV/CQ" },
   { key: "done", label: "Đã phê duyệt", actor: "CQĐV/CQ" },
@@ -56,13 +78,14 @@ export const STEPS: { key: Step; label: string; actor: string }[] = [
 export const MAIN_STEPS = [
   { key: "self", label: "Chờ tự đánh giá", actor: "CQĐV/CQ" },
   { key: "office", label: "Văn phòng thẩm định", actor: "Văn phòng" },
-  { key: "cqtt", label: "CQTT đang đánh giá", actor: "CQTT" },
-  { key: "council", label: "Hội đồng đánh giá", actor: "Hội đồng" },
+  { key: "support", label: "Tổ giúp việc đang đánh giá", actor: "VP · CQ Chính trị · TCNL · Ban CL" },
+  // CQTT (Văn phòng · Cơ quan Chính trị) làm luôn phần việc của Hội đồng: chấm, tổng hợp KI, trình ký GĐ.
+  { key: "council", label: "CQTT đang đánh giá", actor: "VP · CQ Chính trị" },
   { key: "ceo", label: "Đang trình ký", actor: "GĐ" },
-  { key: "approved", label: "Đã phê duyệt", actor: "Hội đồng → VP/Ban CL → CQĐV/CQ" },
+  { key: "approved", label: "Đã phê duyệt", actor: "CQTT → VP/Ban CL → CQĐV/CQ" },
 ] as const;
 export type MainStage = (typeof MAIN_STEPS)[number]["key"];
-const MAIN_OF_STAGE: Record<StageKey, MainStage> = { self: "self", office: "office", cqtt: "cqtt", council: "council", ceo: "ceo", dispatch: "approved", sign: "approved" };
+const MAIN_OF_STAGE: Record<StageKey, MainStage> = { self: "self", office: "office", cqtt: "council", council: "council", ceo: "ceo", dispatch: "approved", sign: "approved" };
 /** Nhóm trạng thái chính của hồ sơ; bước tùy chỉnh thuộc nhóm của bước đặt trước nó. */
 export function mainStageOf(e: Evaluation): MainStage {
   if (e.step !== "custom") return mainStage(e.step);
@@ -79,7 +102,7 @@ export const statusToneOf = (e: Evaluation): StatusTone =>
   e.step === "self" && e.officeReturnPending ? "warning" : STATUS[e.step].tone;
 export function mainStage(step: Step): MainStage {
   if (step === "custom") return "council";
-  if (step === "response" || step === "cqtt_report") return "cqtt";
+  if (step === "cqtt" || step === "response" || step === "cqtt_report") return "council";
   if (step === "council_adjust") return "council";
   if (["approved", "dispatch", "sign", "done"].includes(step)) return "approved";
   return step as MainStage;
@@ -89,6 +112,7 @@ export type StatusTone =
 const statusTones: Record<Step, StatusTone> = {
   self: "pending",
   office: "info",
+  support: "info",
   cqtt: "review",
   response: "warning",
   cqtt_report: "review",
@@ -131,6 +155,8 @@ export type HistoryEntry = {
   after: string;
 };
 export type Evaluation = {
+  /** Ý kiến của các bộ phận Tổ giúp việc (không bắt buộc). */
+  supportOpinions?: SupportOpinion[] | undefined;
   id: string;
   unit: string;
   block: "Khối Cơ quan" | "Khối Đơn vị";
@@ -177,7 +203,7 @@ export type Evaluation = {
   customAfter?: StageKey | undefined;
   /** Thời điểm hồ sơ vào bước hiện tại (ISO) — dùng tính hạn xử lý. */
   stageEnteredAt?: string;
-  /** GĐ đã điều chỉnh trực tiếp điểm/Ki của Hội đồng trước khi phê duyệt. */
+  /** GĐ đã điều chỉnh trực tiếp điểm/Ki của CQTT trước khi phê duyệt. */
   ceoAdjusted?: boolean;
   approvedScore?: number | undefined;
   approvedKi?: Ki | undefined;
@@ -210,6 +236,7 @@ export type Action =
 export const stageRole: Record<Step, PreviewRole> = {
   self: "performer",
   office: "office",
+  support: "support_office",
   cqtt: "cqtt",
   response: "performer",
   cqtt_report: "cqtt",
@@ -469,7 +496,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
     next.criteria = e.criteria.map((c, i) => {
       const value = patch.criteria![i]!.council;
       if (value !== undefined && (!Number.isFinite(value) || value < 1 || value > 5))
-        throw new Error("Điểm Hội đồng từng công việc phải từ 1 đến 5.");
+        throw new Error("Điểm CQTT từng công việc phải từ 1 đến 5.");
       return { ...c, council: value };
     });
     next.councilTaskScored = true;
@@ -551,7 +578,7 @@ export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: st
 }
 /**
  * Đưa hồ sơ vào bước `key` theo cấu hình luồng duyệt, khởi tạo dữ liệu còn thiếu khi bỏ qua bước
- * (vd. tắt CQTT → Hội đồng kế thừa điểm tự đánh giá).
+ * (vd. tắt CQTT → CQTT kế thừa điểm tự đánh giá).
  */
 export function enterStage(e: Evaluation, key: StageKey): Evaluation {
   const withScore = (x: Evaluation): Evaluation => {
@@ -595,7 +622,7 @@ function returnTo(e: Evaluation, role: PreviewRole, from: StageKey | "custom", c
   const target = chosen ? (allowed.includes(chosen) ? chosen : null) : (allowed[0] ?? null);
   if (!target) throw new Error("Luồng duyệt của khối không cho phép trả về ở bước này.");
   if (!reason) throw new Error("Vui lòng nhập lý do trả về.");
-  const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council_adjust";
+  const step: Step = target === "self" ? "self" : target === "office" ? "office" : target === "cqtt" ? "cqtt" : "council";
   const { response: _r, responseNote: _n, responseBaseline: _b, ...rest } = e;
   const next: Evaluation = { ...rest, step, customStageId: undefined, customAfter: undefined, note: reason, officeReturnPending: from === "office" && target === "self", ...(target === "self" || target === "office" ? { councilSummaryCreated: false } : {}) };
   return record(e, next, role, `Trả về ${handlerFor(e.block, target)}`, reason, at);
@@ -607,7 +634,8 @@ export function transition(
   patch: Draft,
   at: string,
 ): Evaluation {
-  if (roleOf(e) !== role) throw new Error("Vai trò không được thực hiện bước này.");
+  if (roleOf(e) !== role && !(e.step === "support" && isSupportRole(role) && action === "return"))
+    throw new Error("Vai trò không được thực hiện bước này.");
   const reason = (patch.note ?? e.note ?? "").trim();
   const requireReason = () => {
     if (!reason) throw new Error("Vui lòng nhập lý do yêu cầu điều chỉnh.");
@@ -624,6 +652,12 @@ export function transition(
       throw new Error("Nhập đủ kết quả, điểm 1–5 và tổng tỷ trọng 100%.");
     next = { ...advance(next, { kind: "fixed", key: "self" }), selfSubmittedAt: at, officeReturnPending: false };
   } else if (e.step === "office") {
+    // Văn phòng thẩm định xong → Tổ giúp việc đang đánh giá.
+    if (action === "send") return record(e, { ...e, step: "support", supportOpinions: [] }, role, "Gửi tổ giúp việc", "", at);
+    else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
+    else throw new Error("Thao tác không hợp lệ.");
+  } else if (e.step === "support") {
+    // Văn phòng (đại diện Tổ giúp việc) tổng hợp và gửi CQTT; mọi bộ phận được gửi điều chỉnh CQ/CQĐV.
     if (action === "send") next = advance(e, { kind: "fixed", key: "office" });
     else if (action === "return") return returnTo(e, role, "office", patch.returnStage, reason, at);
     else throw new Error("Thao tác không hợp lệ.");
@@ -688,9 +722,9 @@ export function transition(
     if (!e.criteria.length || e.criteria.some(c => c.council === undefined || !Number.isFinite(c.council) || c.council < 1 || c.council > 5))
       throw new Error("Nhập đủ điểm QLTT đánh giá từ 1 đến 5 cho từng công việc trước khi hoàn tất.");
     if (kiError(e)) throw new Error(kiError(e));
-    return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách Hội đồng đã đánh giá.", at);
+    return record(e, { ...e, councilReviewed: true }, role, "Hoàn tất đánh giá", "Chờ tổng hợp KI từ danh sách CQTT đã đánh giá.", at);
   } else if (["council", "council_adjust"].includes(e.step) && action === "submit") {
-    if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách Hội đồng đã đánh giá trước khi trình GĐ.");
+    if (e.councilTaskScored && (!e.councilReviewed || !e.councilSummaryCreated)) throw new Error("Hãy hoàn tất đánh giá và tổng hợp KI từ danh sách CQTT đã đánh giá trước khi trình GĐ.");
     if (kiError(e)) throw new Error(kiError(e));
     if (!e.locationCompliance || !e.laborCompliance)
       throw new Error("Vui lòng xác nhận đánh giá tuân thủ.");
@@ -720,10 +754,39 @@ export function receiveDirectorSigningResult(e: Evaluation, outcome: "approved" 
   if (outcome === "approved" && kiError(e)) throw new Error(kiError(e));
   const next: Evaluation = outcome === "approved"
     ? { ...e, step: "done", directorSigningStatus: "approved", approvedScore: e.councilScore, approvedKi: e.ki }
-    : { ...e, step: "council_adjust", directorSigningStatus: "returned", councilReviewed: false, councilSummaryCreated: false, note: reason.trim(), approvedScore: undefined, approvedKi: undefined };
+    : { ...e, step: "council", directorSigningStatus: "returned", councilReviewed: false, councilSummaryCreated: false, note: reason.trim(), approvedScore: undefined, approvedKi: undefined };
   return record(e, next, "ceo", outcome === "approved" ? "GĐ phê duyệt trình ký" : "GĐ trả lại trình ký", reason.trim(), at);
 }
 
+/** Bộ phận Tổ giúp việc đang đánh giá (không bắt buộc); gửi lại sẽ thay ý kiến trước của bộ phận đó. */
+export function supportComment(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
+  if (e.step !== "support" || !isSupportCommenter(role)) throw new Error("Chỉ bộ phận Tổ giúp việc đang đánh giá khi phiếu ở bước Tổ giúp việc.");
+  const text = note.trim();
+  if (!text) throw new Error("Vui lòng nhập nội dung ý kiến.");
+  const dept = SUPPORT_TEAM.find((m) => m.role === role)!.name;
+  const prev = supportOpinionOf(e, role);
+  const opinions = [...(e.supportOpinions ?? []).filter((o) => o.role !== role), { role, dept, note: text, at, ...(actorName ? { actorName } : {}), ...(prev?.confirmed ? { confirmed: true } : {}) }];
+  return record(e, { ...e, supportOpinions: opinions }, role, `Cho ý kiến — ${dept}`, text, at);
+}
+/** Bộ phận Tổ giúp việc xác nhận đánh giá (kèm ý kiến nếu có). */
+export function supportConfirm(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
+  if (e.step !== "support" || !isSupportCommenter(role)) throw new Error("Chỉ bộ phận Tổ giúp việc xác nhận khi phiếu ở bước Tổ giúp việc.");
+  const dept = SUPPORT_TEAM.find((m) => m.role === role)!.name;
+  const text = note.trim() || supportOpinionOf(e, role)?.note || "";
+  const opinions = [...(e.supportOpinions ?? []).filter((o) => o.role !== role), { role, dept, note: text, at, confirmed: true, ...(actorName ? { actorName } : {}) }];
+  return record(e, { ...e, supportOpinions: opinions }, role, `Xác nhận đánh giá — ${dept}`, text, at);
+}
+/**
+ * Ý kiến xử lý (tính năng chung): mọi vai trò cho ý kiến trên phiếu ở bất kỳ bước nào; ghi vào lịch sử.
+ * Bộ phận Tổ giúp việc ở bước Tổ giúp việc: ý kiến đồng thời ghi nhận vào khung Ý kiến Tổ giúp việc.
+ */
+export function addComment(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
+  if (e.step === "support" && isSupportCommenter(role)) return supportComment(e, role, note, at, actorName);
+  const text = note.trim();
+  if (!text) throw new Error("Vui lòng nhập nội dung ý kiến.");
+  return record(e, e, role, "Ý kiến", text, at);
+}
+export const supportOpinionOf = (e: Evaluation, role: PreviewRole) => e.supportOpinions?.find((o) => o.role === role);
 export function forwardOfficeBatch(
   evaluations: Evaluation[],
   role: PreviewRole,
@@ -731,12 +794,13 @@ export function forwardOfficeBatch(
   drafts: Record<string, Draft>,
   at: string,
 ): Evaluation[] {
-  if (role !== "office") throw new Error("Chỉ Văn phòng/Ban Chiến lược được gửi tổng hợp.");
+  if (role !== "support_office") throw new Error("Chỉ Văn phòng (đại diện Tổ giúp việc) được tổng hợp gửi CQTT.");
   const selectedIds = new Set(ids);
-  if (!selectedIds.size) throw new Error("Không có phiếu đang tổng hợp để gửi CQTT.");
+  if (!selectedIds.size) throw new Error("Không có phiếu ở bước Tổ giúp việc để gửi CQTT.");
   const selected = evaluations.filter((e) => selectedIds.has(e.id));
-  if (selected.length !== selectedIds.size || selected.some((e) => e.step !== "office"))
-    throw new Error("Danh sách đã thay đổi. Chỉ gửi các phiếu đang tổng hợp.");
+  // Văn phòng đại diện Tổ giúp việc: tổng hợp các phiếu ở bước Tổ giúp việc và gửi CQTT.
+  if (selected.length !== selectedIds.size || selected.some((e) => e.step !== "support"))
+    throw new Error("Danh sách đã thay đổi. Chỉ gửi các phiếu đang ở bước Tổ giúp việc.");
   const scope = selected[0]!;
   if (selected.some((e) => e.period !== scope.period))
     throw new Error("Mỗi lần gửi phải cùng kỳ đánh giá.");
@@ -919,7 +983,7 @@ extraSamples.forEach(([owner, unit, block, step], index) => {
   const council = ["council", "ceo", "council_adjust", "approved", "dispatch", "sign", "done"].includes(step);
   const approved = ["approved", "dispatch", "sign", "done"].includes(step);
   const criteria = EVALUATIONS[3]!.criteria.map((c) => ({ ...c, target: { ...c.target } }));
-  const note = step === "response" ? "CQTT yêu cầu bổ sung minh chứng và phản hồi về điểm đánh giá." : step === "council_adjust" ? "GĐ yêu cầu Hội đồng rà soát lại điểm và căn cứ xếp Ki." : "";
+  const note = step === "response" ? "CQTT yêu cầu bổ sung minh chứng và phản hồi về điểm đánh giá." : step === "council_adjust" ? "GĐ yêu cầu CQTT rà soát lại điểm và căn cứ xếp Ki." : "";
   EVALUATIONS.push({
     id: "DG-2026-Q3-" + sequence, owner, unit, block, step,
     period: "Quý III/2026", employeeId: String(92000 + index), jobTitle: "Chỉ huy cơ quan/đơn vị", location: "Hà Nội",
@@ -937,6 +1001,7 @@ extraSamples.forEach(([owner, unit, block, step], index) => {
 });
 
 // Tăng số lượng mẫu để thử bảng tổng hợp, tìm kiếm và lọc hai khối.
+const SUPPORT_SAMPLE_COUNT = 6;
 const summaryUnits = [
   ["Ban Tài chính", "Ban Nhân sự", "Ban Kỹ thuật", "Ban Pháp chế", "Văn phòng Tập đoàn"],
   ["Tổng công ty Viễn thông Viettel", "Tổng công ty Mạng lưới Viettel", "Trung tâm Công nghệ thông tin", "Tổng công ty Giải pháp doanh nghiệp Viettel", "Tổng công ty Công nghiệp Công nghệ cao"],
@@ -946,7 +1011,7 @@ for (let i = 0; i < 60; i++) {
   const blockIndex = i % 2;
   const block: Evaluation["block"] = blockIndex === 0 ? "Khối Cơ quan" : "Khối Đơn vị";
   const pending = i < 40;
-  const step: Step = pending ? "office" : ["cqtt", "council", "ceo", "done"][Math.floor((i - 40) / 2) % 4] as Step;
+  const step: Step = pending ? (i >= 40 - SUPPORT_SAMPLE_COUNT ? "support" : "office") : ["cqtt", "council", "ceo", "done"][Math.floor((i - 40) / 2) % 4] as Step;
   const sequence = String(i + 26).padStart(3, "0");
   const council = ["council", "ceo", "done"].includes(step);
   const baseRecord = EVALUATIONS[3]!;
@@ -1016,7 +1081,7 @@ export function councilAutoKi(e: Evaluation): Ki {
   return e.laborCompliance === "Vi phạm nhưng chưa đến mức bị xử lý kỷ luật" && ["A+", "A"].includes(ki) ? "B" : ki;
 }
 /**
- * Hội đồng sao chép kết quả CQTT: Điểm đánh giá = Điểm CQTT, Ki = Ki CQTT đề xuất (nếu có, không thì theo điểm),
+ * CQTT sao chép kết quả CQTT: Điểm đánh giá = Điểm CQTT, Ki = Ki CQTT đề xuất (nếu có, không thì theo điểm),
  * và điền Tuân thủ địa điểm / nội quy sao cho khớp Ki đó (Ki D: bị xử lý kỷ luật; Ki thấp hơn mức điểm: vi phạm nội quy).
  */
 export function councilCopyFromCqtt(e: Evaluation): Draft {
@@ -1034,3 +1099,26 @@ export function councilCopyFromCqtt(e: Evaluation): Draft {
 export function councilKiDraft(ki: Ki): Draft {
   return { ki, councilScore: ki === "K" ? undefined : KI_SCORE_RANGES[ki].min };
 }
+
+// Mẫu bước Tổ giúp việc: một số phiếu đã có ý kiến của các bộ phận.
+EVALUATIONS.filter((e) => e.step === "support").forEach((e, i) => {
+  e.supportOpinions = [
+    ...(i % 2 === 0 ? [{ role: "politics" as PreviewRole, dept: "Cơ quan Chính trị", note: "Thống nhất kết quả tự đánh giá.", at: "02/11/2026 09:00:00" }] : []),
+    ...(i % 3 === 0 ? [{ role: "hr" as PreviewRole, dept: "Tổ chức Nhân lực", note: "Đề nghị bổ sung minh chứng nhiệm vụ đào tạo nội bộ.", at: "02/11/2026 10:30:00" }] : []),
+  ];
+});
+
+// Bỏ luồng CQTT gửi Hội đồng: hồ sơ mẫu ở bước rà soát CQTT cũ chuyển sang bước CQTT chấm điểm, tính Ki.
+EVALUATIONS.forEach((e) => {
+  if (["cqtt", "response", "cqtt_report"].includes(e.step)) {
+    e.step = "council";
+    delete e.response;
+    delete e.responseNote;
+  }
+  // CQTT không còn bước điều chỉnh: hồ sơ mẫu "Chờ CQTT điều chỉnh" về lại CQTT đang đánh giá.
+  if (e.step === "council_adjust") {
+    e.step = "council";
+    e.note = "";
+    delete e.directorSigningStatus;
+  }
+});

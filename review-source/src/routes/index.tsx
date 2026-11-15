@@ -4,7 +4,7 @@ import { EditIcon, FilterIcon } from "@/components/icons";
 import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
 import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
 import { cqttStatus, type CqttStatus } from "@/lib/cqtt-filter";
-import { officeAggregationStatus, officeSubmissionSummary, type OfficeStatus } from "@/lib/office-filter";
+import { officeAggregationStatus, officeSubmissionSummary, supportOfficeStatus, supportStatus, type OfficeStatus, type SupportStatus } from "@/lib/office-filter";
 import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -14,10 +14,12 @@ import {
   ClipboardCheck,
   Eye,
   KanbanSquare,
+  MessageSquarePlus,
   List,
   Plus,
   RefreshCw,
   Search,
+  Send,
   Settings,
   ChevronUp,
 } from "lucide-react";
@@ -25,6 +27,8 @@ import { AppShell, StatusPill, toneBoxColor } from "@/components/AppShell";
 import { DEFAULT_NOTIFICATIONS, slaFor, slaLabel } from "@/lib/workflow";
 import {
   ASSIGNING_UNIT,
+  isSupportCommenter,
+  isSupportRole,
   STATUS,
   MAIN_STEPS,
   mainStage,
@@ -53,10 +57,10 @@ import { useEvaluations } from "@/components/evaluation-context";
 
 // ponytail: tạm ẩn tab Phụ lục Kết quả, đổi thành true khi có nghiệp vụ dùng lại (code vẫn giữ nguyên).
 const SHOW_APPENDIX_TAB = false;
-/** Tổng hợp KPI (Ki) và Phụ lục chỉ có dữ liệu khi CQTT đã hoàn tất rà soát và gửi Hội đồng. */
+/** Tổng hợp KPI (Ki) và Phụ lục chỉ có dữ liệu khi CQTT đã hoàn tất rà soát và gửi CQTT. */
 const KI_DATA_STEPS: Step[] = ["council", "council_adjust", "ceo", "approved", "dispatch", "sign", "done"];
 const hasKiData = (e: Evaluation) => KI_DATA_STEPS.includes(e.step) || (e.step === "custom" && e.councilScore !== undefined);
-const FILTER_STEPS = [...MAIN_STEPS.slice(0, 3), { key: "response" as const, label: "Chờ CQ/CQĐV phản hồi", actor: "CQ/CQĐV" }, MAIN_STEPS[3], { key: "council_adjust" as const, label: "Chờ Hội đồng điều chỉnh", actor: "Hội đồng" }, ...MAIN_STEPS.slice(4)];
+const FILTER_STEPS = MAIN_STEPS;
 const listStage = (e: Evaluation) => e.step === "response" || e.step === "council_adjust" ? e.step : mainStageOf(e);
 
 export const Route = createFileRoute("/")({
@@ -95,13 +99,17 @@ function Index() {
     catch { setRefreshMessage("Chưa thể làm mới. Vui lòng thử lại."); }
     finally { setRefreshing(false); }
   }
-  const { evaluations, previewRole, createCouncilSummary, workflows, summarizeCqtt } = useEvaluations();
+  const { evaluations, previewRole, createCouncilSummary, workflows, summarizeCqtt, sendToSupport } = useEvaluations();
+  const [officeNotice, setOfficeNotice] = useState("");
+  const [sentToSupport, setSentToSupport] = useState(false);
   const [cqttError, setCqttError] = useState("");
   const [cqttNotice, setCqttNotice] = useState("");
   const [view, setView] = useState<"list" | "kpi" | "ki" | "appendix">(
     previewRole === "office" ? "kpi" : "list",
   );
-  const activeView = previewRole === "performer" ? "list" : view;
+  // Cơ quan Chính trị / Tổ chức Nhân lực / Ban Chiến lược chỉ cho ý kiến: chỉ có tab Danh sách.
+  const commenter = isSupportCommenter(previewRole);
+  const activeView = previewRole === "performer" || commenter ? "list" : view;
   const [period, setPeriod] = useState("Quý III/2026");
   const [filter, setFilter] = useState<Set<Step>>(new Set(FILTER_STEPS.map((s) => s.key)));
   const [block, setBlock] = useState<"all" | "Khối Cơ quan" | "Khối Đơn vị">("all");
@@ -111,6 +119,7 @@ function Index() {
   const { cqtt: cqttSearch } = Route.useSearch();
   const [cqttFilter, setCqttFilter] = useState<CqttStatus>(cqttSearch ?? "pending");
   const [officeStatus, setOfficeStatus] = useState<OfficeStatus>("pending");
+  const [supportFilter, setSupportFilter] = useState<SupportStatus>("pending");
   const [unitFilter, setUnitFilter] = useState("");
   const [kiFilter, setKiFilter] = useState("");
   const emptyAdvanced = { employeeId: "", owner: "", block: "", status: "", id: "" };
@@ -130,25 +139,25 @@ function Index() {
           e.period === period &&
           // Bước tùy chỉnh: hiện ở nhóm "chờ xử lý" của vai trò được cấu hình xử lý bước đó.
           (e.step === "custom" && previewRole !== "performer" && roleOf(e) === previewRole
-            ? (previewRole === "office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter) === "pending"
-            : previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e))) &&
+            ? (previewRole === "office" || previewRole === "support_office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter) === "pending"
+            : commenter ? supportStatus(e, previewRole) === supportFilter : previewRole === "support_office" ? supportOfficeStatus(e) === officeStatus : previewRole === "office" ? officeAggregationStatus(e) === officeStatus : previewRole === "cqtt" ? cqttStatus(e) === cqttFilter : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) === councilFilter : previewRole === "ceo" ? ceoStatus(e.step) === ceoFilter : filter.has(listStage(e))) &&
           (block === "all" || e.block === block) &&
           (!unitFilter || e.unit === unitFilter) &&
           matchesAdvancedSearch(e, extraFilter) &&
           (!kiFilter || (kiFilter === "unrated" ? !e.ki : (e.approvedKi ?? e.ki) === kiFilter)) &&
           `${e.unit} ${e.owner} ${ASSIGNING_UNIT.name}`.toLowerCase().includes(q.toLowerCase()),
       ),
-    [evaluations, period, filter, block, q, previewRole, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter],
+    [evaluations, period, filter, block, q, previewRole, commenter, officeStatus, supportFilter, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter],
   );
   const [pageSize, setPageSize] = useState(10);
-  const scope = JSON.stringify([previewRole, activeView, period, [...filter], block, q, officeStatus, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter, pageSize]);
+  const scope = JSON.stringify([previewRole, activeView, period, [...filter], block, q, officeStatus, supportFilter, cqttFilter, councilFilter, ceoFilter, unitFilter, kiFilter, extraFilter, pageSize]);
   const [pagination, setPagination] = useState({ scope, page: 1 });
   const page = pagination.scope === scope ? Math.min(pagination.page, Math.max(1, Math.ceil(rows.length / pageSize))) : 1;
   const pageRows = rows.slice((page - 1) * pageSize, page * pageSize);
-  const selectedRoleStatus = previewRole === "office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter;
-  const roleStatus = (e: Evaluation) => e.step === "custom" && roleOf(e) === previewRole ? "pending" : previewRole === "office" ? officeAggregationStatus(e) : previewRole === "cqtt" ? cqttStatus(e) : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) : ceoStatus(e.step);
-  const roleStatusOptions = (previewRole === "office" ? [{ key: "pending", label: "Chờ thẩm định" }, { key: "completed", label: "Đã thẩm định" }] : previewRole === "cqtt" ? [{ key: "pending", label: "Chờ CQTT đánh giá" }, { key: "report", label: "Đã hoàn tất đánh giá" }, { key: "waiting", label: "Chờ CQ/CQĐV phản hồi" }, { key: "submitted", label: "Đã trình Hội đồng" }] : previewRole === "council" ? COUNCIL_FILTERS : CEO_FILTERS).map(option => ({ ...option, tone: option.key === "approved" || option.key === "completed" || option.key === "report" ? "success" as const : option.key === "adjustment" || option.key === "waiting" ? "warning" as const : "info" as const }));
-  const changeRoleStatus = (value: string) => { setSelectedBatch(undefined); if (previewRole === "office") setOfficeStatus(value as OfficeStatus); else if (previewRole === "cqtt") setCqttFilter(value as CqttStatus); else if (previewRole === "council") setCouncilFilter(value as CouncilFilter); else setCeoFilter(value as CeoFilter); };
+  const selectedRoleStatus = commenter ? supportFilter : previewRole === "office" || previewRole === "support_office" ? officeStatus : previewRole === "cqtt" ? cqttFilter : previewRole === "council" ? councilFilter : ceoFilter;
+  const roleStatus = (e: Evaluation) => commenter ? supportStatus(e, previewRole) : previewRole === "support_office" ? supportOfficeStatus(e) : e.step === "custom" && roleOf(e) === previewRole ? "pending" : previewRole === "office" ? officeAggregationStatus(e) : previewRole === "cqtt" ? cqttStatus(e) : previewRole === "council" ? councilStatus(e.step, !!e.councilReviewed) : ceoStatus(e.step);
+  const roleStatusOptions = (commenter ? [{ key: "pending", label: "Chờ cho ý kiến" }, { key: "commented", label: "Đã xác nhận / cho ý kiến" }, { key: "sent", label: "Đã gửi CQTT" }] : previewRole === "support_office" ? [{ key: "pending", label: "Chờ tổng hợp" }, { key: "completed", label: "Đã gửi CQTT" }] : previewRole === "office" ? [{ key: "pending", label: "Chờ thẩm định" }, { key: "completed", label: "Đã gửi tổ giúp việc" }] : previewRole === "cqtt" ? [{ key: "pending", label: "Chờ CQTT đánh giá" }, { key: "report", label: "Đã hoàn tất đánh giá" }, { key: "waiting", label: "Chờ CQ/CQĐV phản hồi" }, { key: "submitted", label: "Đã trình CQTT" }] : previewRole === "council" ? COUNCIL_FILTERS : CEO_FILTERS).map(option => ({ ...option, tone: option.key === "approved" || option.key === "completed" || option.key === "report" || option.key === "commented" || option.key === "sent" ? "success" as const : option.key === "adjustment" || option.key === "waiting" ? "warning" as const : "info" as const }));
+  const changeRoleStatus = (value: string) => { setSelectedBatch(undefined); setOfficeNotice(""); if (commenter) setSupportFilter(value as SupportStatus); else if (previewRole === "office" || previewRole === "support_office") setOfficeStatus(value as OfficeStatus); else if (previewRole === "cqtt") setCqttFilter(value as CqttStatus); else if (previewRole === "council") setCouncilFilter(value as CouncilFilter); else setCeoFilter(value as CeoFilter); };
   const toggle = (k: Step) =>
     setFilter((s) => {
       const n = new Set(s);
@@ -190,7 +199,7 @@ function Index() {
             ["appendix", "Phụ lục Kết quả"],
           ] as const
         )
-          .filter(([key]) => (previewRole !== "performer" || key === "list") && (SHOW_APPENDIX_TAB || key !== "appendix"))
+          .filter(([key]) => ((previewRole !== "performer" && !commenter) || key === "list") && (SHOW_APPENDIX_TAB || key !== "appendix"))
           .map(([key, label]) => (
             <button
               role="tab"
@@ -228,7 +237,7 @@ function Index() {
               <option key={value}>{value}</option>
             ))}
           </select>
-          {["office", "cqtt", "council", "ceo"].includes(previewRole) ? <>
+          {["office", "support_office", "cqtt", "council", "ceo"].includes(previewRole) || commenter ? <>
             <div className="mb-3 border-b pb-3 font-medium">Trạng thái</div>
             <div className="space-y-4">{roleStatusOptions.map(option => <label key={option.key} className="flex cursor-pointer items-center gap-2 text-foreground">
               <span className="relative grid size-5 shrink-0 place-items-center"><input type="checkbox" checked={selectedRoleStatus === option.key} onChange={() => changeRoleStatus(option.key)} style={{ "--box": toneBoxColor[option.tone] } as React.CSSProperties} className="peer size-5 cursor-pointer appearance-none rounded-md border border-body bg-card checked:border-[var(--box)] checked:bg-[var(--box)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" /><Check aria-hidden strokeWidth={3} className="pointer-events-none absolute size-3.5 text-white opacity-0 peer-checked:opacity-100" /></span>
@@ -367,19 +376,20 @@ function Index() {
           })()}
 
           {previewRole === "cqtt" && activeView === "kpi" && cqttNotice && <p role="status" className="mb-3 rounded-md border border-success/40 bg-success-soft px-3 py-2 text-sm text-success">{cqttNotice}</p>}
-          {previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi Hội đồng.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách Hội đồng đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách Hội đồng đã đánh giá</Button></div> : activeView !== "list" ? (
+          {previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi CQTT.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách CQTT đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách CQTT đã đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
               evaluations={(previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) : rows).filter((e) => (activeView === "kpi" || hasKiData(e)) && (previewRole !== "cqtt" || activeView !== "kpi" || cqttInSummary(e)))}
               mode={activeView}
+              onOfficeSent={(count) => { setOfficeStatus("completed"); setView("list"); setOfficeNotice(`Đã gửi ${count} phiếu đến CQTT đánh giá.`); }}
               onCqttReturned={(count) => { setCqttFilter("waiting"); setCqttNotice(`Đã gửi điều chỉnh ${count} hồ sơ cho CQĐV/CQ. Hồ sơ chuyển sang trạng thái Chờ CQ/CQĐV phản hồi.`); }}
               batchCandidates={evaluations.filter(
-                (e) => e.period === period && (previewRole !== "office" || officeStatus === "pending"),
+                (e) => e.period === period && (previewRole !== "support_office" || officeStatus === "pending"),
               )}
             />
           ) : (
             <div>
             {previewRole === "council" && activeView === "list" && (() => {
-              // Giống màn Tổng hợp của CQTT: chip lọc, đếm đã tổng hợp, Tổng hợp KI cho các phiếu Hội đồng đã đánh giá.
+              // Giống màn Tổng hợp của CQTT: chip lọc, đếm đã tổng hợp, Tổng hợp KI cho các phiếu CQTT đã đánh giá.
               const scope = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block));
               const pendingCouncil = scope.filter((e) => councilStatus(e.step, !!e.councilReviewed) === "pending");
               const reviewed = scope.filter((e) => councilStatus(e.step, !!e.councilReviewed) === "completed");
@@ -392,14 +402,14 @@ function Index() {
                     <h2 className="text-base font-semibold">Danh sách đánh giá</h2>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <span className={chip + " font-medium text-foreground"}>{period}</span>
-                      <button type="button" onClick={() => setCouncilFilter("pending")} aria-pressed={councilFilter === "pending"} className={cn(chip, "hover:border-primary/40", councilFilter === "pending" && "border-primary/40 bg-accent text-primary")}>Chờ Hội đồng đánh giá <b className="font-semibold tabular-nums">{pendingCouncil.length}</b></button>
-                      <button type="button" onClick={() => setCouncilFilter("completed")} aria-pressed={councilFilter === "completed"} className={cn(chip, "hover:border-primary/40", councilFilter === "completed" && "border-primary/40 bg-accent text-primary")}>Hội đồng đã đánh giá <b className="font-semibold tabular-nums">{reviewed.length}</b></button>
+                      <button type="button" onClick={() => setCouncilFilter("pending")} aria-pressed={councilFilter === "pending"} className={cn(chip, "hover:border-primary/40", councilFilter === "pending" && "border-primary/40 bg-accent text-primary")}>Chờ CQTT đánh giá <b className="font-semibold tabular-nums">{pendingCouncil.length}</b></button>
+                      <button type="button" onClick={() => setCouncilFilter("completed")} aria-pressed={councilFilter === "completed"} className={cn(chip, "hover:border-primary/40", councilFilter === "completed" && "border-primary/40 bg-accent text-primary")}>CQTT đã đánh giá <b className="font-semibold tabular-nums">{reviewed.length}</b></button>
                       <span className={chip}>Đã tổng hợp KI <b className="font-semibold text-foreground tabular-nums">{summarizedKi.length}</b></span>
                     </div>
                   </div>
                   {councilFilter === "completed" && <Button
                     disabled={!toSummarize.length}
-                    title={toSummarize.length ? `Tổng hợp KI ${toSummarize.length} cá nhân Hội đồng đã đánh giá` : "Không còn cá nhân nào chờ tổng hợp KI"}
+                    title={toSummarize.length ? `Tổng hợp KI ${toSummarize.length} cá nhân CQTT đã đánh giá` : "Không còn cá nhân nào chờ tổng hợp KI"}
                     onClick={() => { createCouncilSummary(toSummarize.map((e) => e.id)); setView("ki"); }}
                   >
                     <KanbanSquare />Tổng hợp KI
@@ -408,7 +418,8 @@ function Index() {
               );
             })()}
             {previewRole === "office" && activeView === "list" && (() => {
-              const waiting = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block) && e.step === "office");
+              const inScope = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block));
+              const waiting = inScope.filter((e) => e.step === "office");
               const chip = "rounded-md border bg-card px-2.5 py-1 text-xs text-muted-foreground";
               return (
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -421,7 +432,37 @@ function Index() {
                       <span className={chip}>Chờ thẩm định <b className="font-semibold text-foreground tabular-nums">{waiting.length}</b></span>
                     </div>
                   </div>
-                  {officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!waiting.length}><KanbanSquare />Thẩm định phiếu</Button>}
+                  {/* Chờ thẩm định: gửi các phiếu đang hiển thị sang Tổ giúp việc; Tổ giúp việc: Văn phòng tổng hợp gửi CQTT. */}
+                  {officeStatus === "pending" && <Button onClick={() => {
+                    const ids = rows.filter((e) => e.step === "office").map((e) => e.id);
+                    const issue = sendToSupport(ids);
+                    if (issue) { setOfficeNotice(issue); return; }
+                    // Người gửi thuộc Tổ giúp việc: chuyển sang bộ lọc Tổ giúp việc; không thuộc: chỉ báo gửi thành công.
+                    if (isSupportRole(previewRole)) { setOfficeStatus("pending"); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }
+                    else { setSentToSupport(true); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }
+                  }} disabled={sentToSupport || !rows.some((e) => e.step === "office")} title="Gửi các phiếu Chờ thẩm định đang hiển thị sang Tổ giúp việc"><Send />Gửi tổ giúp việc</Button>}
+                  {officeNotice && <p role="status" className="w-full text-sm text-success">{officeNotice}</p>}
+                </div>
+              );
+            })()}
+            {previewRole === "support_office" && activeView === "list" && (() => {
+              // Văn phòng (đại diện Tổ giúp việc): tổng hợp các phiếu ở bước Tổ giúp việc và gửi CQTT.
+              const inScope = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block));
+              const atSupport = inScope.filter((e) => e.step === "support");
+              const chip = "rounded-md border bg-card px-2.5 py-1 text-xs text-muted-foreground";
+              return (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-base font-semibold">Danh sách đánh giá</h2>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span className={chip + " font-medium text-foreground"}>{period}</span>
+                      <span className={chip}>Cơ quan <b className="font-semibold text-foreground tabular-nums">{rows.filter((e) => e.block === "Khối Cơ quan").length}</b> phiếu</span>
+                      <span className={chip}>Đơn vị <b className="font-semibold text-foreground tabular-nums">{rows.filter((e) => e.block === "Khối Đơn vị").length}</b> phiếu</span>
+                      <span className={chip}>Chờ tổng hợp <b className="font-semibold text-foreground tabular-nums">{atSupport.length}</b></span>
+                    </div>
+                  </div>
+                  {officeStatus === "pending" && <Button onClick={() => setView("kpi")} disabled={!atSupport.length}><KanbanSquare />Tổng hợp đánh giá</Button>}
+                  {officeNotice && <p role="status" className="w-full text-sm text-success">{officeNotice}</p>}
                 </div>
               );
             })()}
@@ -429,7 +470,7 @@ function Index() {
               // CQTT đánh giá chi tiết từng cá nhân xong thì Tổng hợp sang form Thường trực đánh giá.
               const scope = evaluations.filter((e) => e.period === period && (block === "all" || e.block === block));
               const reviewing = scope.filter((e) => e.step === "cqtt");
-              // CQTT bấm Hoàn tất đánh giá → phiếu sang chờ báo cáo Hội đồng, tính vào "Đã hoàn tất đánh giá".
+              // CQTT bấm Hoàn tất đánh giá → phiếu sang chờ báo cáo CQTT, tính vào "Đã hoàn tất đánh giá".
               const finished = scope.filter((e) => e.step === "cqtt_report");
               const toSummarize = finished.filter((e) => !e.cqttSummarized && cqttSummarizable(e));
               const summarized = scope.filter((e) => ["cqtt", "cqtt_report"].includes(e.step) && e.cqttSummarized);
@@ -533,7 +574,7 @@ function Index() {
                         <td className="px-3 py-4">{result.ki}</td>
                         <td className="px-3 py-4">
                           <StatusPill tone={statusToneOf(e)}>
-                            {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? "Hội đồng đã đánh giá" : statusLabelOf(e)}
+                            {previewRole === "council" && ["council", "council_adjust"].includes(e.step) && e.councilReviewed ? "CQTT đã đánh giá" : statusLabelOf(e)}
                           </StatusPill>
                           {previewRole === "cqtt" && e.step === "cqtt" && cqttScoredCount(e.criteria) > 0 && (
                             <div className="mt-1 text-xs text-muted-foreground">Đã chấm {cqttScoredCount(e.criteria)}/{e.criteria.length} công việc</div>
@@ -564,6 +605,12 @@ function Index() {
                               e.councilSummaryCreated
                                 ? null
                                 : <Button variant="outline" size="icon" className="h-8 w-8" aria-label={`Tổng hợp KI ${e.id}`} title="Tổng hợp KI" onClick={() => { createCouncilSummary([e.id]); setView("ki"); }}><KanbanSquare className="h-4 w-4" /></Button>
+                            )}
+                            {previewRole === "support_office" && e.step === "support" && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Xử lý" aria-label={`Xử lý ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>
+                            )}
+                            {commenter && e.step === "support" && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Cho ý kiến" aria-label={`Cho ý kiến ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }}><MessageSquarePlus className="h-4 w-4" /></Link></Button>
                             )}
                             {previewRole === "office" && e.step === "office" && (
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" title="Thẩm định" aria-label={`Thẩm định phiếu ${e.id}`} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><ClipboardCheck className="h-4 w-4" /></Link></Button>

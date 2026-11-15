@@ -27,7 +27,7 @@ export function nextAssignmentRef(e: Evaluation): string {
 
 type Doc = SigningAttachment & { url: string; label: string };
 
-/** Hội đồng trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi. */
+/** CQTT trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi. */
 export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   evaluations: Evaluation[];
   open: boolean;
