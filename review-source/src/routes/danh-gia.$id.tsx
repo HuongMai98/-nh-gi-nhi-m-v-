@@ -160,6 +160,8 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [returnStage, setReturnStage] = useState<StageKey | "">("");
   const chosenReturn = allowedReturns.includes(returnStage as StageKey) ? (returnStage as StageKey) : allowedReturns[0];
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
+  // Văn phòng thẩm định và Tổ giúp việc gửi điều chỉnh qua popup nhập lý do.
+  const popupReturn = isSupportRole(previewRole) || (previewRole === "office" && ev.step === "office");
   const returnText =
     (previewRole === "office" && ev.step === "office") || supportMember ? "Gửi điều chỉnh" : ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
   const run = (action?: Action, requestReasonOverride?: string) => {
@@ -184,7 +186,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     else if (action === "return") patch = { note, ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && action === "request") patch = { ...patch, ...(note.trim() ? { note } : {}), ...(chosenReturn ? { returnStage: chosenReturn } : {}) };
     else if (ev.step === "cqtt" && own && note.trim()) patch = { ...patch, note };
-    if ((action === "request" || (action === "return" && isSupportRole(previewRole))) && requestReasonOverride !== undefined) patch = { ...patch, note: requestReasonOverride.trim() };
+    if ((action === "request" || (action === "return" && popupReturn)) && requestReasonOverride !== undefined) patch = { ...patch, note: requestReasonOverride.trim() };
     const issue = updateEvaluation(ev.id, patch, action);
     setError(issue ?? "");
     setMessage(
@@ -286,7 +288,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <Button
               key={a.action}
               variant={a.outline ? "return" : "default"}
-              onClick={() => { if ((a.action === "request" && previewRole === "cqtt") || (a.action === "return" && isSupportRole(previewRole))) { setRequestReason(note.trim() || ev.note || ""); setRequestError(""); setRequestOpen(true); } else run(a.action); }}
+              onClick={() => { if ((a.action === "request" && previewRole === "cqtt") || (a.action === "return" && popupReturn)) { setRequestReason(note.trim() || ev.note || ""); setRequestError(""); setRequestOpen(true); } else run(a.action); }}
             >
               {a.outline ? <Undo2 /> : a.action === "approve" ? <Check /> : <Send />}
               {a.label}
@@ -307,15 +309,15 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
           <form onSubmit={event => {
             event.preventDefault();
             if (!requestReason.trim()) { setRequestError("Vui lòng nhập lý do yêu cầu điều chỉnh."); return; }
-            const issue = isSupportRole(previewRole) ? run("return", requestReason) : run("request", requestReason);
+            const issue = popupReturn ? run("return", requestReason) : run("request", requestReason);
             if (issue) setRequestError(issue); else setRequestOpen(false);
           }}>
-            <DialogHeader><DialogTitle>Gửi điều chỉnh</DialogTitle><DialogDescription>{isSupportRole(previewRole) ? `${supportMember ? `${ROLES[previewRole]} (Tổ giúp việc) gửi điều chỉnh. ` : ""}Nhập nội dung cần CQ/CQĐV bổ sung hoặc chỉnh sửa. Phiếu sẽ quay lại người gửi để cập nhật, sau đó Văn phòng thẩm định lại.` : "Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá."}</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>Gửi điều chỉnh</DialogTitle><DialogDescription>{popupReturn ? `${supportMember ? `${ROLES[previewRole]} (Tổ giúp việc) gửi điều chỉnh. ` : ""}Nhập nội dung cần CQ/CQĐV bổ sung hoặc chỉnh sửa. Phiếu sẽ quay lại người gửi để cập nhật, sau đó Văn phòng thẩm định lại.` : "Nhập lý do gửi CQ/CQĐV phản hồi. Nội dung được lưu vào cột Lý do trong Tổng hợp đánh giá."}</DialogDescription></DialogHeader>
             <label className="my-4 block space-y-2 text-sm font-medium">Lý do điều chỉnh <span className="text-primary">*</span>
               <textarea autoFocus aria-label="Lý do gửi điều chỉnh" className="mt-2 block min-h-28 w-full rounded-md border border-input bg-card p-3 text-sm font-normal" value={requestReason} onChange={event => { setRequestReason(event.target.value); setRequestError(""); }} placeholder="Nhập lý do yêu cầu điều chỉnh..." />
             </label>
             {requestError && <p role="alert" className="mb-3 text-sm text-primary">{requestError}</p>}
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />{isSupportRole(previewRole) ? "Gửi điều chỉnh" : "Xác nhận gửi"}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setRequestOpen(false)}>Hủy</Button><Button type="submit"><Send />{popupReturn ? "Gửi điều chỉnh" : "Xác nhận gửi"}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
