@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useEvaluations } from "@/components/evaluation-context";
 import { ROLES, canConfigureWorkflow, type PreviewRole } from "@/lib/evaluation";
+import { OrgTreePicker } from "@/components/OrgTreePicker";
+import { compactOrgSelection, orgName } from "@/lib/orgs";
 import {
   BLOCKS,
   STAGES,
@@ -39,6 +41,7 @@ import {
   type WorkflowVersion,
   RETIRED_STAGES,
   DEFAULT_STAGE_ROLES,
+  defaultHandlerOrgs,
   ROLE_OPTIONS,
   withLead,
 } from "@/lib/workflow";
@@ -503,15 +506,18 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
                     </div>
                   </td>
                   <td className="px-3 py-3">
-                    <select
-                      aria-label={`Đơn vị xử lý ${meta.name}`}
-                      disabled={readOnly || !s.enabled || meta.handlers.length < 2}
-                      className="h-9 w-48 rounded-md border bg-card px-2 text-sm disabled:bg-muted"
-                      value={s.handler}
-                      onChange={(e) => setStage(key, { handler: e.target.value })}
-                    >
-                      {meta.handlers.map((h) => <option key={h}>{h}</option>)}
-                    </select>
+                    {key === "self"
+                      ? <span className="inline-flex min-h-9 w-56 items-center rounded-md border bg-muted px-2 text-sm text-muted-foreground">Theo đơn vị người thực hiện</span>
+                      : <OrgTreePicker
+                          label={`Đơn vị xử lý ${meta.name}`}
+                          value={s.handlerOrgs ?? defaultHandlerOrgs(draft.block, key)}
+                          disabled={readOnly || !s.enabled}
+                          onChange={(orgs) => setStage(key, {
+                            handlerOrgs: orgs,
+                            // Bước Văn phòng thẩm định: tên đơn vị chọn được dùng làm nhãn người xử lý trên tiến trình.
+                            ...(key === "office" && orgs.length ? { handler: compactOrgSelection(orgs).map(orgName).join(", ") } : {}),
+                          })}
+                        />}
                   </td>
                   <td className="px-3 py-3">
                     <label className="flex items-center gap-2 whitespace-nowrap">

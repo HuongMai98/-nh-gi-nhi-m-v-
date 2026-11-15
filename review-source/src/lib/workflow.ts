@@ -17,6 +17,8 @@ export type StageConfig = {
   slaDays: number;
   /** Các bước được phép trả về (đứng trước, đang bật). Rỗng = không cho trả về. Người xử lý chọn 1 bước khi trả về. */
   returnTo: StageKey[];
+  /** Đơn vị xử lý chọn theo cây tổ chức (id VHR_ORG, chỉ lá). Rỗng ở bước Tự đánh giá = theo đơn vị người thực hiện. */
+  handlerOrgs?: string[];
   /** Vai trò tham gia bước: vai trò chủ trì (STAGES[key].role) luôn có; các vai trò phối hợp do quản trị chọn thêm. */
   roles?: PreviewRole[];
   /** Bước CQTT: bộ phận phải xác nhận Tổng hợp KI (cả lô) trước khi Văn phòng trình ký GĐ. Rỗng = không cần xác nhận. */
@@ -37,6 +39,17 @@ export const DEFAULT_STAGE_ROLES: Record<StageKey, PreviewRole[]> = {
   dispatch: ["office"],
   sign: ["performer"],
 };
+/** Đơn vị xử lý mặc định theo bước/Khối. */
+export function defaultHandlerOrgs(block: Block, key: StageKey): string[] {
+  const lead = block === "Khối Cơ quan" ? "van-phong" : "ban-chien-luoc";
+  switch (key) {
+    case "office": case "dispatch": return [lead];
+    case "support": return ["van-phong", "co-quan-chinh-tri", "ban-to-chuc-nhan-luc", "ban-chien-luoc"];
+    case "cqtt": case "council": return ["van-phong", "co-quan-chinh-tri"];
+    case "ceo": return ["ban-giam-doc"];
+    default: return [];
+  }
+}
 const DEFAULT_COUNCIL_CONFIRM = { confirmBy: ["politics"] as PreviewRole[], confirmCanAdjust: true };
 export type BranchConfig = {
   /** GĐ điều chỉnh trực tiếp điểm/Ki trước khi phê duyệt. */
@@ -169,6 +182,7 @@ export function defaultWorkflow(block: Block): WorkflowConfig {
       slaDays: sla[key],
       returnTo: [...(DEFAULT_RETURN[key] ?? [])],
       roles: [...DEFAULT_STAGE_ROLES[key]],
+      handlerOrgs: defaultHandlerOrgs(block, key),
       ...(key === "council" ? { confirmBy: [...DEFAULT_COUNCIL_CONFIRM.confirmBy], confirmCanAdjust: DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {}),
     })),
     branches: { ceoDirectAdjust: false },
@@ -206,7 +220,7 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
         : configuredReturn;
       const confirm = key === "council" ? { confirmBy: [...(s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy)], confirmCanAdjust: s.confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {};
       const roles = withLead(key, s.roles ?? DEFAULT_STAGE_ROLES[key]);
-      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo, roles, ...confirm };
+      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo, roles, handlerOrgs: [...(s.handlerOrgs ?? defaultHandlerOrgs(raw.block, key))], ...confirm };
     }),
     branches: { ceoDirectAdjust: false },
     customStages: (raw.customStages ?? []).map((s) => ({ ...s, returnTo: [...(s.returnTo ?? [])] })),
@@ -216,7 +230,7 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
 
 export const cloneWorkflow = (c: WorkflowConfig): WorkflowConfig => ({
   ...c,
-  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo], ...(s.confirmBy ? { confirmBy: [...s.confirmBy] } : {}), ...(s.roles ? { roles: [...s.roles] } : {}) })),
+  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo], ...(s.confirmBy ? { confirmBy: [...s.confirmBy] } : {}), ...(s.roles ? { roles: [...s.roles] } : {}), ...(s.handlerOrgs ? { handlerOrgs: [...s.handlerOrgs] } : {}) })),
   branches: { ...c.branches },
   customStages: (c.customStages ?? []).map((s) => ({ ...s, returnTo: [...s.returnTo] })),
   notifications: { ...DEFAULT_NOTIFICATIONS, ...(c.notifications ?? {}) },
@@ -239,6 +253,7 @@ export function validateWorkflow(c: WorkflowConfig): string[] {
       if (!Number.isInteger(s.slaDays) || s.slaDays < 0 || s.slaDays > 60)
         errors.push(`Hạn xử lý bước "${STAGES[key].name}" phải là số ngày nguyên 0–60.`);
       if (!s.handler.trim()) errors.push(`Chọn đơn vị xử lý cho bước "${STAGES[key].name}".`);
+      if (s.enabled && key !== "self" && key !== "sign" && s.handlerOrgs && !s.handlerOrgs.length) errors.push(`Chọn đơn vị xử lý cho bước "${STAGES[key].name}".`);
     }
   }
   if (!on("cqtt") && !on("council") && !on("ceo"))
@@ -271,6 +286,7 @@ export function normalizeBranches(c: WorkflowConfig): WorkflowConfig {
       enabled: STAGES[s.key].required ? true : RETIRED_STAGES.includes(s.key) ? false : s.enabled,
       // Gửi kết quả do chính đơn vị tổng hợp đầu vào thực hiện.
       handler: s.key === "dispatch" ? (c.stages.find((x) => x.key === "office")?.handler ?? s.handler) : s.handler,
+      ...(s.key === "dispatch" ? { handlerOrgs: [...(c.stages.find((x) => x.key === "office")?.handlerOrgs ?? s.handlerOrgs ?? [])] } : {}),
       returnTo: s.returnTo.filter((t) => returnOptions(c, s.key).includes(t)),
       roles: withLead(s.key, s.roles ?? DEFAULT_STAGE_ROLES[s.key]),
       // Bộ phận xác nhận phải là vai trò đang tham gia bước CQTT.
