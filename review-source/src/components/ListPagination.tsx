@@ -1,15 +1,17 @@
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function ListPagination({ total, page, pageSize, onPageChange, onPageSizeChange }: {
+export function ListPagination({ total, page, pageSize, onPageChange, onPageSizeChange, itemLabel = "dòng" }: {
   total: number; page: number; pageSize: number;
+  /** Đơn vị đếm hiển thị ở ô số dòng mỗi trang (mặc định "dòng"). */
+  itemLabel?: string;
   onPageChange: (page: number) => void; onPageSizeChange: (size: number) => void;
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   return <nav aria-label="Phân trang danh sách" className="flex flex-wrap items-center justify-between gap-4 border-t bg-muted/30 px-4 py-4 text-sm">
     <div className="flex items-center gap-3">
-      <select aria-label="Số dòng mỗi trang" className="h-9 rounded-md border bg-card px-3" value={pageSize} onChange={event => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map(size => <option key={size} value={size}>{size} dòng</option>)}</select>
-      <span>Hiển thị {total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} / {total}</span>
+      <select aria-label="Số dòng mỗi trang" className="h-9 rounded-md border bg-card px-3" value={pageSize} onChange={event => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map(size => <option key={size} value={size}>{size} {itemLabel}</option>)}</select>
+      <span>Hiển thị {total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} / {total}{itemLabel === "dòng" ? "" : ` ${itemLabel}`}</span>
     </div>
     <div className="flex items-center gap-2">
       <Button type="button" variant="ghost" size="icon" aria-label="Trang đầu" disabled={page === 1} onClick={() => onPageChange(1)}><ChevronsLeft /></Button>

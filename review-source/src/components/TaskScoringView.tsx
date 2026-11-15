@@ -3,6 +3,7 @@ import { Check, ChevronDown, ChevronRight, Copy, Save, Search, X } from "lucide-
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
+import { ListPagination } from "@/components/ListPagination";
 import { useEvaluations } from "@/components/evaluation-context";
 import { cn } from "@/lib/utils";
 import { rating, type Criterion, type Evaluation } from "@/lib/evaluation";
@@ -52,12 +53,20 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
   const visibleRows = (e: Evaluation) => itemsOf(e).map((c, i) => ({ c, i })).filter(({ c }) =>
     (group === "all" || c.group === group) && (scored === "all" || (scored === "done") === (c.council !== undefined)));
   const allVisible = units.flatMap((e) => visibleRows(e).map((r) => ({ e, ...r })));
+  // Phân trang theo cơ quan/đơn vị (mỗi nhóm nhiệm vụ của một phiếu là một mục).
+  const shownUnits = units.filter((e) => visibleRows(e).length);
+  const [pageSize, setPageSize] = useState(10);
+  const [rawPage, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(shownUnits.length / pageSize));
+  const page = Math.min(rawPage, pages);
+  const pageUnits = shownUnits.slice((page - 1) * pageSize, page * pageSize);
+  const pageVisible = pageUnits.flatMap((e) => visibleRows(e).map((r) => ({ e, ...r })));
   const totalTasks = units.reduce((n, e) => n + itemsOf(e).filter((c) => group === "all" || c.group === group).length, 0);
   const doneTasks = units.reduce((n, e) => n + itemsOf(e).filter((c) => (group === "all" || c.group === group) && c.council !== undefined).length, 0);
 
   function copySelf() {
     const next = { ...drafts };
-    for (const { e, i, c } of allVisible) if (editableOf(e) && c.council === undefined) {
+    for (const { e, i, c } of pageVisible) if (editableOf(e) && c.council === undefined) {
       const base = next[e.id] ?? e.criteria;
       next[e.id] = base.map((x, j) => (j === i ? { ...x, council: Math.min(5, Math.max(1, Math.round(c.self))) } : x));
     }
@@ -132,7 +141,7 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex rounded-lg bg-muted p-1 text-sm" role="tablist" aria-label="Nhóm nhiệm vụ">
           {([["all", "Tất cả"], ...GROUPS.map((g) => [g.key, g.label] as const)] as const).map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={group === k} onClick={() => setGroup(k as Group | "all")}
+            <button key={k} type="button" role="tab" aria-selected={group === k} onClick={() => { setGroup(k as Group | "all"); setPage(1); }}
               className={cn("rounded-md px-3 py-1.5", group === k ? "bg-card font-medium text-primary shadow-sm" : "text-muted-foreground")}>{l}</button>
           ))}
         </div>
@@ -143,7 +152,7 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
         <span className="text-xs text-muted-foreground">Đã chấm <b className="text-foreground tabular-nums">{doneTasks}/{totalTasks}</b> nhiệm vụ</span>
         {previewRole === "council" && showActions && (
           <div className="ml-auto flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={copySelf} disabled={!allVisible.some(({ e, c }) => editableOf(e) && c.council === undefined)}><Copy />Sao chép điểm tự đánh giá cho dòng chưa chấm</Button>
+            <Button type="button" variant="outline" onClick={copySelf} disabled={!pageVisible.some(({ e, c }) => editableOf(e) && c.council === undefined)} title="Áp dụng cho các dòng chưa chấm ở trang đang xem"><Copy />Sao chép điểm tự đánh giá cho dòng chưa chấm</Button>
             <Button type="button" variant="outline" onClick={() => save()} disabled={!dirty.length}><Save />Lưu{dirty.length ? ` (${dirty.length} phiếu)` : ""}</Button>
             <Button type="button" onClick={() => save(readyToFinish.map((e) => e.id))} disabled={!readyToFinish.length} title="Lưu và Hoàn tất đánh giá các phiếu đã chấm đủ mọi nhiệm vụ"><Check />Hoàn tất {readyToFinish.length} phiếu đã chấm đủ</Button>
           </div>
@@ -168,7 +177,7 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
             </tr>
           </thead>
           <tbody>
-            {units.map((e) => {
+            {pageUnits.map((e) => {
               const rows = visibleRows(e);
               if (!rows.length) return null;
               const open = !collapsed.has(e.id);
@@ -207,7 +216,7 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
                         {editable ? (
                           <select aria-label={`CQTT đánh giá ${e.unit} — ${c.goal}`} className={cn("h-9 w-24 rounded-md border bg-card px-2 text-sm", c.council === undefined && "text-muted-foreground")}
                             value={c.council ?? ""} onChange={(ev) => setScore(e, i, ev.target.value ? Number(ev.target.value) : undefined)}>
-                            <option value="">Chọn</option>{SCORES.map((s) => <option key={s} value={s}>{s}</option>)}
+                            <option value="">Chọn</option>{c.council !== undefined && !SCORES.includes(c.council) && <option value={c.council}>{Math.round(c.council * 100) / 100}</option>}{SCORES.map((s) => <option key={s} value={s}>{s}</option>)}
                           </select>
                         ) : <span className="font-semibold tabular-nums">{c.council === undefined ? "—" : Math.round(c.council * 100) / 100}</span>}
                       </td>
@@ -219,6 +228,7 @@ export function TaskScoringView({ evaluations, showActions = true }: { evaluatio
             {!allVisible.length && <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">Không có nhiệm vụ phù hợp bộ lọc.</td></tr>}
           </tbody>
         </table>
+        {shownUnits.length > 0 && <ListPagination total={shownUnits.length} page={page} pageSize={pageSize} itemLabel="CQ/ĐV" onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />}
       </div>
       {task && itemsOf(task.ev)[task.i] && <TaskDetailDialog ev={task.ev} criterion={itemsOf(task.ev)[task.i]!} index={task.i} onClose={() => setTask(null)} />}
     </section>
