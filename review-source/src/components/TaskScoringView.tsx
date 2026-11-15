@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronRight, Copy, Save } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Copy, Save, Search, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { useEvaluations } from "@/components/evaluation-context";
@@ -33,7 +34,8 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
   const [scored, setScored] = useState<"all" | "todo" | "done">("all");
   const [drafts, setDrafts] = useState<Record<string, Criterion[]>>({});
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [focus, setFocus] = useState<string | null>(null);
+  // Cơ quan/đơn vị đang lọc (theo mã phiếu); rỗng = tất cả. Bấm ô ma trận thì chọn đúng một đơn vị.
+  const [picked, setPicked] = useState<string[]>([]);
   const [showMatrix, setShowMatrix] = useState(true);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
@@ -41,7 +43,7 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
 
   const editableOf = (e: Evaluation) => previewRole === "council" && ["council", "council_adjust"].includes(e.step) && !e.councilReviewed;
   const itemsOf = (e: Evaluation) => drafts[e.id] ?? e.criteria;
-  const units = useMemo(() => evaluations.filter((e) => !focus || e.id === focus), [evaluations, focus]);
+  const units = useMemo(() => evaluations.filter((e) => !picked.length || picked.includes(e.id)), [evaluations, picked]);
   const dirty = Object.keys(drafts).filter((id) => evaluations.some((e) => e.id === id));
   const setScore = (e: Evaluation, i: number, value: number | undefined) => {
     setMessage(""); setErrors([]);
@@ -104,16 +106,16 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
               const total = items.every((c) => c.council !== undefined) ? items.reduce((s, c) => s + c.weight * c.council!, 0) : null;
               const done = items.filter((c) => c.council !== undefined).length;
               return (
-                <tr key={e.id} className={cn("border-t", focus === e.id && "bg-accent/40")}>
+                <tr key={e.id} className={cn("border-t", picked.includes(e.id) && "bg-accent/40")}>
                   <td className="px-3 py-2">
-                    <button type="button" className="text-left hover:underline" onClick={() => { setFocus(focus === e.id ? null : e.id); setGroup("all"); }}>
+                    <button type="button" className="text-left hover:underline" onClick={() => { setPicked(picked.length === 1 && picked[0] === e.id ? [] : [e.id]); setGroup("all"); }}>
                       <span className="font-medium">{e.unit}</span><span className="block text-xs text-muted-foreground">{e.owner} · {e.block}</span>
                     </button>
                   </td>
                   {GROUPS.map((g) => {
                     const v = groupAvg(items, g.key);
                     return <td key={g.key} className="px-2 py-1.5 text-center">
-                      <button type="button" aria-label={`${e.unit} — ${g.short}`} onClick={() => { setFocus(e.id); setGroup(g.key); }}
+                      <button type="button" aria-label={`${e.unit} — ${g.short}`} onClick={() => { setPicked([e.id]); setGroup(g.key); }}
                         className={cn("w-full rounded-md px-2 py-1.5 font-semibold tabular-nums ring-primary/40 hover:ring-2", tone(v))}>{fmt(v)}</button>
                     </td>;
                   })}
@@ -137,7 +139,7 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
         <select aria-label="Lọc theo trạng thái chấm" className="h-9 rounded-md border bg-card px-2 text-sm" value={scored} onChange={(ev) => setScored(ev.target.value as typeof scored)}>
           <option value="all">Tất cả nhiệm vụ</option><option value="todo">Chưa chấm</option><option value="done">Đã chấm</option>
         </select>
-        {focus && <button type="button" className="rounded-md border bg-card px-2.5 py-1.5 text-xs" onClick={() => setFocus(null)}>Đang xem: {evaluations.find((e) => e.id === focus)?.unit} ✕</button>}
+        <UnitFilter evaluations={evaluations} value={picked} onChange={setPicked} />
         <span className="text-xs text-muted-foreground">Đã chấm <b className="text-foreground tabular-nums">{doneTasks}/{totalTasks}</b> nhiệm vụ</span>
         {previewRole === "council" && (
           <div className="ml-auto flex flex-wrap gap-2">
@@ -220,5 +222,46 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
       </div>
       {task && itemsOf(task.ev)[task.i] && <TaskDetailDialog ev={task.ev} criterion={itemsOf(task.ev)[task.i]!} index={task.i} onClose={() => setTask(null)} />}
     </section>
+  );
+}
+
+/** Lọc cơ quan/đơn vị có tìm kiếm, chọn nhiều (theo phiếu: cùng tên đơn vị có thể có nhiều người được đánh giá). */
+function UnitFilter({ evaluations, value, onChange }: { evaluations: Evaluation[]; value: string[]; onChange: (next: string[]) => void }) {
+  const [q, setQ] = useState("");
+  const k = q.trim().toLocaleLowerCase("vi");
+  const list = evaluations.filter((e) => !k || `${e.unit} ${e.owner} ${e.id}`.toLocaleLowerCase("vi").includes(k));
+  const label = !value.length ? "Tất cả CQ/ĐV" : value.length === 1 ? evaluations.find((e) => e.id === value[0])?.unit ?? "1 CQ/ĐV" : `${value.length} CQ/ĐV`;
+  return (
+    <div className="flex items-center gap-1">
+      <Popover>
+        <PopoverTrigger asChild>
+          <button type="button" aria-label="Lọc cơ quan/đơn vị" className={cn("flex h-9 max-w-64 items-center gap-2 rounded-md border bg-card px-2.5 text-sm", value.length && "border-primary/50 text-primary")}>
+            <Search className="h-4 w-4 shrink-0 opacity-60" /><span className="truncate">{label}</span><ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-80 bg-card p-0">
+          <div className="border-b p-2">
+            <input autoFocus aria-label="Tìm cơ quan/đơn vị" className="h-9 w-full rounded-md border bg-card px-2 text-sm" placeholder="Tìm cơ quan / đơn vị / người" value={q} onChange={(ev) => setQ(ev.target.value)} />
+          </div>
+          <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs">
+            <button type="button" className="text-primary hover:underline" onClick={() => onChange([...new Set([...value, ...list.map((e) => e.id)])])}>Chọn {k ? "kết quả tìm" : "tất cả"} ({list.length})</button>
+            <button type="button" className="text-muted-foreground hover:underline" onClick={() => onChange([])}>Bỏ chọn</button>
+          </div>
+          <ul className="max-h-72 overflow-y-auto p-1" aria-label="Danh sách cơ quan/đơn vị">
+            {list.map((e) => (
+              <li key={e.id}>
+                <label className="flex cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent">
+                  <input type="checkbox" className="mt-0.5 h-4 w-4 accent-primary" checked={value.includes(e.id)} aria-label={`Chọn ${e.unit} — ${e.owner}`}
+                    onChange={(ev) => onChange(ev.target.checked ? [...value, e.id] : value.filter((x) => x !== e.id))} />
+                  <span className="min-w-0"><span className="block">{e.unit}</span><span className="block text-xs text-muted-foreground">{e.owner} · {e.block}</span></span>
+                </label>
+              </li>
+            ))}
+            {!list.length && <li className="px-2 py-4 text-center text-sm text-muted-foreground">Không tìm thấy cơ quan/đơn vị.</li>}
+          </ul>
+        </PopoverContent>
+      </Popover>
+      {value.length > 0 && <button type="button" aria-label="Bỏ lọc cơ quan/đơn vị" className="grid h-9 w-9 place-items-center rounded-md border bg-card text-muted-foreground hover:text-foreground" onClick={() => onChange([])}><X className="h-4 w-4" /></button>}
+    </div>
   );
 }
