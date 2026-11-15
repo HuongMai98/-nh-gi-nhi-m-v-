@@ -161,6 +161,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const chosenReturn = allowedReturns.includes(returnStage as StageKey) ? (returnStage as StageKey) : allowedReturns[0];
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
   // Văn phòng thẩm định và Tổ giúp việc gửi điều chỉnh qua popup nhập lý do.
+  const opinions = (ev.history ?? []).filter((h) => h.note?.trim());
   const popupReturn = isSupportRole(previewRole) || (previewRole === "office" && ev.step === "office");
   const returnText =
     (previewRole === "office" && ev.step === "office") || supportMember ? "Gửi điều chỉnh" : ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
@@ -539,13 +540,15 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
                 <Button type="submit" size="sm" disabled={!supportNote.trim()}><Send className="h-3.5 w-3.5" />Gửi ý kiến</Button>
               </div>
             </form>
-            {ev.history?.slice(-3).map((h, i) => (
+            {/* Chỉ hiện các lượt có nội dung ý kiến; thao tác không kèm nội dung xem ở Lịch sử xử lý. */}
+            {opinions.map((h, i) => (
               <div key={i} className="mb-2 rounded bg-muted p-2 text-xs">
                 <b>{h.actorName ?? ROLES[h.role]}</b> · {h.at}
-                <div className="mt-1 whitespace-pre-wrap">{h.note || actionLabel(h.action)}</div>
+                <div className="mt-0.5 text-muted-foreground">{actionLabel(h.action)}</div>
+                <div className="mt-1 whitespace-pre-wrap">{h.note}</div>
               </div>
             ))}
-            {ev.note && (
+            {ev.note && !opinions.some((h) => h.note?.trim() === ev.note?.trim()) && (
               <div className="mb-3 rounded-md bg-muted p-2 text-xs">
                 <b>Ý kiến / yêu cầu đã ghi nhận:</b>
                 <p className="mt-1 whitespace-pre-wrap">{ev.note}</p>
@@ -590,8 +593,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
 
             {!ev.note &&
               !ev.response &&
-              !ev.history?.length &&
-              !["ceo", "cqtt"].includes(ev.step) && (
+              !opinions.length && (
                 <p className="text-xs text-muted-foreground">Chưa có ý kiến xử lý.</p>
               )}
           </section>
