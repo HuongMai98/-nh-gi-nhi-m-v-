@@ -533,7 +533,7 @@ function Index() {
                 </div>
               </div>
             )}
-            {listMode === "task" && ["council", "office", "support_office"].includes(previewRole) ? <TaskScoringView evaluations={rows} /> : <>
+            {listMode === "task" && ["council", "office", "support_office"].includes(previewRole) ? <TaskScoringView evaluations={rows} showActions={!(previewRole === "council" && councilFilter === "completed")} /> : <>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1200px] text-sm">
                 <thead className="bg-muted text-left text-xs font-medium text-foreground">

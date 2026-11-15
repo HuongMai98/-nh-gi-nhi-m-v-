@@ -28,7 +28,7 @@ const tone = (v: number | null) =>
  * Chấm điểm theo nhiệm vụ: gom nhiệm vụ trọng tâm / chức năng của nhiều cơ quan, đơn vị để chấm ngang hàng.
  * Ghi vào cùng điểm CQTT từng công việc của phiếu (criteria[].council), nên chi tiết phiếu vẫn thấy đủ các nhóm.
  */
-export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) {
+export function TaskScoringView({ evaluations, showActions = true }: { evaluations: Evaluation[]; /** Ẩn nút chấm (danh sách CQTT đã đánh giá chỉ còn Tổng hợp KI). */ showActions?: boolean }) {
   const { previewRole, updateEvaluation } = useEvaluations();
   const [group, setGroup] = useState<Group | "all">("A");
   const [scored, setScored] = useState<"all" | "todo" | "done">("all");
@@ -77,7 +77,7 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
     }
     setDrafts((d) => Object.fromEntries(Object.entries(d).filter(([id]) => issues.some((x) => x.startsWith(id + ":")))));
     setErrors(issues);
-    setMessage(issues.length && !saved && !finished ? "" : [saved && `Đã lưu điểm ${saved} phiếu`, finished && `hoàn tất ${finished} phiếu`].filter(Boolean).join(", ") + ".");
+    setMessage(issues.length && !saved && !finished ? "" : (() => { const t = [saved && `đã lưu điểm ${saved} phiếu`, finished && `hoàn tất ${finished} phiếu`].filter(Boolean).join(", "); return t.charAt(0).toUpperCase() + t.slice(1) + "."; })());
   }
   const complete = (e: Evaluation) => itemsOf(e).every((c) => c.council !== undefined);
   const readyToFinish = units.filter((e) => editableOf(e) && complete(e));
@@ -141,7 +141,7 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
         </select>
         <UnitFilter evaluations={evaluations} value={picked} onChange={setPicked} />
         <span className="text-xs text-muted-foreground">Đã chấm <b className="text-foreground tabular-nums">{doneTasks}/{totalTasks}</b> nhiệm vụ</span>
-        {previewRole === "council" && (
+        {previewRole === "council" && showActions && (
           <div className="ml-auto flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={copySelf} disabled={!allVisible.some(({ e, c }) => editableOf(e) && c.council === undefined)}><Copy />Sao chép điểm tự đánh giá cho dòng chưa chấm</Button>
             <Button type="button" variant="outline" onClick={() => save()} disabled={!dirty.length}><Save />Lưu{dirty.length ? ` (${dirty.length} phiếu)` : ""}</Button>
@@ -209,7 +209,7 @@ export function TaskScoringView({ evaluations }: { evaluations: Evaluation[] }) 
                             value={c.council ?? ""} onChange={(ev) => setScore(e, i, ev.target.value ? Number(ev.target.value) : undefined)}>
                             <option value="">Chọn</option>{SCORES.map((s) => <option key={s} value={s}>{s}</option>)}
                           </select>
-                        ) : <span className="font-semibold tabular-nums">{c.council ?? "—"}</span>}
+                        ) : <span className="font-semibold tabular-nums">{c.council === undefined ? "—" : Math.round(c.council * 100) / 100}</span>}
                       </td>
                     </tr>
                   ))}
