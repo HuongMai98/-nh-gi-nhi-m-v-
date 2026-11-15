@@ -1,4 +1,5 @@
 import { matchesAdvancedSearch } from "@/lib/evaluation-search";
+import { TaskScoringView } from "@/components/TaskScoringView";
 import { ListPagination } from "@/components/ListPagination";
 import { EditIcon, FilterIcon } from "@/components/icons";
 import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
@@ -103,6 +104,8 @@ function Index() {
   const { evaluations, previewRole, createCouncilSummary, workflows, summarizeCqtt, summarizeOffice, sendToSupport } = useEvaluations();
   const [officeNotice, setOfficeNotice] = useState("");
   const [sentToSupport, setSentToSupport] = useState(false);
+  // Danh sách: xem theo phiếu (mặc định) hoặc theo nhiệm vụ để chấm ngang hàng giữa các cơ quan/đơn vị.
+  const [listMode, setListMode] = useState<"form" | "task">("form");
   const [cqttError, setCqttError] = useState("");
   const [cqttNotice, setCqttNotice] = useState("");
   const [view, setView] = useState<"list" | "kpi" | "ki" | "appendix">(
@@ -520,6 +523,17 @@ function Index() {
                 </div>
               );
             })()}
+            {["council", "office", "support_office"].includes(previewRole) && (
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex rounded-lg bg-muted p-1 text-sm" role="tablist" aria-label="Kiểu xem danh sách">
+                  {([["form", "Theo phiếu"], ["task", "Theo nhiệm vụ"]] as const).map(([k, l]) => (
+                    <button key={k} type="button" role="tab" aria-selected={listMode === k} onClick={() => setListMode(k)}
+                      className={cn("rounded-md px-3 py-1.5", listMode === k ? "bg-card font-medium text-primary shadow-sm" : "text-muted-foreground")}>{l}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {listMode === "task" && ["council", "office", "support_office"].includes(previewRole) ? <TaskScoringView evaluations={rows} /> : <>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1200px] text-sm">
                 <thead className="bg-muted text-left text-xs font-medium text-foreground">
@@ -647,6 +661,7 @@ function Index() {
               </table>
             </div>
             <ListPagination total={rows.length} page={page} pageSize={pageSize} onPageChange={page => setPagination({ scope, page })} onPageSizeChange={setPageSize} />
+            </>}
             </div>
           )}
         </div>
