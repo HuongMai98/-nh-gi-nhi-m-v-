@@ -46,6 +46,7 @@ import {
   cqttScoredCount,
   cqttSummarizable,
   cqttInSummary,
+  officeInSummary,
   totalScore,
   type Step,
   type Evaluation,
@@ -99,7 +100,7 @@ function Index() {
     catch { setRefreshMessage("Chưa thể làm mới. Vui lòng thử lại."); }
     finally { setRefreshing(false); }
   }
-  const { evaluations, previewRole, createCouncilSummary, workflows, summarizeCqtt, sendToSupport } = useEvaluations();
+  const { evaluations, previewRole, createCouncilSummary, workflows, summarizeCqtt, summarizeOffice, sendToSupport } = useEvaluations();
   const [officeNotice, setOfficeNotice] = useState("");
   const [sentToSupport, setSentToSupport] = useState(false);
   const [cqttError, setCqttError] = useState("");
@@ -376,9 +377,9 @@ function Index() {
           })()}
 
           {previewRole === "cqtt" && activeView === "kpi" && cqttNotice && <p role="status" className="mb-3 rounded-md border border-success/40 bg-success-soft px-3 py-2 text-sm text-success">{cqttNotice}</p>}
-          {previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi CQTT.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách CQTT đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách CQTT đã đánh giá</Button></div> : activeView !== "list" ? (
+          {previewRole === "office" && activeView === "kpi" && !rows.some(officeInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi Văn phòng thẩm định bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => setView("list")}>Mở danh sách Chờ thẩm định</Button></div> : previewRole === "cqtt" && activeView === "kpi" && !rows.some(cqttInSummary) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu Tổng hợp đánh giá</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu Thường trực đánh giá có sau khi CQTT bấm Tổng hợp đánh giá ở tab Danh sách.</p><Button variant="outline" className="mt-4" onClick={() => { setCqttFilter("report"); setView("list"); }}>Mở danh sách đã hoàn tất đánh giá</Button></div> : (activeView === "ki" || activeView === "appendix") && !rows.some(hasKiData) && !(previewRole === "council" && activeView === "ki") ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">{activeView === "ki" ? "Chưa có dữ liệu Tổng hợp KPI" : "Chưa có dữ liệu Phụ lục Kết quả"}</h2><p className="mt-2 text-sm text-muted-foreground">Dữ liệu có sau khi CQTT hoàn tất rà soát, chấm điểm và gửi CQTT.</p></div> : previewRole === "council" && activeView === "ki" && !rows.some((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) ? <div className="rounded-lg border bg-card px-6 py-12 text-center"><h2 className="text-sm font-semibold">Chưa có dữ liệu tổng hợp KI</h2><p className="mt-2 text-sm text-muted-foreground">Bấm Tổng hợp KI tại danh sách CQTT đã đánh giá để tạo dữ liệu.</p><Button variant="outline" className="mt-4" onClick={() => { setCouncilFilter("completed"); setView("list"); }}>Mở danh sách CQTT đã đánh giá</Button></div> : activeView !== "list" ? (
             <AggregateForm
-              evaluations={(previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) : rows).filter((e) => (activeView === "kpi" || hasKiData(e)) && (previewRole !== "cqtt" || activeView !== "kpi" || cqttInSummary(e)))}
+              evaluations={(previewRole === "cqtt" && selectedBatch ? rows.filter((e) => (e.officeBatchId ?? e.period + "|" + e.block) === selectedBatch) : previewRole === "council" && activeView === "ki" ? rows.filter((e) => e.councilSummaryCreated || !["council", "council_adjust"].includes(e.step)) : rows).filter((e) => (activeView === "kpi" || hasKiData(e)) && (previewRole !== "cqtt" || activeView !== "kpi" || cqttInSummary(e)) && (previewRole !== "office" || activeView !== "kpi" || officeInSummary(e)))}
               mode={activeView}
               onOfficeSent={(count) => { setOfficeStatus("completed"); setView("list"); setOfficeNotice(`Đã gửi ${count} phiếu đến CQTT đánh giá.`); }}
               onCqttReturned={(count) => { setCqttFilter("waiting"); setCqttNotice(`Đã gửi điều chỉnh ${count} hồ sơ cho CQĐV/CQ. Hồ sơ chuyển sang trạng thái Chờ CQ/CQĐV phản hồi.`); }}
@@ -433,14 +434,24 @@ function Index() {
                     </div>
                   </div>
                   {/* Chờ thẩm định: gửi các phiếu đang hiển thị sang Tổ giúp việc; Tổ giúp việc: Văn phòng tổng hợp gửi CQTT. */}
-                  {officeStatus === "pending" && <Button onClick={() => {
+                  {officeStatus === "pending" && <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" onClick={() => {
+                    // Tổng hợp các phiếu Chờ thẩm định đang hiển thị → có dữ liệu ở tab Tổng hợp đánh giá.
+                    const ids = rows.filter((e) => e.step === "office").map((e) => e.id);
+                    const issue = summarizeOffice(ids);
+                    if (issue) { setOfficeNotice(issue); return; }
+                    setOfficeNotice("");
+                    setView("kpi");
+                  }} disabled={!rows.some((e) => e.step === "office")} title="Tổng hợp các phiếu Chờ thẩm định đang hiển thị"><KanbanSquare />Tổng hợp đánh giá</Button>
+                  <Button onClick={() => {
                     const ids = rows.filter((e) => e.step === "office").map((e) => e.id);
                     const issue = sendToSupport(ids);
                     if (issue) { setOfficeNotice(issue); return; }
                     // Người gửi thuộc Tổ giúp việc: chuyển sang bộ lọc Tổ giúp việc; không thuộc: chỉ báo gửi thành công.
                     if (isSupportRole(previewRole)) { setOfficeStatus("pending"); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }
                     else { setSentToSupport(true); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }
-                  }} disabled={sentToSupport || !rows.some((e) => e.step === "office")} title="Gửi các phiếu Chờ thẩm định đang hiển thị sang Tổ giúp việc"><Send />Gửi tổ giúp việc</Button>}
+                  }} disabled={sentToSupport || !rows.some((e) => e.step === "office")} title="Gửi các phiếu Chờ thẩm định đang hiển thị sang Tổ giúp việc"><Send />Gửi tổ giúp việc</Button>
+                  </div>}
                   {officeNotice && <p role="status" className="w-full text-sm text-success">{officeNotice}</p>}
                 </div>
               );

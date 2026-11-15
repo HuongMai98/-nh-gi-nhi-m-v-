@@ -10,6 +10,7 @@ import {
   forwardOfficeBatch,
   saveDraft,
   summarizeCqtt,
+  summarizeOffice,
   supportComment,
   addComment,
   supportConfirm,
@@ -258,6 +259,13 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
             const at = new Date().toLocaleString("vi-VN");
             const next = evaluations.map((e) => (ids.includes(e.id) ? summarizeCqtt(e, previewRole, at) : e));
             setEvaluations(next);
+            return null;
+          } catch (error) { return error instanceof Error ? error.message : "Không thể tổng hợp."; }
+        },
+        summarizeOffice: (ids) => {
+          try {
+            const at = new Date().toLocaleString("vi-VN");
+            setEvaluations(evaluations.map((e) => (ids.includes(e.id) ? summarizeOffice(e, previewRole, at) : e)));
             return null;
           } catch (error) { return error instanceof Error ? error.message : "Không thể tổng hợp."; }
         },

@@ -180,6 +180,8 @@ export type Evaluation = {
   cqttFunction?: number | undefined;
   /** CQTT đã tổng hợp điểm nhóm từ chi tiết đánh giá từng công việc. */
   cqttSummarized?: boolean | undefined;
+  /** Văn phòng thẩm định đã bấm Tổng hợp đánh giá: phiếu có dữ liệu ở tab Tổng hợp đánh giá. */
+  officeSummarized?: boolean | undefined;
   cqttAdjustmentPercent?: number | undefined;
   proposedKi?: Ki | undefined;
   reviewAssistant?: string;
@@ -446,6 +448,13 @@ export function summarizeCqtt(e: Evaluation, role: PreviewRole, at: string): Eva
   if (!groups) throw new Error(`${e.id}: chưa đánh giá đủ từng công việc.`);
   const next = { ...e, ...groups, cqttSummarized: true };
   return record(e, next, role, "Tổng hợp đánh giá", "Tổng hợp từ chi tiết đánh giá từng công việc", at);
+}
+/** Tab Tổng hợp đánh giá của Văn phòng thẩm định chỉ có dữ liệu sau khi bấm Tổng hợp đánh giá. */
+export const officeInSummary = (e: Evaluation) => e.step !== "office" || !!e.officeSummarized;
+export function summarizeOffice(e: Evaluation, role: PreviewRole, at: string): Evaluation {
+  if (role !== "office" || e.step !== "office") throw new Error("Chỉ Văn phòng thẩm định tổng hợp phiếu đang chờ thẩm định.");
+  if (e.officeSummarized) return e;
+  return record(e, { ...e, officeSummarized: true }, role, "Tổng hợp đánh giá", "", at);
 }
 export function saveDraft(e: Evaluation, role: PreviewRole, draft: Draft, at: string): Evaluation {
   const { returnStage: _returnStage, ...patch } = draft;
