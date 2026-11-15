@@ -435,7 +435,7 @@ function Index() {
                   </div>
                   {/* Chờ thẩm định: gửi các phiếu đang hiển thị sang Tổ giúp việc; Tổ giúp việc: Văn phòng tổng hợp gửi CQTT. */}
                   {officeStatus === "pending" && <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" onClick={() => {
+                  <Button onClick={() => {
                     // Tổng hợp các phiếu Chờ thẩm định đang hiển thị → có dữ liệu ở tab Tổng hợp đánh giá.
                     const ids = rows.filter((e) => e.step === "office").map((e) => e.id);
                     const issue = summarizeOffice(ids);
