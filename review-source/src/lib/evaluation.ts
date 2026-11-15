@@ -1,4 +1,4 @@
-import { councilConfirmCanAdjust, councilConfirmers, customStageOf, handlerFor, isStageEnabled, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
+import { councilConfirmCanAdjust, councilConfirmers, stageRoles, customStageOf, handlerFor, isStageEnabled, nextNode, resolveReturn, returnTargets, stageOf, type FlowNode, type StageKey } from "./workflow.ts";
 export type Step =
   | "self"
   | "office"
@@ -44,6 +44,10 @@ export const SUPPORT_TEAM: { role: PreviewRole; name: string; lead?: boolean }[]
 export const isSupportRole = (role: PreviewRole) => SUPPORT_TEAM.some((m) => m.role === role);
 /** Bộ phận cho ý kiến (không gồm Văn phòng đại diện). */
 export const isSupportCommenter = (role: PreviewRole) => isSupportRole(role) && role !== "support_office";
+/** Vai trò tham gia bước Tổ giúp việc theo cấu hình Khối (Văn phòng (Tổ giúp việc) chủ trì). */
+export const isSupportMemberOf = (block: Evaluation["block"], role: PreviewRole) => stageRoles(block, "support").includes(role);
+/** Bộ phận cho ý kiến ở bước Tổ giúp việc theo cấu hình Khối (trừ vai trò chủ trì). */
+export const isSupportCommenterOf = (block: Evaluation["block"], role: PreviewRole) => isSupportMemberOf(block, role) && role !== "support_office";
 export type SupportOpinion = { role: PreviewRole; dept: string; note: string; at: string; actorName?: string; confirmed?: boolean };
 /** Chỉ Quản trị hệ thống được cấu hình luồng duyệt. */
 export const canConfigureWorkflow = (role: PreviewRole) => role === "admin";
@@ -684,7 +688,7 @@ export function transition(
   patch: Draft,
   at: string,
 ): Evaluation {
-  if (roleOf(e) !== role && !(e.step === "support" && isSupportRole(role) && action === "return"))
+  if (roleOf(e) !== role && !(e.step === "support" && isSupportMemberOf(e.block, role) && action === "return"))
     throw new Error("Vai trò không được thực hiện bước này.");
   const reason = (patch.note ?? e.note ?? "").trim();
   const requireReason = () => {
@@ -812,18 +816,18 @@ export function receiveDirectorSigningResult(e: Evaluation, outcome: "approved" 
 
 /** Bộ phận Tổ giúp việc đang đánh giá (không bắt buộc); gửi lại sẽ thay ý kiến trước của bộ phận đó. */
 export function supportComment(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
-  if (e.step !== "support" || !isSupportCommenter(role)) throw new Error("Chỉ bộ phận Tổ giúp việc đang đánh giá khi phiếu ở bước Tổ giúp việc.");
+  if (e.step !== "support" || !isSupportCommenterOf(e.block, role)) throw new Error("Chỉ bộ phận Tổ giúp việc đang đánh giá khi phiếu ở bước Tổ giúp việc.");
   const text = note.trim();
   if (!text) throw new Error("Vui lòng nhập nội dung ý kiến.");
-  const dept = SUPPORT_TEAM.find((m) => m.role === role)!.name;
+  const dept = SUPPORT_TEAM.find((m) => m.role === role)?.name ?? ROLES[role];
   const prev = supportOpinionOf(e, role);
   const opinions = [...(e.supportOpinions ?? []).filter((o) => o.role !== role), { role, dept, note: text, at, ...(actorName ? { actorName } : {}), ...(prev?.confirmed ? { confirmed: true } : {}) }];
   return record(e, { ...e, supportOpinions: opinions }, role, `Cho ý kiến — ${dept}`, text, at);
 }
 /** Bộ phận Tổ giúp việc xác nhận đánh giá (kèm ý kiến nếu có). */
 export function supportConfirm(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
-  if (e.step !== "support" || !isSupportCommenter(role)) throw new Error("Chỉ bộ phận Tổ giúp việc xác nhận khi phiếu ở bước Tổ giúp việc.");
-  const dept = SUPPORT_TEAM.find((m) => m.role === role)!.name;
+  if (e.step !== "support" || !isSupportCommenterOf(e.block, role)) throw new Error("Chỉ bộ phận Tổ giúp việc xác nhận khi phiếu ở bước Tổ giúp việc.");
+  const dept = SUPPORT_TEAM.find((m) => m.role === role)?.name ?? ROLES[role];
   const text = note.trim() || supportOpinionOf(e, role)?.note || "";
   const opinions = [...(e.supportOpinions ?? []).filter((o) => o.role !== role), { role, dept, note: text, at, confirmed: true, ...(actorName ? { actorName } : {}) }];
   return record(e, { ...e, supportOpinions: opinions }, role, `Xác nhận đánh giá — ${dept}`, text, at);
@@ -833,7 +837,7 @@ export function supportConfirm(e: Evaluation, role: PreviewRole, note: string, a
  * Bộ phận Tổ giúp việc ở bước Tổ giúp việc: ý kiến đồng thời ghi nhận vào khung Ý kiến Tổ giúp việc.
  */
 export function addComment(e: Evaluation, role: PreviewRole, note: string, at: string, actorName?: string): Evaluation {
-  if (e.step === "support" && isSupportCommenter(role)) return supportComment(e, role, note, at, actorName);
+  if (e.step === "support" && isSupportCommenterOf(e.block, role)) return supportComment(e, role, note, at, actorName);
   const text = note.trim();
   if (!text) throw new Error("Vui lòng nhập nội dung ý kiến.");
   return record(e, e, role, "Ý kiến", text, at);

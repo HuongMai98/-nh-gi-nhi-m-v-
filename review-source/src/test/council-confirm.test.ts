@@ -52,7 +52,7 @@ it("cấu hình: bỏ bộ phận xác nhận thì trình ký ngay; tắt quyề
 
 it("cấu hình nhiều bộ phận xác nhận: đủ tất cả mới được trình ký", () => {
   const c = defaultWorkflow(ready().block);
-  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, confirmBy: ["politics", "hr"] } : s));
+  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, roles: ["council", "politics", "hr"], confirmBy: ["politics", "hr"] } : s));
   setWorkflows([c]);
   const one = confirmCouncilSummary(ready(), "politics", "t1");
   expect(needsCouncilConfirm(one)).toBe(true);

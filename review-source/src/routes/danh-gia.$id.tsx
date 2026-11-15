@@ -35,8 +35,8 @@ import { roleOf, statusLabelOf, statusToneOf,
   type Criterion,
   type Action,
   type Draft,
-  isSupportCommenter,
-  isSupportRole,
+  isSupportCommenterOf,
+  isSupportMemberOf,
   supportOpinionOf,
 } from "@/lib/evaluation";
 import { CreateEvaluationDialog, EVALUATION_FORM_ACTIONS_ID } from "@/components/CreateEvaluationDialog";
@@ -103,7 +103,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [error, setError] = useState("");
   const own = !readOnly && ev.step !== "ceo" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
   // Tổ giúp việc: 4 bộ phận đều gửi điều chỉnh được; Văn phòng (đại diện) gửi CQTT; 3 bộ phận còn lại cho ý kiến.
-  const supportMember = ev.step === "support" && isSupportRole(previewRole);
+  const supportMember = ev.step === "support" && isSupportMemberOf(ev.block, previewRole);
   const [supportNote, setSupportNote] = useState("");
   const [supportMsg, setSupportMsg] = useState("");
   const canSelf = own && selfEditable(ev, previewRole);
@@ -162,7 +162,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const returnAction: Action = ev.step === "cqtt" ? "request" : "return";
   // Văn phòng thẩm định và Tổ giúp việc gửi điều chỉnh qua popup nhập lý do.
   const opinions = (ev.history ?? []).filter((h) => h.note?.trim());
-  const popupReturn = isSupportRole(previewRole) || (previewRole === "office" && ev.step === "office");
+  const popupReturn = supportMember || (previewRole === "office" && ev.step === "office");
   const returnText =
     (previewRole === "office" && ev.step === "office") || supportMember ? "Gửi điều chỉnh" : ev.step === "cqtt" ? "Gửi điều chỉnh" : allowedReturns.length !== 1 ? "Trả về" : ev.step === "custom" ? `Trả về ${handlerFor(ev.block, allowedReturns[0]!)}` : returnLabel(ev.block, fromStage, allowedReturns[0]!);
   const run = (action?: Action, requestReasonOverride?: string) => {
@@ -279,7 +279,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               Lưu
             </Button>
           )}
-          {supportMember && isSupportCommenter(previewRole) && (
+          {supportMember && isSupportCommenterOf(ev.block, previewRole) && (
             <Button onClick={() => { const issue = confirmSupport(ev.id, supportNote); setSupportMsg(issue ?? "Đã xác nhận đánh giá."); setError(issue ?? ""); }} disabled={!!supportOpinionOf(ev, previewRole)?.confirmed}>
               <Check />
               {supportOpinionOf(ev, previewRole)?.confirmed ? "Đã xác nhận" : "Xác nhận đánh giá"}

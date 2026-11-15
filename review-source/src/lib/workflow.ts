@@ -17,13 +17,26 @@ export type StageConfig = {
   slaDays: number;
   /** Các bước được phép trả về (đứng trước, đang bật). Rỗng = không cho trả về. Người xử lý chọn 1 bước khi trả về. */
   returnTo: StageKey[];
+  /** Vai trò tham gia bước: vai trò chủ trì (STAGES[key].role) luôn có; các vai trò phối hợp do quản trị chọn thêm. */
+  roles?: PreviewRole[];
   /** Bước CQTT: bộ phận phải xác nhận Tổng hợp KI (cả lô) trước khi Văn phòng trình ký GĐ. Rỗng = không cần xác nhận. */
   confirmBy?: PreviewRole[];
   /** Bước CQTT: bộ phận xác nhận được Gửi điều chỉnh cho Văn phòng (CQTT). */
   confirmCanAdjust?: boolean;
 };
-/** Bộ phận có thể được cấu hình xác nhận Tổng hợp KI ở bước CQTT. */
-export const COUNCIL_CONFIRMER_OPTIONS: PreviewRole[] = ["politics", "hr", "strategy"];
+/** Vai trò có thể chọn tham gia các bước (trừ Quản trị hệ thống và CQTT rà soát cũ). */
+export const ROLE_OPTIONS: PreviewRole[] = ["performer", "office", "support_office", "politics", "hr", "strategy", "council", "ceo"];
+/** Vai trò mặc định của từng bước (vai trò đầu tiên là chủ trì). */
+export const DEFAULT_STAGE_ROLES: Record<StageKey, PreviewRole[]> = {
+  self: ["performer"],
+  office: ["office"],
+  support: ["support_office", "politics", "hr", "strategy"],
+  cqtt: ["cqtt"],
+  council: ["council", "politics"],
+  ceo: ["ceo"],
+  dispatch: ["office"],
+  sign: ["performer"],
+};
 const DEFAULT_COUNCIL_CONFIRM = { confirmBy: ["politics"] as PreviewRole[], confirmCanAdjust: true };
 export type BranchConfig = {
   /** GĐ điều chỉnh trực tiếp điểm/Ki trước khi phê duyệt. */
@@ -155,6 +168,7 @@ export function defaultWorkflow(block: Block): WorkflowConfig {
       handler: key === "office" || key === "dispatch" ? unit : STAGES[key].handlers[0]!,
       slaDays: sla[key],
       returnTo: [...(DEFAULT_RETURN[key] ?? [])],
+      roles: [...DEFAULT_STAGE_ROLES[key]],
       ...(key === "council" ? { confirmBy: [...DEFAULT_COUNCIL_CONFIRM.confirmBy], confirmCanAdjust: DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {}),
     })),
     branches: { ceoDirectAdjust: false },
@@ -191,7 +205,8 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
         ? [...configuredReturn, "self"]
         : configuredReturn;
       const confirm = key === "council" ? { confirmBy: [...(s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy)], confirmCanAdjust: s.confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust } : {};
-      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo, ...confirm };
+      const roles = withLead(key, s.roles ?? DEFAULT_STAGE_ROLES[key]);
+      return { ...s, ...(key === "ceo" ? { enabled: true, handler: "GĐ" } : {}), returnTo, roles, ...confirm };
     }),
     branches: { ceoDirectAdjust: false },
     customStages: (raw.customStages ?? []).map((s) => ({ ...s, returnTo: [...(s.returnTo ?? [])] })),
@@ -201,7 +216,7 @@ export function upgradeWorkflow(raw: WorkflowConfig & { branches: Partial<Branch
 
 export const cloneWorkflow = (c: WorkflowConfig): WorkflowConfig => ({
   ...c,
-  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo], ...(s.confirmBy ? { confirmBy: [...s.confirmBy] } : {}) })),
+  stages: c.stages.map((s) => ({ ...s, returnTo: [...s.returnTo], ...(s.confirmBy ? { confirmBy: [...s.confirmBy] } : {}), ...(s.roles ? { roles: [...s.roles] } : {}) })),
   branches: { ...c.branches },
   customStages: (c.customStages ?? []).map((s) => ({ ...s, returnTo: [...s.returnTo] })),
   notifications: { ...DEFAULT_NOTIFICATIONS, ...(c.notifications ?? {}) },
@@ -257,6 +272,9 @@ export function normalizeBranches(c: WorkflowConfig): WorkflowConfig {
       // Gửi kết quả do chính đơn vị tổng hợp đầu vào thực hiện.
       handler: s.key === "dispatch" ? (c.stages.find((x) => x.key === "office")?.handler ?? s.handler) : s.handler,
       returnTo: s.returnTo.filter((t) => returnOptions(c, s.key).includes(t)),
+      roles: withLead(s.key, s.roles ?? DEFAULT_STAGE_ROLES[s.key]),
+      // Bộ phận xác nhận phải là vai trò đang tham gia bước CQTT.
+      ...(s.key === "council" && s.confirmBy ? { confirmBy: s.confirmBy.filter((r) => withLead(s.key, s.roles ?? DEFAULT_STAGE_ROLES[s.key]).includes(r) && r !== STAGES[s.key].role) } : {}),
     })),
     branches: { ceoDirectAdjust: false },
     customStages: (c.customStages ?? []).map((cs) => ({ ...cs, returnTo: cs.returnTo.filter((t) => customReturnOptions(c, cs).includes(t)) })),
@@ -374,10 +392,18 @@ export const customStageOf = (block: Block, id: string | undefined): CustomStage
   id ? getWorkflow(block).customStages?.find((s) => s.id === id) : undefined;
 export const notificationsFor = (block: Block): NotificationConfig => ({ ...DEFAULT_NOTIFICATIONS, ...(getWorkflow(block).notifications ?? {}) });
 export const handlerFor = (block: Block, key: StageKey) => stageConfig(block, key).handler;
+/** Vai trò chủ trì luôn đứng đầu; giữ thứ tự theo ROLE_OPTIONS, bỏ trùng. */
+export function withLead(key: StageKey, roles: PreviewRole[]): PreviewRole[] {
+  const lead = STAGES[key].role;
+  return [lead, ...ROLE_OPTIONS.filter((r) => r !== lead && roles.includes(r))];
+}
+/** Vai trò tham gia bước theo cấu hình Khối. */
+export const stageRoles = (block: Block, key: StageKey): PreviewRole[] => withLead(key, stageConfig(block, key).roles ?? DEFAULT_STAGE_ROLES[key]);
 /** Bộ phận phải xác nhận Tổng hợp KI trước khi trình ký GĐ (theo cấu hình bước CQTT). */
 export const councilConfirmers = (block: Block): PreviewRole[] => {
   const s = stageConfig(block, "council");
-  return s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy;
+  const roles = stageRoles(block, "council");
+  return (s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy).filter((r) => roles.includes(r) && r !== "council");
 };
 export const councilConfirmCanAdjust = (block: Block) => stageConfig(block, "council").confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust;
 /** Các bước được phép trả về từ bước `key` (rỗng = không cho trả về). */

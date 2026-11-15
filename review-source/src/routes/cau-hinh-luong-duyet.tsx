@@ -38,7 +38,9 @@ import {
   type VersionStatus,
   type WorkflowVersion,
   RETIRED_STAGES,
-  COUNCIL_CONFIRMER_OPTIONS,
+  DEFAULT_STAGE_ROLES,
+  ROLE_OPTIONS,
+  withLead,
 } from "@/lib/workflow";
 import { cn } from "@/lib/utils";
 
@@ -490,27 +492,38 @@ function VersionEditor({ id, from }: { id: string; from: string | undefined }) {
                       <div className="mt-1 text-xs text-amber-700">{inStage[key]} phiếu đang ở bước này sẽ xử lý nốt, sau đó bỏ qua bước.</div>
                     )}
                   </td>
-                  <td className="px-3 py-3">{key === "support"
-                    ? <div><div className="whitespace-nowrap">{ROLES.support_office}</div><div className="mt-0.5 max-w-44 text-xs text-muted-foreground">Cho ý kiến: {ROLES.politics}, {ROLES.hr}, {ROLES.strategy}</div></div>
-                    : key === "council" ? <div className="min-w-48 space-y-2">
-                      <div><div>Văn phòng (CQTT)</div><div className="mt-0.5 text-xs text-muted-foreground">Chấm điểm, tổng hợp KI, trình ký GĐ</div></div>
-                      {/* Bộ phận phải xác nhận cả lô Tổng hợp KI trước khi Văn phòng (CQTT) trình ký GĐ. */}
-                      <fieldset className="space-y-1 rounded-md border bg-muted/30 p-2 text-xs" aria-label="Xác nhận trước khi trình ký">
-                        <legend className="px-1 font-medium text-foreground">Xác nhận trước khi trình ký</legend>
-                        {COUNCIL_CONFIRMER_OPTIONS.map((r) => <label key={r} className="flex items-center gap-1.5">
-                          <input type="checkbox" className="size-3.5 accent-primary" aria-label={`${ROLES[r]} xác nhận Tổng hợp KI`} disabled={readOnly || !s.enabled}
-                            checked={(s.confirmBy ?? []).includes(r)}
-                            onChange={(event) => setStage(key, { confirmBy: event.target.checked ? COUNCIL_CONFIRMER_OPTIONS.filter((x) => x === r || (s.confirmBy ?? []).includes(x)) : (s.confirmBy ?? []).filter((x) => x !== r) })} />
-                          {ROLES[r]}
-                        </label>)}
-                        <label className="flex items-center gap-1.5 border-t pt-1.5">
-                          <input type="checkbox" className="size-3.5 accent-primary" aria-label="Bộ phận xác nhận được gửi điều chỉnh" disabled={readOnly || !s.enabled || !(s.confirmBy ?? []).length}
-                            checked={!!s.confirmCanAdjust && !!(s.confirmBy ?? []).length} onChange={(event) => setStage(key, { confirmCanAdjust: event.target.checked })} />
-                          Được gửi điều chỉnh cho Văn phòng
-                        </label>
-                      </fieldset>
+                  <td className="px-3 py-3">
+                    <div className="min-w-52 space-y-2">
+                      <RolePicker
+                        stage={key}
+                        value={withLead(key, s.roles ?? DEFAULT_STAGE_ROLES[key])}
+                        disabled={readOnly || !s.enabled}
+                        onChange={(roles) => setStage(key, { roles, ...(key === "council" ? { confirmBy: (s.confirmBy ?? []).filter((r) => roles.includes(r)) } : {}) })}
+                      />
+                      {key === "support" && <p className="text-xs text-muted-foreground">Chủ trì tổng hợp, gửi CQTT; vai trò phối hợp cho ý kiến/xác nhận. Tất cả được gửi điều chỉnh.</p>}
+                      {key === "council" && (() => {
+                        const options = withLead(key, s.roles ?? DEFAULT_STAGE_ROLES[key]).filter((r) => r !== meta.role);
+                        return (
+                          /* Bộ phận phải xác nhận cả lô Tổng hợp KI trước khi Văn phòng (CQTT) trình ký GĐ: chọn trong các vai trò phối hợp. */
+                          <fieldset className="space-y-1 rounded-md border bg-muted/30 p-2 text-xs" aria-label="Xác nhận trước khi trình ký">
+                            <legend className="px-1 font-medium text-foreground">Xác nhận trước khi trình ký</legend>
+                            {!options.length && <p className="text-muted-foreground">Chọn thêm vai trò phối hợp để yêu cầu xác nhận.</p>}
+                            {options.map((r) => <label key={r} className="flex items-center gap-1.5">
+                              <input type="checkbox" className="size-3.5 accent-primary" aria-label={`${ROLES[r]} xác nhận Tổng hợp KI`} disabled={readOnly || !s.enabled}
+                                checked={(s.confirmBy ?? []).includes(r)}
+                                onChange={(event) => setStage(key, { confirmBy: event.target.checked ? options.filter((x) => x === r || (s.confirmBy ?? []).includes(x)) : (s.confirmBy ?? []).filter((x) => x !== r) })} />
+                              {ROLES[r]}
+                            </label>)}
+                            <label className="flex items-center gap-1.5 border-t pt-1.5">
+                              <input type="checkbox" className="size-3.5 accent-primary" aria-label="Bộ phận xác nhận được gửi điều chỉnh" disabled={readOnly || !s.enabled || !(s.confirmBy ?? []).length}
+                                checked={!!s.confirmCanAdjust && !!(s.confirmBy ?? []).length} onChange={(event) => setStage(key, { confirmCanAdjust: event.target.checked })} />
+                              Được gửi điều chỉnh cho Văn phòng
+                            </label>
+                          </fieldset>
+                        );
+                      })()}
                     </div>
-                    : <span className="whitespace-nowrap">{ROLES[meta.role]}</span>}</td>
+                  </td>
                   <td className="px-3 py-3">
                     <select
                       aria-label={`Đơn vị xử lý ${meta.name}`}
@@ -702,6 +715,39 @@ function ReturnPicker({
               {STAGES[target].name}
               <span className="block text-xs text-muted-foreground">{handlerOf(target)}</span>
             </span>
+          </label>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Chọn nhiều vai trò tham gia bước; vai trò chủ trì luôn có, không bỏ được. */
+function RolePicker({ stage, value, disabled, onChange }: { stage: StageKey; value: PreviewRole[]; disabled: boolean; onChange: (next: PreviewRole[]) => void }) {
+  const lead = STAGES[stage].role;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" disabled={disabled} aria-label={`Vai trò thao tác — ${STAGES[stage].name}`} className="flex min-h-9 w-56 items-start justify-between gap-2 rounded-md border bg-card px-2 py-1.5 text-left text-sm disabled:bg-muted disabled:text-muted-foreground">
+          <span className="flex flex-wrap gap-1">
+            {value.map((r) => <span key={r} className={cn("rounded px-1.5 py-0.5 text-xs", r === lead ? "bg-primary/10 font-medium text-primary" : "bg-muted text-foreground")}>{ROLES[r]}</span>)}
+          </span>
+          <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 opacity-60" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 bg-card p-1">
+        {ROLE_OPTIONS.map((r) => (
+          <label key={r} className={cn("flex items-center gap-2 rounded px-2 py-1.5 text-sm", r === lead ? "cursor-default" : "cursor-pointer hover:bg-accent")}>
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-primary"
+              aria-label={`${STAGES[stage].name}: ${ROLES[r]}`}
+              checked={value.includes(r)}
+              disabled={r === lead}
+              onChange={(e) => onChange(withLead(stage, e.target.checked ? [...value, r] : value.filter((x) => x !== r)))}
+            />
+            <span className="flex-1">{ROLES[r]}</span>
+            {r === lead && <span className="text-[11px] text-primary">Chủ trì</span>}
           </label>
         ))}
       </PopoverContent>
