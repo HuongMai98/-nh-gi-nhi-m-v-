@@ -25,7 +25,7 @@ it("kỳ tới của Quý IV là Quý I năm sau", () => {
   expect(nextPeriod("Quý IV/2026").label).toBe("Quý I/2027");
 });
 
-it("CQTT bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi", async () => {
+it("CQTT bấm Trình ký GĐ: xem PDF Phụ lục I/III, chọn phiếu GNV kỳ tới rồi gửi", async () => {
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:test", revokeObjectURL: () => {} }));
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chuẩn bị"));
@@ -34,8 +34,11 @@ it("CQTT bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ 
   const docs = await within(dialog).findByRole("list", { name: "Tài liệu trình ký" });
   await waitFor(() => expect(within(docs).getAllByRole("listitem")).toHaveLength(1));
   expect(docs).not.toHaveTextContent("Phieu-danh-gia-SIGNING-TEST.pdf");
-  expect(docs).toHaveTextContent("Tong-hop-KI.pdf");
-  expect(within(dialog).getByTitle("Xem Tong-hop-KI.pdf")).toBeInTheDocument();
+  const block = EVALUATIONS[1]!.block;
+  const appendix = block === "Khối Cơ quan" ? "Phu_luc_I_Ket_qua_danh_gia_nhiem_vu_Quy_3_2026_KCQ.pdf" : "Phu_luc_III_Ket_qua_danh_gia_nhiem_vu_Quy_3_2026_cac_don_vi.pdf";
+  expect(docs).toHaveTextContent(appendix);
+  expect(docs).not.toHaveTextContent("Tong-hop-KI.pdf");
+  expect(within(dialog).getByTitle(`Xem ${appendix}`)).toBeInTheDocument();
   // Bỏ chọn hết phiếu GNV kỳ tới thì không gửi được.
   const gnv = within(dialog).getByLabelText("Chọn GNV-2026-Q4-777");
   fireEvent.click(gnv);
@@ -46,7 +49,7 @@ it("CQTT bấm Trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ 
   expect(state().step).toBe("council");
   fireEvent.click(screen.getByRole("button", { name: "Trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
-  expect(state().files).toEqual(["Tong-hop-KI.pdf", expect.stringMatching(/\.xlsx$/)]);
+  expect(state().files).toEqual([expect.stringMatching(/^Phu_luc_(I|III)_/), expect.stringMatching(/\.xlsx$/)]);
   expect(state().note).toContain("Ngành: Kế hoạch");
   expect(state().note).toContain("GNV-2026-Q4-777");
   vi.unstubAllGlobals();

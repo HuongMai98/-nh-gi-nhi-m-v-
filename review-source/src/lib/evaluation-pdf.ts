@@ -119,3 +119,52 @@ export function buildSigningDossierPdf(evaluations: Evaluation[]): TDocumentDefi
   documents.push(summary(evaluations, "ki"));
   return { ...buildEvaluationPdf(evaluations,"ki"), info: { title: "Hồ sơ trình ký GĐ — Phiếu GNV, Phiếu đánh giá, Tổng hợp KI" }, content: documents.flatMap((parts,i) => [...(i ? [{ text:"", pageBreak:"before" as const }] : []), ...parts]) };
 }
+/** Phụ lục trình TGĐ: I = Khối Cơ quan, III = Khối Đơn vị (theo mẫu Phu_luc_I / Phu_luc_III_..._MAU.pdf). */
+export type AppendixKind = "co-quan" | "don-vi";
+const SHORT_RATING: Record<string, string> = { "Vượt xa yêu cầu": "Vượt xa YC", "Vượt yêu cầu": "Vượt YC", "Đạt yêu cầu": "Đạt YC", "Gần đạt yêu cầu": "Gần đạt YC", "Không đạt yêu cầu": "Không đạt YC" };
+const QUARTER_NO: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4" };
+/** "Quý III/2026" → "QUÝ 3/2026" như tiêu đề phụ lục mẫu. */
+export const appendixPeriod = (period: string) => {
+  const [q = "", y = ""] = period.replace("Quý ", "").split("/");
+  return `QUÝ ${QUARTER_NO[q] ?? q}/${y}`;
+};
+export const APPENDIX_SIGNERS = ["CHÁNH VĂN PHÒNG", "BAN TCNL", "BAN CHIẾN LƯỢC", "PHÓ TỔNG GIÁM ĐỐC", "TỔNG GIÁM ĐỐC"];
+export function appendixFileName(kind: AppendixKind, period: string) {
+  const p = appendixPeriod(period).replace("QUÝ ", "Quy_").replace("/", "_");
+  return kind === "co-quan" ? `Phu_luc_I_Ket_qua_danh_gia_nhiem_vu_${p}_KCQ.pdf` : `Phu_luc_III_Ket_qua_danh_gia_nhiem_vu_${p}_cac_don_vi.pdf`;
+}
+export function buildAppendixPdf(evaluations: Evaluation[], kind: AppendixKind): TDocumentDefinitions {
+  if (!evaluations.length) throw new Error("Không có hồ sơ để lập phụ lục.");
+  const isAgency = kind === "co-quan";
+  const period = appendixPeriod(evaluations[0]!.period);
+  const heading = isAgency
+    ? `PHỤ LỤC I: KẾT QUẢ ĐÁNH GIÁ NHIỆM VỤ ${period} CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN`
+    : `PHỤ LỤC III: KẾT QUẢ ĐÁNH GIÁ NHIỆM VỤ ${period} CỦA CHỈ HUY ĐƠN VỊ`;
+  const h = (value: string, colSpan = 1, rowSpan = 1): TableCell => ({ text: value, bold: true, alignment: "center", colSpan, rowSpan, ...(rowSpan > 1 ? { margin: [0, 12, 0, 0] as [number, number, number, number] } : {}) });
+  // Xếp theo điểm đánh giá giảm dần như mẫu.
+  const rows = evaluations.map(e => ({ e, r: templateResult(e) })).sort((a, b) => (b.r.score ?? -1) - (a.r.score ?? -1));
+  const center = (value: string): TableCell => ({ text: value, alignment: "center" });
+  const body: TableCell[][] = [
+    [h("TT", 1, 2), h(isAgency ? "Mã số" : "Mã nhân viên", 1, 2), h("Họ và Tên", 1, 2), h("Chức danh", 1, 2), h(isAgency ? "Cơ quan" : "Đơn vị", 1, 2), h("Kết quả hoàn thành nhiệm vụ/công việc", 6), {}, {}, {}, {}, {}],
+    [{}, {}, {}, {}, {}, h("Điểm đánh giá"), h("Xếp loại kết quả thực hiện nhiệm vụ"), h("Tuân thủ địa điểm làm việc"), h("Tuân thủ Nội quy lao động"), h("Xếp loại Ki"), h("Xếp loại mức độ hoàn thành nhiệm vụ/công việc")],
+    ...rows.map(({ e, r }, i) => [
+      center(String(i + 1)), center(text(e.employeeId)), { text: e.owner }, { text: text(e.jobTitle) }, { text: e.unit },
+      center(r.score == null ? "—" : String(Math.round(r.score * 100) / 100)), center(SHORT_RATING[r.rating] ?? text(r.rating)),
+      center(text(e.locationCompliance)), center(text(e.laborCompliance)), center(text(r.ki)), center(text(r.completion)),
+    ]),
+  ];
+  const fontSize = rows.length > 20 ? 7 : 8.5;
+  const weights = isAgency ? [3, 6, 12, 11.5, 13, 5, 8, 7, 7, 4.5, 11] : [3, 5.5, 11, 11.5, 18, 5, 8, 6.5, 6.5, 4.5, 11];
+  return {
+    pageSize: "A4", pageOrientation: "landscape", pageMargins: [28, 24, 28, 28],
+    defaultStyle: { font: "Tinos", fontSize: 9 },
+    info: { title: heading },
+    content: [
+      { table: { widths: [150], body: [[{ stack: ["Số và ký hiệu: ........../TTr-VP", "Ngày ban hành: ..../..../........"], fontSize: 7.5 }]] }, layout: { hLineWidth: () => 0.6, vLineWidth: () => 0.6 } },
+      { text: heading, bold: true, fontSize: 13, alignment: "center", margin: [0, 10, 0, 8] },
+      { ...table(body, weights, 2, fontSize) as object, margin: [0, 0, 0, 12] } as Content,
+      { columns: APPENDIX_SIGNERS.map(s => ({ width: "*", alignment: "center", bold: true, fontSize: 9, text: s })), unbreakable: true } as Content,
+    ],
+    footer: (page, pages) => pages > 1 ? ({ text: `${page} / ${pages}`, alignment: "right", margin: [0, 5, 28, 0], fontSize: 8 }) : null,
+  };
+}

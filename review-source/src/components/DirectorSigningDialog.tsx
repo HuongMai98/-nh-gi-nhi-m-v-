@@ -4,7 +4,7 @@ import { Download, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
-import { buildEvaluationPdf } from "@/lib/evaluation-pdf";
+import { appendixFileName, buildAppendixPdf } from "@/lib/evaluation-pdf";
 import { createPdfBlob } from "@/lib/pdf-runtime";
 import { downloadSigningAttachment, type SigningAttachment } from "@/lib/director-signing";
 import type { Evaluation } from "@/lib/evaluation";
@@ -27,7 +27,7 @@ export function nextAssignmentRef(e: Evaluation): string {
 
 type Doc = SigningAttachment & { url: string; label: string };
 
-/** CQTT trình ký GĐ: xem PDF Tổng hợp KI, chọn phiếu GNV kỳ tới rồi gửi. */
+/** CQTT trình ký GĐ: xem PDF Phụ lục I / Phụ lục III, chọn phiếu GNV kỳ tới rồi gửi. */
 export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   evaluations: Evaluation[];
   open: boolean;
@@ -51,8 +51,13 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
     setChosen(new Set(options.map((o) => o.ref)));
     (async () => {
       try {
+        // Tờ trình TGĐ kèm Phụ lục I (Khối Cơ quan) và Phụ lục III (Khối Đơn vị) theo mẫu.
+        const agencies = evaluations.filter((e) => e.block === "Khối Cơ quan");
+        const units = evaluations.filter((e) => e.block !== "Khối Cơ quan");
+        const period = evaluations[0]!.period;
         const specs = [
-          { name: "Tong-hop-KI.pdf", label: `Tổng hợp KI · ${evaluations.length} cá nhân`, def: buildEvaluationPdf(evaluations, "ki") },
+          ...(agencies.length ? [{ name: appendixFileName("co-quan", period), label: `Phụ lục I · Chỉ huy cơ quan · ${agencies.length} cá nhân`, def: buildAppendixPdf(agencies, "co-quan") }] : []),
+          ...(units.length ? [{ name: appendixFileName("don-vi", period), label: `Phụ lục III · Chỉ huy đơn vị · ${units.length} cá nhân`, def: buildAppendixPdf(units, "don-vi") }] : []),
         ];
         const built: Doc[] = [];
         for (const s of specs) {
