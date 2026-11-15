@@ -22,9 +22,9 @@ it("bỏ Ban Chiến lược khỏi bước Tổ giúp việc: không còn cho �
   expect(supportComment(e, "politics", "ý kiến", "t1").supportOpinions?.some((o) => o.role === "politics" && o.note === "ý kiến")).toBe(true);
 });
 
-it("bước CQTT: thêm Tổ chức Nhân lực làm vai trò phối hợp và bộ phận xác nhận", () => {
+it("bước CQTT: vai trò phối hợp là bộ phận phải xác nhận Tổng hợp KI", () => {
   const c = defaultWorkflow("Khối Cơ quan");
-  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, roles: ["council", "politics", "hr"], confirmBy: ["hr"] } : s));
+  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, roles: ["council", "hr"] } : s));
   setWorkflows([normalizeBranches(c)]);
   expect(councilConfirmers("Khối Cơ quan")).toEqual(["hr"]);
   const e = { ...structuredClone(EVALUATIONS.find((x) => x.step === "council" && x.block === "Khối Cơ quan")!), councilSummaryCreated: true };

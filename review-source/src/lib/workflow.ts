@@ -120,7 +120,7 @@ export const STAGES: Record<
     name: "CQTT chấm điểm, tính Ki",
     role: "council",
     required: false,
-    description: "Văn phòng (CQTT) chấm từng công việc, xác nhận tuân thủ, tổng hợp KI; bộ phận được chọn (mặc định Cơ quan Chính trị) xác nhận cả lô rồi Văn phòng trình ký GĐ.",
+    description: "Văn phòng (CQTT) chấm từng công việc, xác nhận tuân thủ, tổng hợp KI; vai trò phối hợp (mặc định Cơ quan Chính trị) xác nhận cả lô rồi Văn phòng trình ký GĐ.",
     handlers: ["CQTT"],
     steps: ["council", "council_adjust"],
   },
@@ -401,9 +401,8 @@ export function withLead(key: StageKey, roles: PreviewRole[]): PreviewRole[] {
 export const stageRoles = (block: Block, key: StageKey): PreviewRole[] => withLead(key, stageConfig(block, key).roles ?? DEFAULT_STAGE_ROLES[key]);
 /** Bộ phận phải xác nhận Tổng hợp KI trước khi trình ký GĐ (theo cấu hình bước CQTT). */
 export const councilConfirmers = (block: Block): PreviewRole[] => {
-  const s = stageConfig(block, "council");
-  const roles = stageRoles(block, "council");
-  return (s.confirmBy ?? DEFAULT_COUNCIL_CONFIRM.confirmBy).filter((r) => roles.includes(r) && r !== "council");
+  // Các vai trò phối hợp của bước CQTT đều phải xác nhận cả lô Tổng hợp KI trước khi trình ký GĐ.
+  return stageRoles(block, "council").filter((r) => r !== "council");
 };
 export const councilConfirmCanAdjust = (block: Block) => stageConfig(block, "council").confirmCanAdjust ?? DEFAULT_COUNCIL_CONFIRM.confirmCanAdjust;
 /** Các bước được phép trả về từ bước `key` (rỗng = không cho trả về). */

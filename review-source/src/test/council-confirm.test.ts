@@ -38,9 +38,9 @@ it("Văn phòng (CQTT) sửa điểm sau khi đã xác nhận thì phải xác n
   expect(needsCouncilConfirm(edited)).toBe(true);
 });
 
-it("cấu hình: bỏ bộ phận xác nhận thì trình ký ngay; tắt quyền gửi điều chỉnh thì bị chặn", () => {
+it("cấu hình: bỏ vai trò phối hợp ở bước CQTT thì trình ký ngay; tắt quyền gửi điều chỉnh thì bị chặn", () => {
   const c = defaultWorkflow(ready().block);
-  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, confirmBy: [], confirmCanAdjust: false } : s));
+  c.stages = c.stages.map((s) => (s.key === "council" ? { ...s, roles: ["council"], confirmCanAdjust: false } : s));
   setWorkflows([c]);
   expect(councilConfirmState(ready())).toBe("none");
   expect(transition(ready(), "council", "submit", {}, "t1").step).toBe("ceo");
