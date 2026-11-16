@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
 import { TaskDetailDialog } from "@/components/TaskDetailDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -195,6 +196,11 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
     setMessage(
       issue ? "" : action === "finish" && (canCqttTasks || canCouncilTasks) ? "Đã lưu điểm QLTT đánh giá và hoàn tất đánh giá." : action ? "Đã chuyển hồ sơ." : "Đã lưu.",
     );
+    if (!issue) {
+      // Thông báo thành công theo tên nút: "Gửi đánh giá thành công", "Gửi CQTT thành công", "Gửi điều chỉnh thành công"…
+      const label = action === "request" || action === "return" ? returnText : action ? actions.find((a) => a.action === action)?.label ?? (action === "submit" ? "Gửi đánh giá" : actionLabel(action)) : "Cập nhật đánh giá";
+      if (label) toast.success(`${label} thành công`);
+    }
     if (!issue) { setCqttTouched(false); setComplianceTouched(false); if (items.some((c) => c.cqtt !== undefined)) setCqttEditing(false); }
     if (!issue && canCouncilTasks && action === "finish") onCouncilSaved?.();
     // CQTT Hoàn tất đánh giá → về Danh sách, bộ lọc Đã hoàn tất đánh giá để tổng hợp.

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Send } from "lucide-react";
@@ -100,7 +101,8 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
         ? updateEvaluation(existing!.id, accepted, "respond")
         : updateEvaluation(existing!.id, acceptedResponse ? accepted : { criteria: updatedCriteria, responseNote });
       if (issue) { setError(issue); return; }
-      if (intent !== "send_cqtt") { setSavedResponse(true); setNotice("Đã lưu cập nhật. Bấm Gửi CQTT để gửi CQTT rà soát, chấm điểm lại."); return; }
+      if (intent !== "send_cqtt") { setSavedResponse(true); setNotice("Đã lưu cập nhật. Bấm Gửi CQTT để gửi CQTT rà soát, chấm điểm lại."); toast.success("Cập nhật đánh giá thành công"); return; }
+      toast.success("Gửi CQTT thành công");
       onCreated({ ...existing!, criteria: updatedCriteria });
       onOpenChange(false);
       return;
@@ -131,6 +133,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       const issue = replaceSelfEvaluation(created);
       if (issue) { setError(issue); return; }
     } else addEvaluation(created);
+    toast.success(send ? "Gửi đánh giá thành công" : existing ? "Cập nhật đánh giá thành công" : "Tạo đánh giá thành công");
     onCreated(created);
     onOpenChange(false);
   }

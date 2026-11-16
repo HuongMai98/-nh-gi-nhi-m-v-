@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { matchesAdvancedSearch } from "@/lib/evaluation-search";
 import { TaskScoringView } from "@/components/TaskScoringView";
 import { ListPagination } from "@/components/ListPagination";
@@ -456,6 +457,7 @@ function Index() {
                     const ids = rows.filter((e) => e.step === "office").map((e) => e.id);
                     const issue = sendToSupport(ids);
                     if (issue) { setOfficeNotice(issue); return; }
+                    toast.success("Gửi tổ giúp việc thành công");
                     // Người gửi thuộc Tổ giúp việc: chuyển sang bộ lọc Tổ giúp việc; không thuộc: chỉ báo gửi thành công.
                     if (isSupportRole(previewRole)) { setOfficeStatus("pending"); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }
                     else { setSentToSupport(true); setOfficeNotice(`Gửi thành công ${ids.length} phiếu sang Tổ giúp việc.`); }

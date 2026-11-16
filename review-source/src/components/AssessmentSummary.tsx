@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ListPagination } from "@/components/ListPagination";
 import { EvaluationExportMenu } from "@/components/EvaluationExportMenu";
@@ -64,7 +65,7 @@ export function AssessmentSummary({
     const ids = batch.map((e) => e.id);
     const issue = sendOfficeBatch(ids, batchDrafts);
     setBatchFeedback(issue ?? `Đã gửi ${ids.length} phiếu đến CQTT đánh giá.`);
-    if (!issue) onOfficeSent?.(ids.length);
+    if (!issue) { onOfficeSent?.(ids.length); toast.success("Gửi CQTT thành công"); }
     if (!issue)
       setBatchDrafts((current) =>
         Object.fromEntries(Object.entries(current).filter(([id]) => !ids.includes(id))),
@@ -130,6 +131,7 @@ export function AssessmentSummary({
     if (missingNote.length && !returnNote.trim()) { setReturnError("Vui lòng nhập lý do điều chỉnh."); return; }
     const issue = sendReturn(returnIds, returnNote);
     if (issue) { setReturnError(issue); return; }
+    toast.success("Gửi điều chỉnh thành công");
     setReturnIds(null);
   };
   // Lưu tất cả: điểm/ý kiến hồ sơ đang rà soát và Lý do của hồ sơ đã Hoàn tất đánh giá.
