@@ -536,14 +536,6 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
             <h2 className="mb-3 flex items-center gap-2 font-medium">
               <MessageSquare className="h-4 w-4" />Ý kiến xử lý
             </h2>
-            {/* Nhập ý kiến: tính năng chung cho mọi vai trò, mọi bước. */}
-            <form className="mb-3 space-y-2" onSubmit={(event) => { event.preventDefault(); const issue = commentSupport(ev.id, supportNote); setSupportMsg(issue ?? "Đã gửi ý kiến."); if (!issue) setSupportNote(""); }}>
-              <textarea aria-label="Nhập ý kiến" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm" value={supportNote} onChange={(event) => { setSupportNote(event.target.value); setSupportMsg(""); }} placeholder={`Ý kiến của ${ROLES[previewRole]}...`} />
-              <div className="flex items-center justify-between gap-2">
-                <span role="status" className={cn("text-xs", supportMsg.startsWith("Đã") ? "text-success" : "text-primary")}>{supportMsg}</span>
-                <Button type="submit" size="sm" disabled={!supportNote.trim()}><Send className="h-3.5 w-3.5" />Gửi ý kiến</Button>
-              </div>
-            </form>
             {/* Chỉ hiện các lượt có nội dung ý kiến; thao tác không kèm nội dung xem ở Lịch sử xử lý. */}
             {opinions.map((h, i) => (
               <div key={i} className="mb-2 rounded bg-muted p-2 text-xs">
@@ -600,6 +592,14 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
               !opinions.length && (
                 <p className="text-xs text-muted-foreground">Chưa có ý kiến xử lý.</p>
               )}
+            {/* Nhập ý kiến (chung cho mọi vai trò, mọi bước) nằm dưới danh sách ý kiến đã có. */}
+            <form className="mt-3 space-y-2 border-t pt-3" onSubmit={(event) => { event.preventDefault(); const issue = commentSupport(ev.id, supportNote); setSupportMsg(issue ?? "Đã gửi ý kiến."); if (!issue) setSupportNote(""); }}>
+              <textarea aria-label="Nhập ý kiến" className="block min-h-20 w-full rounded-md border bg-card p-2 text-sm" value={supportNote} onChange={(event) => { setSupportNote(event.target.value); setSupportMsg(""); }} placeholder={`Ý kiến của ${ROLES[previewRole]}...`} />
+              <div className="flex items-center justify-between gap-2">
+                <span role="status" className={cn("text-xs", supportMsg.startsWith("Đã") ? "text-success" : "text-primary")}>{supportMsg}</span>
+                <Button type="submit" size="sm" disabled={!supportNote.trim()}><Send className="h-3.5 w-3.5" />Gửi ý kiến</Button>
+              </div>
+            </form>
           </section>
         </aside>
       </div>
