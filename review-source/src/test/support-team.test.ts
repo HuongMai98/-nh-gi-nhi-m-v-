@@ -41,7 +41,7 @@ describe("Tổ giúp việc", () => {
       expect(() => transition(e, role, "return", {}, "now")).toThrow(/lý do/);
       const back = transition(e, role, "return", { note: "Bổ sung kết quả" }, "now");
       expect(back.step).toBe("self");
-      expect(statusLabelOf(back)).toBe("Chờ CQ phản hồi");
+      expect(statusLabelOf(back)).toBe("Chờ CQ/CQĐV phản hồi");
     }
     expect(() => transition(atSupport(), "cqtt", "return", { note: "x" }, "now")).toThrow();
     expect(() => transition(atSupport(), "office", "return", { note: "x" }, "now")).toThrow();

@@ -7,7 +7,7 @@ import { CEO_FILTERS, ceoStatus, type CeoFilter } from "@/lib/ceo-filter";
 import { COUNCIL_FILTERS, councilStatus, type CouncilFilter } from "@/lib/council-filter";
 import { cqttStatus, type CqttStatus } from "@/lib/cqtt-filter";
 import { officeAggregationStatus, officeSubmissionSummary, supportOfficeStatus, supportStatus, type OfficeStatus, type SupportStatus } from "@/lib/office-filter";
-import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
+import { CURRENT_USER, canActOnSelf, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
@@ -626,8 +626,8 @@ function Index() {
                         {previewRole === "council" && <td className="whitespace-nowrap px-3 py-4">{councilStatus(e.step, !!e.councilReviewed) === "completed" ? <span className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", e.councilSummaryCreated ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700")}>{e.councilSummaryCreated ? "Đã tổng hợp" : "Chưa tổng hợp"}</span> : e.step === "ceo" || ["approved", "dispatch", "sign", "done"].includes(e.step) ? <span className="inline-flex rounded-md border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700">Đã tổng hợp</span> : "—"}</td>}
                         <td className="px-3 py-4">
                           <div className="flex items-center gap-2 text-body">
-                            {selfEditable(e, previewRole) && canSubmitEvaluation(e, CURRENT_USER) && (
-                              <Button variant="ghost" size="action" title={canSubmitEvaluation(e, CURRENT_USER) ? "Cập nhật" : "Chỉ người thực hiện hoặc người cùng đơn vị được cập nhật"} aria-label={`Cập nhật ${e.id}`} disabled={!canSubmitEvaluation(e, CURRENT_USER)} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><EditIcon /></Link></Button>
+                            {selfEditable(e, previewRole) && canActOnSelf(e, CURRENT_USER) && (
+                              <Button variant="ghost" size="action" title={canActOnSelf(e, CURRENT_USER) ? "Cập nhật" : "Chỉ người thực hiện hoặc người cùng đơn vị được cập nhật"} aria-label={`Cập nhật ${e.id}`} disabled={!canActOnSelf(e, CURRENT_USER)} asChild><Link to="/danh-gia/$id" params={{ id: e.id }} search={{ mode: "edit" }}><EditIcon /></Link></Button>
                             )}
                             {previewRole === "cqtt" && e.step === "cqtt_report" && cqttSummarizable(e) && (
                               e.cqttSummarized

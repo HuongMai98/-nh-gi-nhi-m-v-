@@ -1,5 +1,5 @@
 import { prepareSigningAttachments, type SigningAttachment } from "@/lib/director-signing";
-import { CURRENT_USER, canSubmitEvaluation, validateSelfSubmission } from "@/lib/users";
+import { CURRENT_USER, canActOnSelf, canSubmitEvaluation, validateSelfSubmission } from "@/lib/users";
 import { useState, useRef, type ReactNode } from "react";
 import {
   EVALUATIONS,
@@ -142,7 +142,7 @@ export function EvaluationProvider({ children }: { children: ReactNode }) {
   }
   function replaceSelfEvaluation(next: Evaluation): string | null {
     const existing = evaluations.find((e) => e.id === next.id);
-    if (!existing || existing.step !== "self" || previewRole !== "performer" || !canSubmitEvaluation(existing, CURRENT_USER))
+    if (!existing || existing.step !== "self" || previewRole !== "performer" || !canActOnSelf(existing, CURRENT_USER))
       return "Chỉ người thực hiện hoặc người cùng đơn vị được cập nhật phiếu đang tự đánh giá.";
     if (next.employeeId !== existing.employeeId || next.unit !== existing.unit || next.block !== existing.block)
       return "Không được thay đổi người thực hiện và đơn vị của phiếu.";

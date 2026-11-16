@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { ChevronDown, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useEvaluations } from "@/components/evaluation-context";
 import { responseScoreLimits, statusLabelOf, allocateCouncilScores, cqttTaskTotal, cqttTotal, totalScore, transition, type Criterion, type Evaluation } from "@/lib/evaluation";
 
@@ -44,9 +45,12 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
   const tasksFor = (group: Criterion["group"]) => quarterTasks(SOURCE_TASKS, taskUnit, quarter, year, group);
   const evaluationDate = existing?.evaluationDate ?? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const [deadline] = useState(existing?.deadline.split("/").reverse().join("-") ?? addDaysToDate(evaluationDate, 14));
-  const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => ({ ...c, sourceTaskId: SOURCE_TASKS.find((t) => t.unit === existing.unit && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id })) : quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })));
+  const [criteria, setCriteriaState] = useState<FormCriterion[]>(existing ? existing.criteria.map((c) => { const sourceTaskId = SOURCE_TASKS.find((t) => t.unit === existing.unit && t.criterion.group === c.group && t.criterion.goal === c.goal)?.id; return { ...c, sourceTaskId, manual: !sourceTaskId }; }) :quarterTasks(SOURCE_TASKS, taskUnit, quarter, year).map((task) => ({ ...task.criterion, self: 0, council: undefined, sourceTaskId: task.id })));
   const [personalInfoOpen, setPersonalInfoOpen] = useState(true);
   const submitIntent = useRef<"draft" | "send" | "send_cqtt">("draft");
+  // Cảnh báo nhiệm vụ đã loại khi gửi: "Đồng ý" bật cờ này rồi gửi lại form.
+  const [removalWarning, setRemovalWarning] = useState<string[] | null>(null);
+  const removalAcknowledgedRef = useRef(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   // Luồng phản hồi CQTT: Tiếp thu (điền điểm CQTT) → Cập nhật → Gửi CQTT.
@@ -84,17 +88,24 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const removalAcknowledged = removalAcknowledgedRef.current;
+    removalAcknowledgedRef.current = false;
     if (!unit.trim() || !performer || criteria.some((item) => !item.goal.trim() || !item.kpi.trim())) {
       setError("Vui lòng nhập đầy đủ các trường bắt buộc.");
       return;
     }
-    if (criteria.some((item) => !tasksFor(item.group).some((task) => task.id === item.sourceTaskId))) { setError("Vui lòng chọn nhiệm vụ đã kết thúc hoặc đã đóng đúng nhóm của người thực hiện."); return; }
-    if (new Set(criteria.map((c) => c.sourceTaskId)).size !== criteria.length) { setError("Mỗi nhiệm vụ chỉ được chọn một lần."); return; }
+    if (criteria.some((item) => !item.manual && !tasksFor(item.group).some((task) => task.id === item.sourceTaskId))) { setError("Vui lòng chọn nhiệm vụ đã kết thúc hoặc đã đóng đúng nhóm của người thực hiện."); return; }
+    const sourceIds = criteria.filter((c) => !c.manual).map((c) => c.sourceTaskId);
+    if (new Set(sourceIds).size !== sourceIds.length) { setError("Mỗi nhiệm vụ chỉ được chọn một lần."); return; }
+    if (submitIntent.current === "send" && !removalAcknowledged) {
+      const removed = (["A", "B-I", "B-II"] as const).flatMap((group) => tasksFor(group)).filter((task) => !criteria.some((c) => c.sourceTaskId === task.id)).map((task) => task.criterion.goal);
+      if (removed.length) { setRemovalWarning(removed); return; }
+    }
     const intent = submitIntent.current;
     const send = intent === "send";
     submitIntent.current = "draft";
     if (responding) {
-      const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, ...c }) => c);
+      const updatedCriteria = criteria.map(({ sourceTaskId: _sourceTaskId, manual: _manual, ...c }) => c);
       const accepted = { criteria: updatedCriteria, response: "Tiếp thu" as const, responseNote: responseNote.trim() };
       // Cập nhật: lưu, phiếu vẫn chờ phản hồi; Gửi CQTT mới chuyển phiếu sang CQTT chấm lại.
       const issue = intent === "send_cqtt"
@@ -117,7 +128,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       id: existing?.id ?? `${prefix}${String(sequence).padStart(3, "0")}`, unit: unit.trim(), block, owner: performer!.name, employeeId: performer!.employeeId, period,
       ...personalMetadata(performerId),
       evaluationDate,
-      deadline: `${d}/${m}/${y}`, updated: new Date().toLocaleString("vi-VN"), step: "self", criteria,
+      deadline: `${d}/${m}/${y}`, updated: new Date().toLocaleString("vi-VN"), step: "self", criteria: criteria.map(({ manual: _manual, ...c }) => c),
     };
     let created = evaluation;
     if (send) {
@@ -170,7 +181,7 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       </section>
       <div className={card + " -mx-4 min-w-0"}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"><h3 className={cardTitle}>Đánh giá kết quả thực hiện nhiệm vụ, công việc</h3><span className={weight === 100 ? "text-sm text-success" : "text-sm text-primary"}>Trọng điểm: {Math.round(criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Chức năng: {Math.round(criteria.filter((c) => c.group !== "A").reduce((sum, c) => sum + c.weight, 0) * 100)}% · Tổng: {weight}% · Tự đánh giá: {totalScore(criteria).toFixed(2)}/5</span></div>
-        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} fillVerticalSpace={!personalInfoOpen} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
+        <CreateEvaluationTable items={criteria} tasksFor={tasksFor} onChange={setCriteria} cqttScore={cqttScore} fillVerticalSpace={!personalInfoOpen} detailContext={{ id: existing?.id ?? "", unit: taskUnit, owner: performer?.name ?? "", assignmentRef: existing?.assignmentRef, selfSubmittedAt: existing?.selfSubmittedAt, updated: existing?.updated }} {...(responding ? { cqttLimits: responseScoreLimits(existing!, criteria), onCopyQltt: previewRole === "performer" ? acceptCqtt : undefined } : {})} />
         {responding && <section className="border-t pt-5" aria-label="Phản hồi CQTT">
           <h3 className={cardTitle + " mb-3"}>Phản hồi yêu cầu điều chỉnh của CQTT</h3>
           <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -184,5 +195,17 @@ export function CreateEvaluationDialog({ open, onOpenChange, onCreated, existing
       </div>
     </div>
     {actionsSlot ? createPortal(actions, actionsSlot) : <div className="flex justify-end gap-2">{actions}</div>}
+    <AlertDialog open={removalWarning !== null} onOpenChange={(open) => { if (!open) setRemovalWarning(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader className="text-center sm:text-center">
+          <AlertDialogTitle>Còn {removalWarning?.length} nhiệm vụ đã loại</AlertDialogTitle>
+          <AlertDialogDescription>{removalWarning?.join(", ")}. Bạn vẫn muốn gửi đánh giá?</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center">
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { removalAcknowledgedRef.current = true; setRemovalWarning(null); (document.getElementById(FORM_ID) as HTMLFormElement | null)?.requestSubmit(); }}>Đồng ý</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </form>;
 }

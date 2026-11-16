@@ -9,11 +9,14 @@ const GROUP_NAME: Record<Criterion["group"], string> = { A: "Nhóm NV trọng t�
 const date = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "--");
 const stars = (weight: number) => weight >= 0.15 ? "3☆ Quan trọng" : weight >= 0.1 ? "2☆ Quan trọng, chưa khẩn cấp" : "1☆ Ít quan trọng, chưa khẩn cấp";
 
+/** Ngữ cảnh phiếu để suy ra chi tiết nhiệm vụ; màn tạo phiếu (chưa lưu) chỉ có unit/owner. */
+export type TaskContext = { id: string; unit: string; owner: string; assignmentRef?: string | undefined; selfSubmittedAt?: string | undefined; updated?: string | undefined };
+
 /**
  * Chi tiết nhiệm vụ (mô phỏng màn Thông tin chi tiết nhiệm vụ của module Nhiệm vụ / VOffice).
  * shortcut: dữ liệu suy ra từ phiếu đánh giá và nhiệm vụ mẫu; thay bằng API chi tiết nhiệm vụ (MISSION_ID) khi tích hợp.
  */
-export function taskDetail(ev: Evaluation, c: Criterion, index: number) {
+export function taskDetail(ev: TaskContext, c: Criterion, index: number) {
   const source = SOURCE_TASKS.find((t) => t.unit === ev.unit && t.criterion.goal === c.goal);
   const id = source?.id ?? `${ev.assignmentRef ?? ev.id}-${index + 1}`;
   const numericId = 600000 + Math.abs([...id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) | 0, 7)) % 100000;
@@ -43,7 +46,7 @@ export function taskDetail(ev: Evaluation, c: Criterion, index: number) {
   };
 }
 
-export function TaskDetailDialog({ ev, criterion, index, onClose }: { ev: Evaluation; criterion: Criterion; index: number; onClose: () => void }) {
+export function TaskDetailDialog({ ev, criterion, index, onClose }: { ev: TaskContext; criterion: Criterion; index: number; onClose: () => void }) {
   const d = taskDetail(ev, criterion, index);
   const [tab, setTab] = useState<"result" | "detail">("result");
   return (

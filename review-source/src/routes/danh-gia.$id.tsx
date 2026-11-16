@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { evaluationCsvRows } from "@/lib/evaluation-csv";
 import { ExportEvaluationPdf } from "@/components/ExportEvaluationPdf";
 import { EditIcon } from "@/components/icons";
-import { CURRENT_USER, canSubmitEvaluation } from "@/lib/users";
+import { CURRENT_USER, canActOnSelf, canSubmitEvaluation } from "@/lib/users";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, ChevronDown, ClipboardCheck, Copy, Download, MessageSquare, MoreVertical, Save, Send, Undo2 } from "lucide-react";
@@ -65,7 +65,7 @@ function Detail() {
   const navigate = Route.useNavigate();
   const ev = evaluations.find((e) => e.id === id) ?? loaded;
   if (!ev) throw notFound();
-  const editAllowed = ev.step !== "done" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
+  const editAllowed = ev.step !== "done" && roleOf(ev) === previewRole && (ev.step !== "self" || canActOnSelf(ev, CURRENT_USER));
   const showView = () => { void navigate({ search: {} }); };
   // CQTT vào phiếu ở bước chấm điểm thì chấm ngay, không phải bấm "Đánh giá" thêm lần nữa.
   const councilDirect = previewRole === "council" && ["council", "council_adjust"].includes(ev.step);
@@ -104,7 +104,7 @@ export function EvaluationDetail({ ev, readOnly = false, onEdit, onCqttFinished,
   const [responseNote, setResponseNote] = useState(ev.responseNote ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const own = !readOnly && ev.step !== "ceo" && roleOf(ev) === previewRole && (ev.step !== "self" || canSubmitEvaluation(ev, CURRENT_USER));
+  const own = !readOnly && ev.step !== "ceo" && roleOf(ev) === previewRole && (ev.step !== "self" || canActOnSelf(ev, CURRENT_USER));
   // Tổ giúp việc: 4 bộ phận đều gửi điều chỉnh được; Văn phòng (đại diện) gửi CQTT; 3 bộ phận còn lại cho ý kiến.
   const supportMember = ev.step === "support" && isSupportMemberOf(ev.block, previewRole);
   const [supportNote, setSupportNote] = useState("");

@@ -101,7 +101,7 @@ export const roleOf = (e: Evaluation): PreviewRole =>
 /** Nhãn trạng thái hiển thị (bước tùy chỉnh dùng tên bước). */
 export const statusLabelOf = (e: Evaluation) =>
   e.step === "custom" ? (customStageOf(e.block, e.customStageId)?.name ?? "Bước bổ sung")
-    : e.step === "self" && e.officeReturnPending ? "Chờ CQ phản hồi" : STATUS[e.step].label;
+    : e.step === "self" && e.officeReturnPending ? "Chờ CQ/CQĐV phản hồi" : STATUS[e.step].label;
 export const statusToneOf = (e: Evaluation): StatusTone =>
   e.step === "self" && e.officeReturnPending ? "warning" : STATUS[e.step].tone;
 export function mainStage(step: Step): MainStage {

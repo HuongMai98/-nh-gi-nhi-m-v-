@@ -22,6 +22,10 @@ export const CURRENT_USER = USERS.find((user) => user.employeeId === EVALUATIONS
 export function canSubmitEvaluation(e: Evaluation, user: User): boolean {
   return e.employeeId === user.employeeId || e.unit === user.unit;
 }
+// Phiếu Văn phòng gửi điều chỉnh về CQ/CQĐV: người thực hiện được chỉnh sửa dù không cùng đơn vị với người xem.
+export function canActOnSelf(e: Evaluation, user: User): boolean {
+  return canSubmitEvaluation(e, user) || e.officeReturnPending === true;
+}
 export function validateSelfSubmission(e: Evaluation): string | null {
   const total = e.criteria.reduce((sum, c) => sum + c.weight, 0);
   const key = e.criteria.filter((c) => c.group === "A").reduce((sum, c) => sum + c.weight, 0);
