@@ -7,6 +7,15 @@ import { Input } from "@/components/ui/input";
 import { useEvaluations } from "@/components/evaluation-context";
 import { downloadSigningAttachment, loadSigningTemplate } from "@/lib/director-signing";
 
+/** Người ký duyệt tự điền theo thứ tự chữ ký trên Phụ lục trình TGĐ (APPENDIX_SIGNERS). */
+export const SIGNING_APPROVERS = [
+  { signer: "Chánh Văn phòng", title: "Văn phòng Tập đoàn - Chánh Văn phòng" },
+  { signer: "Ban TCNL", title: "Ban Tổ chức Nhân lực - Trưởng ban" },
+  { signer: "Ban Chiến lược", title: "Ban Chiến lược - Trưởng ban" },
+  { signer: "Phó Tổng Giám đốc", title: "Ban Tổng Giám đốc - Phó Tổng Giám đốc" },
+  { signer: "Tổng Giám đốc", title: "Ban Tổng Giám đốc - Tổng Giám đốc" },
+];
+
 export const Route = createFileRoute("/soan-trinh-ky-gd")({
   component: DirectorSigningPage,
 });
@@ -66,7 +75,7 @@ export function DirectorSigningPage() {
         note: [subject.trim(), note.trim(),
           ...["Độ khẩn", "Độ mật", "Ngành", "Hình thức văn bản", "Ký hiệu văn bản", "Nơi nhận", "Đơn vị ban hành"].map((label) => label + ": " + fields.get(label)),
           ...["Văn bản Đảng", "Phát hành bên ngoài", "Trình ký song song", "Ban hành tự động"].filter((label) => fields.has(label)),
-          "Người ký: Giám đốc",
+          "Người ký: " + SIGNING_APPROVERS.map((a) => a.signer).join(", "),
           ...basis.map((ref) => "Văn bản sở cứ: " + ref),
           ...recipients.filter((e) => people[e.id]).map((e) => people[e.id] + ": " + e.owner),
           ...units.map((unit) => "Đơn vị nhận: " + unit),
@@ -138,7 +147,7 @@ export function DirectorSigningPage() {
       </section>
       <section className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex flex-wrap justify-between gap-4">{heading(3, "Danh sách cá nhân ký duyệt")}<div className="flex flex-wrap gap-4">{toggle("Phát hành bên ngoài", "Phát hành bên ngoài")}{toggle("Trình ký song song", "Trình ký song song")}</div></div>
-        <table className="w-full text-left text-sm"><thead className="bg-muted"><tr><th className="p-3">TT</th><th>Ký ban hành</th><th>Đơn vị - Chức danh</th><th>Chữ ký</th></tr></thead><tbody><tr><td className="p-3">1</td><td>Giám đốc</td><td>Giám đốc</td><td><input type="checkbox" checked disabled aria-label="Chữ ký Giám đốc" /></td></tr></tbody></table>
+        <table className="w-full text-left text-sm"><thead className="bg-muted"><tr><th className="p-3">TT</th><th>Ký ban hành</th><th>Đơn vị - Chức danh</th><th>Chữ ký</th></tr></thead><tbody>{SIGNING_APPROVERS.map((a, i) => <tr key={a.signer} className="border-t"><td className="p-3">{i + 1}</td><td>{a.signer}</td><td>{a.title}</td><td><input type="checkbox" checked disabled aria-label={`Chữ ký ${a.signer}`} /></td></tr>)}</tbody></table>
       </section>
       <section className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex flex-wrap justify-between gap-4">{heading(4, "Ban hành")}{toggle("Ban hành tự động", "Ban hành tự động")}</div>

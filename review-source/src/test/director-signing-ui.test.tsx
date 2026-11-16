@@ -51,11 +51,14 @@ it("CQTT bấm Trình ký GĐ: xem PDF Phụ lục I/III và Phụ lục II/IV c
   await waitFor(() => expect(docs).toHaveTextContent(gnvPdf));
   fireEvent.click(within(dialog).getByRole("button", { name: "Gửi trình ký" }));
   expect(await screen.findByText("Chỉnh sửa văn bản trình ký")).toBeInTheDocument();
+  // Danh sách cá nhân ký duyệt tự điền 5 người theo chữ ký trên Phụ lục.
+  expect(["Chánh Văn phòng", "Ban TCNL", "Ban Chiến lược", "Phó Tổng Giám đốc", "Tổng Giám đốc"].map((n) => screen.getByLabelText(`Chữ ký ${n}`))).toHaveLength(5);
   expect(state().step).toBe("council");
   fireEvent.click(screen.getByRole("button", { name: "Trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
   expect(state().files).toEqual([expect.stringMatching(/^Phu_luc_(I|III)_Ket_qua_danh_gia/), expect.stringMatching(/^Phu_luc_(II|IV)_Ket_qua_tham_dinh/), expect.stringMatching(/\.xlsx$/)]);
   expect(state().note).toContain("Ngành: Kế hoạch");
   expect(state().note).toContain("GNV-2026-Q4-777");
+  expect(state().note).toContain("Người ký: Chánh Văn phòng, Ban TCNL, Ban Chiến lược, Phó Tổng Giám đốc, Tổng Giám đốc");
   vi.unstubAllGlobals();
 });
