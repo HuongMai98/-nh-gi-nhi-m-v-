@@ -51,3 +51,21 @@ it("builds a signing PDF containing GNV, evaluation and KI from actual records",
   writeFileSync(".test-tmp/pdfs/signing-dossier.pdf",buffer);
   expect(buffer.subarray(0,5).toString()).toBe("%PDF-");
 },20000);
+it("Phụ lục II thẩm định nhiệm vụ trọng tâm kỳ tới theo mẫu: tiêu đề, 3 tầng tiêu đề, cột đỏ CQTT, chữ ký", async () => {
+  const { buildKeyTaskAppraisalPdf, keyTaskAppraisalFileName } = await import("@/lib/evaluation-pdf");
+  const { nextKeyTasks } = await import("@/components/DirectorSigningDialog");
+  const e = EVALUATIONS.find(x => x.block === "Khối Cơ quan" && x.criteria.some(c => c.group === "A"))!;
+  const items = nextKeyTasks(e);
+  expect(items.length).toBe(e.criteria.filter(c => c.group === "A").length);
+  expect(items[0]!.startDate).toBe("2026-10-01");
+  expect(items[0]!.endDate).toBe("2026-12-31");
+  const def = buildKeyTaskAppraisalPdf(items, "co-quan", "Quý IV/2026");
+  const json = JSON.stringify(def.content);
+  expect(json).toContain("PHỤ LỤC II: KẾT QUẢ THẨM ĐỊNH NHIỆM VỤ TRỌNG TÂM QUÝ 4/2026 CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN");
+  expect(json).toContain("Đánh giá của Cơ quan thường trực");
+  expect(json).toContain("TỔNG GIÁM ĐỐC");
+  const tbl = (def.content as { table?: { body: unknown[][]; headerRows: number } }[]).find(c => c.table?.headerRows === 3)!.table!;
+  expect(tbl.body).toHaveLength(3 + items.length);
+  expect(tbl.body.every(row => row.length === 23)).toBe(true);
+  expect(keyTaskAppraisalFileName("don-vi", "Quý IV/2026")).toBe("Phu_luc_IV_Ket_qua_tham_dinh_NVTT_Quy_4_2026_cac_don_vi.pdf");
+});

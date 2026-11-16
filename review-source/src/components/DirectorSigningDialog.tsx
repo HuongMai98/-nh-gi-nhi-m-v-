@@ -4,7 +4,7 @@ import { Download, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEvaluations } from "@/components/evaluation-context";
-import { appendixFileName, buildAppendixPdf } from "@/lib/evaluation-pdf";
+import { appendixFileName, buildAppendixPdf, buildKeyTaskAppraisalPdf, keyTaskAppraisalFileName, type KeyTaskItem } from "@/lib/evaluation-pdf";
 import { createPdfBlob } from "@/lib/pdf-runtime";
 import { downloadSigningAttachment, type SigningAttachment } from "@/lib/director-signing";
 import type { Evaluation } from "@/lib/evaluation";
@@ -27,6 +27,16 @@ export function nextAssignmentRef(e: Evaluation): string {
 
 type Doc = SigningAttachment & { url: string; label: string };
 
+const QUARTER_END = ["03-31", "06-30", "09-30", "12-31"];
+// shortcut: nhiệm vụ trọng tâm của phiếu GNV kỳ tới lấy từ nhiệm vụ trọng tâm kỳ này, dời sang ngày của kỳ tới;
+// thay bằng nội dung phiếu GNV kỳ tới từ API giao nhiệm vụ khi tích hợp.
+export function nextKeyTasks(e: Evaluation): KeyTaskItem[] {
+  const { year, q } = nextPeriod(e.period);
+  const start = `${year}-${String(q * 3 - 2).padStart(2, "0")}-01`;
+  const end = `${year}-${QUARTER_END[q - 1]}`;
+  return e.criteria.filter((c) => c.group === "A").map((c) => ({ unit: e.unit, goal: c.goal, kpi: c.kpi, method: c.method, measure: c.unit, weight: c.weight, target: c.target, startDate: start, endDate: end }));
+}
+
 /** CQTT trình ký GĐ: xem PDF Phụ lục I / Phụ lục III, chọn phiếu GNV kỳ tới rồi gửi. */
 export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   evaluations: Evaluation[];
@@ -42,6 +52,36 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   const options = useMemo(() => evaluations.map((e) => ({ id: e.id, ref: nextAssignmentRef(e), owner: e.owner, unit: e.unit })), [evaluations]);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const key = evaluations.map((e) => e.id).join(",");
+  const [gnvDocs, setGnvDocs] = useState<Doc[]>([]);
+  const chosenKey = [...chosen].sort().join(",");
+  useEffect(() => {
+    if (!open || !evaluations.length) return;
+    let cancelled = false;
+    const urls: string[] = [];
+    const picked = evaluations.filter((e) => chosen.has(nextAssignmentRef(e)));
+    const next = nextPeriod(evaluations[0]!.period).label;
+    (async () => {
+      try {
+        const specs = (["co-quan", "don-vi"] as const).flatMap((kind) => {
+          const items = picked.filter((e) => (e.block === "Khối Cơ quan") === (kind === "co-quan")).flatMap(nextKeyTasks);
+          return items.length ? [{ name: keyTaskAppraisalFileName(kind, next), label: `${kind === "co-quan" ? "Phụ lục II" : "Phụ lục IV"} · Phiếu GNV kỳ tới · ${items.length} nhiệm vụ trọng tâm`, def: buildKeyTaskAppraisalPdf(items, kind, next) }] : [];
+        });
+        const built: Doc[] = [];
+        for (const sp of specs) {
+          const blob = await createPdfBlob(sp.def);
+          const url = URL.createObjectURL(blob);
+          urls.push(url);
+          built.push({ name: sp.name, label: sp.label, blob, url });
+        }
+        if (!cancelled) setGnvDocs(built);
+      } catch (issue) {
+        if (!cancelled) setError(issue instanceof Error ? issue.message : "Không tạo được PDF phiếu GNV kỳ tới.");
+      }
+    })();
+    return () => { cancelled = true; urls.forEach((u) => URL.revokeObjectURL(u)); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, key, chosenKey]);
+  const allDocs = [...docs, ...gnvDocs];
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +120,7 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
   function openDraft() {
     setDirectorSigningDraft({
       ids: evaluations.map((e) => e.id),
-      files: docs.map(({ name, blob }) => ({ name, blob })),
+      files: allDocs.map(({ name, blob }) => ({ name, blob })),
       refs: options.filter((o) => chosen.has(o.ref)).map((o) => o.ref),
       period: evaluations[0]!.period,
     });
@@ -88,7 +128,7 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
     void navigate({ to: "/soan-trinh-ky-gd" });
   }
 
-  const current = docs[active];
+  const current = allDocs[Math.min(active, allDocs.length - 1)];
   const period = evaluations[0] ? nextPeriod(evaluations[0].period).label : "";
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="flex max-h-[95dvh] w-[calc(100%-2rem)] max-w-[1400px] flex-col gap-0 overflow-hidden bg-card p-0" aria-describedby={undefined}>
@@ -99,8 +139,8 @@ export function DirectorSigningDialog({ evaluations, open, onOpenChange }: {
             <h3 className="text-sm font-semibold">Tài liệu trình ký</h3>
             {loading && <p className="text-sm text-muted-foreground">Đang tạo file PDF…</p>}
             <ul className="space-y-1" aria-label="Tài liệu trình ký">
-              {docs.map((d, i) => <li key={d.name} className={"flex items-center gap-2 rounded-md border px-2.5 py-2 text-sm " + (i === active ? "border-primary bg-accent" : "bg-card")}>
-                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" onClick={() => setActive(i)} aria-pressed={i === active}>
+              {allDocs.map((d, i) => <li key={d.name} className={"flex items-center gap-2 rounded-md border px-2.5 py-2 text-sm " + (d === current ? "border-primary bg-accent" : "bg-card")}>
+                <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" onClick={() => setActive(i)} aria-pressed={d === current}>
                   <FileText className="size-4 shrink-0 text-primary" /><span className="min-w-0"><span className="block truncate font-medium">{d.label}</span><span className="block truncate text-xs text-muted-foreground">{d.name}</span></span>
                 </button>
                 <Button type="button" variant="ghost" size="action" title="Tải xuống" aria-label={`Tải xuống ${d.name}`} onClick={() => downloadSigningAttachment(d)}><Download /></Button>

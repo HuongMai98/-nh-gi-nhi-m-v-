@@ -25,31 +25,36 @@ it("kỳ tới của Quý IV là Quý I năm sau", () => {
   expect(nextPeriod("Quý IV/2026").label).toBe("Quý I/2027");
 });
 
-it("CQTT bấm Trình ký GĐ: xem PDF Phụ lục I/III, chọn phiếu GNV kỳ tới rồi gửi", async () => {
+it("CQTT bấm Trình ký GĐ: xem PDF Phụ lục I/III và Phụ lục II/IV của phiếu GNV kỳ tới, chọn phiếu GNV rồi gửi", async () => {
   vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:test", revokeObjectURL: () => {} }));
   render(<EvaluationProvider><Probe /></EvaluationProvider>);
   fireEvent.click(screen.getByText("Chuẩn bị"));
   fireEvent.click(screen.getByRole("button", { name: "Trình ký GĐ" }));
   const dialog = await screen.findByRole("dialog");
   const docs = await within(dialog).findByRole("list", { name: "Tài liệu trình ký" });
-  await waitFor(() => expect(within(docs).getAllByRole("listitem")).toHaveLength(1));
+  await waitFor(() => expect(within(docs).getAllByRole("listitem")).toHaveLength(2));
   expect(docs).not.toHaveTextContent("Phieu-danh-gia-SIGNING-TEST.pdf");
   const block = EVALUATIONS[1]!.block;
   const appendix = block === "Khối Cơ quan" ? "Phu_luc_I_Ket_qua_danh_gia_nhiem_vu_Quy_3_2026_KCQ.pdf" : "Phu_luc_III_Ket_qua_danh_gia_nhiem_vu_Quy_3_2026_cac_don_vi.pdf";
   expect(docs).toHaveTextContent(appendix);
   expect(docs).not.toHaveTextContent("Tong-hop-KI.pdf");
   expect(within(dialog).getByTitle(`Xem ${appendix}`)).toBeInTheDocument();
+  // Phiếu GNV kỳ tới: Phụ lục II (Khối Cơ quan) / IV (Khối Đơn vị) theo mẫu thẩm định nhiệm vụ trọng tâm Quý 4/2026.
+  const gnvPdf = block === "Khối Cơ quan" ? "Phu_luc_II_Ket_qua_tham_dinh_NVTT_Quy_4_2026_KCQ.pdf" : "Phu_luc_IV_Ket_qua_tham_dinh_NVTT_Quy_4_2026_cac_don_vi.pdf";
+  expect(docs).toHaveTextContent(gnvPdf);
   // Bỏ chọn hết phiếu GNV kỳ tới thì không gửi được.
   const gnv = within(dialog).getByLabelText("Chọn GNV-2026-Q4-777");
   fireEvent.click(gnv);
   expect(within(dialog).getByRole("button", { name: "Gửi trình ký" })).toBeDisabled();
+  await waitFor(() => expect(docs).not.toHaveTextContent(gnvPdf));
   fireEvent.click(gnv);
+  await waitFor(() => expect(docs).toHaveTextContent(gnvPdf));
   fireEvent.click(within(dialog).getByRole("button", { name: "Gửi trình ký" }));
   expect(await screen.findByText("Chỉnh sửa văn bản trình ký")).toBeInTheDocument();
   expect(state().step).toBe("council");
   fireEvent.click(screen.getByRole("button", { name: "Trình ký" }));
   await waitFor(() => expect(state().step).toBe("ceo"));
-  expect(state().files).toEqual([expect.stringMatching(/^Phu_luc_(I|III)_/), expect.stringMatching(/\.xlsx$/)]);
+  expect(state().files).toEqual([expect.stringMatching(/^Phu_luc_(I|III)_Ket_qua_danh_gia/), expect.stringMatching(/^Phu_luc_(II|IV)_Ket_qua_tham_dinh/), expect.stringMatching(/\.xlsx$/)]);
   expect(state().note).toContain("Ngành: Kế hoạch");
   expect(state().note).toContain("GNV-2026-Q4-777");
   vi.unstubAllGlobals();

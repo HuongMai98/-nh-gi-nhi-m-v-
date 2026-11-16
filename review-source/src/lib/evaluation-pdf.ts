@@ -168,3 +168,48 @@ export function buildAppendixPdf(evaluations: Evaluation[], kind: AppendixKind):
     footer: (page, pages) => pages > 1 ? ({ text: `${page} / ${pages}`, alignment: "right", margin: [0, 5, 28, 0], fontSize: 8 }) : null,
   };
 }
+
+/** Phụ lục thẩm định nhiệm vụ trọng tâm kỳ tới (theo mẫu Phu_luc_II_..._MAU.pdf): II = Khối Cơ quan, IV = Khối Đơn vị. */
+export type KeyTaskItem = { unit: string; goal: string; kpi: string; method?: string | undefined; measure: string; weight: number; target: { t: string; b: string; s: string }; startDate?: string | undefined; endDate?: string | undefined };
+export function keyTaskAppraisalFileName(kind: AppendixKind, period: string) {
+  const p = appendixPeriod(period).replace("QUÝ ", "Quy_").replace("/", "_");
+  return kind === "co-quan" ? `Phu_luc_II_Ket_qua_tham_dinh_NVTT_${p}_KCQ.pdf` : `Phu_luc_IV_Ket_qua_tham_dinh_NVTT_${p}_cac_don_vi.pdf`;
+}
+export function buildKeyTaskAppraisalPdf(items: KeyTaskItem[], kind: AppendixKind, period: string): TDocumentDefinitions {
+  if (!items.length) throw new Error("Không có nhiệm vụ trọng tâm để lập phụ lục.");
+  const isAgency = kind === "co-quan";
+  const heading = isAgency
+    ? `PHỤ LỤC II: KẾT QUẢ THẨM ĐỊNH NHIỆM VỤ TRỌNG TÂM ${appendixPeriod(period)} CỦA CHỈ HUY CƠ QUAN TẬP ĐOÀN`
+    : `PHỤ LỤC IV: KẾT QUẢ THẨM ĐỊNH NHIỆM VỤ TRỌNG TÂM ${appendixPeriod(period)} CỦA CHỈ HUY ĐƠN VỊ`;
+  const h = (value: string, colSpan = 1, rowSpan = 1): TableCell => ({ text: value, bold: true, alignment: "center", colSpan, rowSpan, margin: [0, rowSpan === 3 ? 18 : rowSpan === 2 ? 8 : 0, 0, 0] });
+  // Nhóm cột "Đánh giá của Cơ quan thường trực": nền đỏ chữ trắng như mẫu.
+  const r = (value: string, colSpan = 1, rowSpan = 1): TableCell => ({ ...(h(value, colSpan, rowSpan) as object), color: "#ffffff", fillColor: RED } as TableCell);
+  const c = (value: string): TableCell => ({ text: value, alignment: "center" });
+  const body: TableCell[][] = [
+    [h("STT", 1, 3), h(isAgency ? "Đơn vị" : "Đơn vị", 1, 3), h("Mục tiêu nhiệm vụ/công việc (Kết quả mong đợi)", 1, 3), h("Chỉ số đo lường KPI", 1, 3), h("Phương pháp đo (công thức hoặc mô tả cách tính)", 1, 3), h("Đơn vị đo ($, số lượng, %, điểm…)", 1, 3), h("Tỷ trọng (%)", 1, 3),
+      h("Các mức chỉ tiêu", 3), {}, {}, h("Ngày bắt đầu", 1, 3), h("Ngày hoàn thành", 1, 3),
+      h("Chứng minh mục tiêu trọng điểm theo ma trận 9box", 5), {}, {}, {}, {},
+      r("Đánh giá của Cơ quan thường trực", 5), {}, {}, {}, {}, h("Ghi chú", 1, 3)],
+    [{}, {}, {}, {}, {}, {}, {}, h("Tối thiểu", 1, 2), h("Mong đợi", 1, 2), h("Thách thức", 1, 2), {}, {},
+      h("Mức độ mới/khó", 2), {}, h("Phạm vi tác động/ tính chất trọng yếu", 2), {}, h("Nhóm mục tiêu trọng điểm đề xuất", 1, 2),
+      r("Mức độ mới/khó", 2), {}, r("Phạm vi tác động/ tính chất trọng yếu", 2), {}, r("Nhóm mục tiêu trọng điểm đề xuất", 1, 2), {}],
+    [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+      h("Vị trí trên ma trận"), h("Lý do"), h("Vị trí trên ma trận"), h("Lý do"), {},
+      r("Vị trí trên ma trận"), r("Lý do"), r("Vị trí trên ma trận"), r("Lý do"), {}, {}],
+    // Các cột ma trận 9box và đánh giá của CQTT để trống, điền khi thẩm định.
+    ...items.map((t, i) => [c(String(i + 1)), c(t.unit), { text: t.goal }, { text: t.kpi }, { text: text(t.method) }, c(t.measure), c(`${Math.round(t.weight * 100)}%`),
+      c(t.target.t), c(t.target.b), c(t.target.s), c(date(t.startDate)), c(date(t.endDate)), "", "", "", "", "", "", "", "", "", "", ""] as TableCell[]),
+  ];
+  return {
+    pageSize: "A4", pageOrientation: "landscape", pageMargins: [24, 24, 24, 28],
+    defaultStyle: { font: "Tinos", fontSize: 9 },
+    info: { title: heading },
+    content: [
+      { table: { widths: [150], body: [[{ stack: ["Số và ký hiệu: ........../TTr-VP", "Ngày ban hành: ..../..../........"], fontSize: 7.5 }]] }, layout: { hLineWidth: () => 0.6, vLineWidth: () => 0.6 } },
+      { text: heading, bold: true, fontSize: 12, alignment: "center", margin: [0, 10, 0, 8] },
+      { ...table(body, [3, 6, 13, 7, 8, 5, 4, 5.5, 5.5, 5.5, 6, 6, 4, 9, 4, 8, 4.5, 4, 8, 4, 8, 4.5, 4.5], 3, 6) as object, margin: [0, 0, 0, 12] } as Content,
+      { columns: APPENDIX_SIGNERS.map(s => ({ width: "*", alignment: "center", bold: true, fontSize: 9, text: s })), unbreakable: true } as Content,
+    ],
+    footer: (page, pages) => pages > 1 ? ({ text: `${page} / ${pages}`, alignment: "right", margin: [0, 5, 24, 0], fontSize: 8 }) : null,
+  };
+}
